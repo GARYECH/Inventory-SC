@@ -1,138 +1,123 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-black text-xl text-gray-800 leading-tight">
-            {{ __('My Rental History & Loans') }}
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Riwayat & Status Transaksi') }}
         </h2>
     </x-slot>
 
-    <div class="py-12 space-y-10"> <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-8">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
             
-            @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 shadow-sm text-xs font-bold uppercase">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            <div class="mb-4 flex items-center justify-between">
-                <h3 class="text-sm font-black uppercase tracking-widest text-indigo-600">Active Loans & Pending Requests</h3>
-                <span class="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full border border-indigo-100 uppercase">
-                    Live Status
-                </span>
-            </div>
-            
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100 mb-12">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50/50 border-b border-gray-100 text-[10px] uppercase text-gray-500 font-black tracking-widest">
-                                <th class="py-4 px-6">Receipt #</th>
-                                <th class="py-4 px-6">Item Details</th>
-                                <th class="py-4 px-6 text-center">Qty</th>
-                                <th class="py-4 px-6">Rental Period</th>
-                                <th class="py-4 px-6 text-center">Status</th>
-                                <th class="py-4 px-6 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm divide-y divide-gray-50">
-                            @forelse($activeLoans as $loan)
-                                <tr class="hover:bg-gray-50/50 transition duration-200">
-                                    <td class="py-4 px-6 font-mono text-xs">
-                                        <span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md font-bold border border-indigo-100">
-                                            {{ $loan->order_number }}
-                                        </span>
-                                    </td>
-
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center">
-                                            <img src="{{ asset('storage/' . $loan->item->item_photo) }}" class="w-10 h-10 rounded-lg object-cover mr-4 border border-gray-100 shadow-sm">
-                                            <div>
-                                                <span class="block font-black text-gray-900 leading-none">{{ $loan->item->name }}</span>
-                                                <span class="text-[9px] text-gray-400 font-bold uppercase mt-1 inline-block">Asset ID: {{ $loan->item_id }}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td class="py-4 px-6 font-black text-gray-600 text-center">{{ $loan->quantity }}</td>
-
-                                    <td class="py-4 px-6">
-                                        <div class="flex flex-col">
-                                            <span class="font-black text-gray-800 text-xs">{{ \Carbon\Carbon::parse($loan->start_date)->format('d M Y') }}</span>
-                                            <span class="text-[9px] text-gray-400 uppercase font-black tracking-tighter">Until {{ \Carbon\Carbon::parse($loan->end_date)->format('d M Y') }}</span>
-                                        </div>
-                                    </td>
-
-                                    <td class="py-4 px-6 text-center">
-                                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border
-                                            {{ $loan->status === 'Pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : '' }}
-                                            {{ $loan->status === 'Approved' ? 'bg-blue-50 text-blue-600 border-blue-200' : '' }}
-                                            {{ $loan->status === 'Borrowed' ? 'bg-purple-50 text-purple-600 border-purple-200' : '' }}">
-                                            {{ $loan->status }}
-                                        </span>
-                                    </td>
-
-                                    <td class="py-4 px-6 text-right">
-                                        @if($loan->status === 'Pending')
-                                            <form action="{{ route('student.rent.cancel', $loan) }}" method="POST" onsubmit="return confirm('Est-ce que tu es sûr, mon cher? Cancel this request?')">
-                                                @csrf @method('PATCH')
-                                                <button type="submit" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition active:scale-95">
-                                                    Cancel Order
-                                                </button>
-                                            </form>
-                                        @else
-                                            <div class="flex flex-col items-end">
-                                                <span class="text-[10px] text-gray-400 font-bold uppercase italic">In Progress</span>
-                                                <span class="text-[9px] text-gray-300">Contact Admin to Modify</span>
-                                            </div>
+            <!-- 🟢 TRANSAKSI AKTIF (Active Loans) -->
+            <div class="bg-white p-6 shadow-sm sm:rounded-xl border border-gray-100">
+                <h3 class="text-lg font-black text-gray-900 border-b pb-4 mb-6">Transaksi Aktif & Menunggu Persetujuan</h3>
+                
+                @if($activeLoans->isEmpty())
+                    <div class="text-center py-6">
+                        <p class="text-gray-500 text-sm">Belum ada transaksi yang sedang berjalan.</p>
+                    </div>
+                @else
+                    <div class="space-y-6">
+                        @foreach($activeLoans as $order)
+                            <div class="border border-gray-200 rounded-xl p-5 bg-gray-50 hover:shadow-md transition duration-200">
+                                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-200 pb-4 mb-4">
+                                    <div>
+                                        <h4 class="font-black text-indigo-700 text-lg">{{ $order->order_number }}</h4>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            Proker: <strong>{{ $order->proker_name }}</strong> | Tipe: <strong>{{ $order->order_type }}</strong>
+                                        </p>
+                                        @if($order->order_type !== 'Sale')
+                                            <p class="text-xs font-bold text-blue-600 mt-1">
+                                                🗓️ Jadwal: {{ $order->start_date->format('d M Y') }} - {{ $order->end_date->format('d M Y') }}
+                                            </p>
                                         @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="py-16 text-center">
-                                        <p class="text-gray-400 font-bold uppercase text-xs italic tracking-widest">No active business, mon cher.</p>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="mb-4 flex items-center justify-between">
-                <h3 class="text-sm font-black uppercase tracking-widest text-gray-400">Past History & Archives</h3>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-50 opacity-75 grayscale-[50%] hover:grayscale-0 transition-all duration-500">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <tbody class="text-xs divide-y divide-gray-50">
-                            @forelse($pastLoans as $history)
-                                <tr class="bg-gray-50/30">
-                                    <td class="py-4 px-6 font-mono text-gray-400">{{ $history->order_number }}</td>
-                                    <td class="py-4 px-6">
-                                        <span class="font-bold text-gray-600">{{ $history->item->name }}</span>
-                                    </td>
-                                    <td class="py-4 px-6 text-gray-400">{{ $history->quantity }} unit(s)</td>
-                                    <td class="py-4 px-6 text-gray-400">
-                                        {{ \Carbon\Carbon::parse($history->end_date)->format('d M Y') }}
-                                    </td>
-                                    <td class="py-4 px-6 text-right">
-                                        <span class="px-2 py-1 bg-gray-100 text-gray-400 rounded text-[9px] font-black uppercase tracking-widest">
-                                            {{ $history->status }}
+                                    </div>
+                                    <div class="mt-4 md:mt-0 text-right">
+                                        <!-- Indikator Status Dinamis -->
+                                        <span class="inline-block px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-yellow-100 text-yellow-800 border border-yellow-200 shadow-sm">
+                                            {{ $order->status }}
                                         </span>
-                                    </td>
-                                </tr>
-                            @empty
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div class="col-span-2">
+                                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rincian Barang (Keranjang):</p>
+                                        <ul class="space-y-2">
+                                            @foreach($order->orderItems as $detail)
+                                                <li class="flex justify-between items-center bg-white p-2 border rounded-md text-sm">
+                                                    <span class="font-semibold text-gray-800">{{ $detail->item->name }} <span class="text-gray-400">x{{ $detail->quantity }}</span></span>
+                                                    <span class="text-gray-600">Rp {{ number_format($detail->subtotal_price, 0, ',', '.') }}</span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="flex flex-col justify-end items-end bg-white p-4 border rounded-lg shadow-sm">
+                                        <p class="text-xs font-bold text-gray-500 uppercase">Grand Total</p>
+                                        <p class="text-2xl font-black text-gray-900 mt-1">Rp {{ number_format($order->total_price, 0, ',', '.') }}</p>
+                                        
+                                        <!-- THE MAGIC BUTTONS (PDF) -->
+                                        <div class="mt-4 w-full flex flex-col space-y-2">
+                                            @if($order->status === 'Waiting for MoU')
+                                                <a href="{{ route('student.document.mou', $order->id) }}" target="_blank" class="w-full inline-block text-center bg-indigo-600 text-white py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition shadow">
+                                                    📄 Download MoU
+                                                </a>
+                                                <p class="text-[10px] text-gray-500 text-center leading-tight">Print, tanda tangani, dan bawa fisik MoU ini saat mengambil barang di SC.</p>
+                                            @elseif($order->status === 'Paid' || $order->status === 'Returned' || $order->status === 'Handed Over')
+                                                <a href="{{ route('student.document.invoice', $order->id) }}" target="_blank" class="w-full inline-block text-center bg-gray-800 text-white py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-gray-700 transition shadow">
+                                                    🧾 Download Invoice
+                                                </a>
+                                            @else
+                                                <p class="text-[10px] text-center text-gray-400 italic">Menunggu update status dari Admin SC...</p>
+                                            @endif
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            <!-- 🔴 RIWAYAT MASA LALU (Past History) -->
+            <div class="bg-white p-6 shadow-sm sm:rounded-xl border border-gray-100">
+                <h3 class="text-lg font-black text-gray-900 border-b pb-4 mb-6 text-gray-400">Arsip Transaksi (Selesai/Batal)</h3>
+                
+                @if($pastLoans->isEmpty())
+                    <p class="text-gray-400 text-sm italic">Belum ada riwayat transaksi.</p>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
                                 <tr>
-                                    <td colspan="5" class="py-8 text-center text-gray-300 text-[10px] font-bold uppercase tracking-widest">No archives found.</td>
+                                    <th class="px-4 py-3">No. Order</th>
+                                    <th class="px-4 py-3">Tipe</th>
+                                    <th class="px-4 py-3">Item Count</th>
+                                    <th class="px-4 py-3">Total Tagihan</th>
+                                    <th class="px-4 py-3 text-right">Status Akhir</th>
                                 </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="p-4 bg-white border-t border-gray-50">
-                    {{ $pastLoans->links() }}
-                </div>
+                            </thead>
+                            <tbody>
+                                @foreach($pastLoans as $order)
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="px-4 py-3 font-bold text-gray-900">{{ $order->order_number }}</td>
+                                        <td class="px-4 py-3">{{ $order->order_type }}</td>
+                                        <td class="px-4 py-3">{{ $order->orderItems->sum('quantity') }} Barang</td>
+                                        <td class="px-4 py-3">Rp {{ number_format($order->total_price, 0, ',', '.') }}</td>
+                                        <td class="px-4 py-3 text-right font-bold {{ $order->status === 'Returned' || $order->status === 'Handed Over' ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $order->status }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4">
+                        {{ $pastLoans->links() }}
+                    </div>
+                @endif
             </div>
 
         </div>

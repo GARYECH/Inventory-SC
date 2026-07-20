@@ -11,19 +11,31 @@ return new class extends Migration
      */
 public function up(): void
 {
-Schema::create('orders', function (Blueprint $table) {
-    $table->id();
-    $table->string('order_number')->unique(); // Remove nullable, we'll generate it on store
-    $table->foreignId('user_id')->constrained()->onDelete('cascade');
-    $table->foreignId('item_id')->constrained()->onDelete('cascade');
-    $table->integer('quantity')->default(1);
-    $table->decimal('total_price', 10, 2)->default(0); 
-    $table->enum('status', ['Pending', 'Approved', 'Borrowed', 'Returned', 'Cancelled'])->default('Pending');
-    $table->date('start_date');
-    $table->date('end_date');
-    $table->text('admin_notes')->nullable();
-    $table->timestamps();
-});
+    Schema::create('orders', function (Blueprint $table) {
+        $table->id();
+        $table->string('order_number')->unique();
+        $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+        
+        // Data Birokrasi
+        $table->string('phone_number');
+        $table->string('proker_name');
+        $table->string('department');
+        $table->string('treasurer_name');
+        
+     $table->enum('order_type', ['Internal Rental', 'Vendor Rental', 'Sale']);
+        
+        $table->date('start_date')->nullable(); 
+        $table->date('end_date')->nullable();   
+        
+        // Status & Dokumen
+        $table->string('status')->default('Pending SOP');
+        $table->boolean('is_sop_accepted')->default(false);
+        $table->string('mou_file_path')->nullable(); 
+        $table->string('invoice_file_path')->nullable(); 
+        $table->string('payment_proof_path')->nullable(); 
+        
+        $table->timestamps();
+    });
 }
     /**
      * Reverse the migrations.

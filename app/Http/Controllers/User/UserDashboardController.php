@@ -10,13 +10,17 @@ use Illuminate\Http\Request;
 class UserDashboardController extends Controller
 {
     /**
-     * Menampilkan katalog barang yang tersedia untuk disewa.
+     * 🛒 Menampilkan katalog barang (Dengan 3 Jalur Navigasi)
      */
     public function index(Request $request)
     {
         $search = $request->input('search');
+        
+        // 🌟 TIGA JALUR NAVIGASI: Default ke Internal Rental jika tidak ada filter
+        $type = $request->input('type', 'Internal Rental'); 
 
         $items = Item::where('condition_status', 'Good')
+            ->where('transaction_type', $type) // 🔒 Filter ketat sesuai tab yang dipilih
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -27,36 +31,31 @@ class UserDashboardController extends Controller
             ->paginate(8)
             ->withQueryString();
         
-        return view('user.dashboard', compact('items'));
+        // Cek isi keranjang saat ini untuk memunculkan notifikasi angka
+        $cartCount = count(session()->get('cart', []));
+        
+        return view('user.dashboard', compact('items', 'type', 'cartCount'));
     }
 
     /**
-     * Menampilkan daftar pinjaman aktif dan riwayat masa lalu secara terpisah.
+     * 📜 Menampilkan riwayat transaksi mahasiswa
      */
     public function loans()
     {
-        $today = now()->toDateString();
-
-        // 1. ACTIVE LOANS: Hanya yang sedang berjalan atau akan datang (PENTING!)
+        // 1. ACTIVE ORDERS: Semua kuitansi yang belum dikembalikan/dibatalkan
         $activeLoans = Order::where('user_id', auth()->id())
-            ->where('end_date', '>=', $today) 
-            ->whereIn('status', ['Pending', 'Approved', 'Borrowed'])
-            ->with('item')
+            ->whereNotIn('status', [Order::STATUS_RETURNED, Order::STATUS_CANCELLED])
+            ->with('orderItems.item') // 🌟 MENGGUNAKAN RELASI BARU
             ->latest()
             ->get();
 
-        // 2. PAST HISTORY: Untuk arsip mahasiswa (Hanya tampilkan jika sudah selesai/lewat)
+        // 2. PAST HISTORY: Untuk arsip mahasiswa (Hanya Selesai / Batal)
         $pastLoans = Order::where('user_id', auth()->id())
-            ->where(function ($query) use ($today) {
-                $query->where('end_date', '<', $today)
-                      ->orWhere('status', 'Returned')
-                      ->orWhere('status', 'Cancelled');
-            })
-            ->with('item')
+            ->whereIn('status', [Order::STATUS_RETURNED, Order::STATUS_CANCELLED])
+            ->with('orderItems.item') // 🌟 MENGGUNAKAN RELASI BARU
             ->latest()
             ->paginate(5);
 
-        // Kirim keduanya ke view
         return view('user.loans', compact('activeLoans', 'pastLoans'));
     }
 }

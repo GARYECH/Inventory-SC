@@ -3,7 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminItemController;
 use App\Http\Controllers\User\UserDashboardController;
-use App\Http\Controllers\User\RentalController;
+use App\Http\Controllers\User\CartController;
+use App\Http\Controllers\User\DocumentController; // 🌟 INI TAMBAHAN BARU UNTUK PDF
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,10 +49,8 @@ Route::middleware('auth')->group(function () {
     */
     Route::prefix('admin')->name('admin.')->group(function () {
         
-        // Gunakan satu pintu masuk utama untuk dashboard
         Route::get('/dashboard', [AdminItemController::class, 'index'])->name('dashboard');
 
-        // Explicitly define inventory routes instead of resource (agar gampang di-click)
         Route::get('/items', [AdminItemController::class, 'index'])->name('items.index');
         Route::get('/items/create', [AdminItemController::class, 'create'])->name('items.create');
         Route::post('/items', [AdminItemController::class, 'store'])->name('items.store');
@@ -59,11 +58,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/items/{item}', [AdminItemController::class, 'update'])->name('items.update');
         Route::delete('/items/{item}', [AdminItemController::class, 'destroy'])->name('items.destroy');
 
-        // Order & Approval Logic
         Route::get('/orders', [AdminItemController::class, 'orders'])->name('orders');
         Route::patch('/orders/{order}/status', [AdminItemController::class, 'updateStatus'])->name('orders.update');  
         
-        // Export Feature
         Route::get('/orders/export', [AdminItemController::class, 'exportExcel'])->name('orders.export');
     });
 
@@ -71,7 +68,6 @@ Route::middleware('auth')->group(function () {
     |----------------------------------------------------------------------
     | 👤 STUDENT SECTION
     |----------------------------------------------------------------------
-    | All routes here are prefixed with /student and named student.something
     */
     Route::prefix('student')->name('student.')->group(function () {
         
@@ -79,13 +75,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
         Route::get('/loans', [UserDashboardController::class, 'loans'])->name('loans');
         
-        // 2. The Elite Booking Flow
-        // create: Shows the transparency/booking page
-        // store: Processes the reservation with date validation
-        Route::get('/rent/{item}', [RentalController::class, 'create'])->name('rent.create');
-        Route::post('/rent/{item}', [RentalController::class, 'store'])->name('rent.store');
+        // 2. 🛒 The New Enterprise Cart System
+        Route::prefix('cart')->name('cart.')->group(function () {
+            Route::get('/', [CartController::class, 'viewCart'])->name('index');
+            Route::post('/add/{item}', [CartController::class, 'addToCart'])->name('add');
+            Route::post('/clear', [CartController::class, 'clearCart'])->name('clear');
+            Route::post('/checkout', [CartController::class, 'processCheckout'])->name('checkout');
+        });
 
-        Route::patch('/rent/cancel/{order}', [RentalController::class, 'cancel'])->name('rent.cancel');
+        // 3. 📄 PDF & Document Generator (RUANG CETAK SURAT)
+        Route::prefix('document')->name('document.')->group(function () {
+            Route::get('/mou/{order}', [DocumentController::class, 'downloadMou'])->name('mou');
+            Route::get('/invoice/{order}', [DocumentController::class, 'downloadInvoice'])->name('invoice');
+        });
     });
 });
 

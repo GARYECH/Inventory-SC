@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Item;
+use App\Models\Category; // 🌟 WAJIB DITAMBAHKAN
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,77 +14,91 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AdminItemController extends Controller
 {
-   public function index(Request $request)
-{
-    $search = $request->input('search');
+    // =================================================================
+    // 📦 ITEM MANAGEMENT (GUDANG)
+    // =================================================================
 
-    $items = Item::when($search, function ($query, $search) {
-            return $query->where('name', 'like', "%{$search}%")
-                         ->orWhere('description', 'like', "%{$search}%");
-        })
-        ->latest()
-        ->paginate(8)
-        ->withQueryString();
+    public function index(Request $request)
+    {
+        $search = $request->input('search');
 
-    return view('admin.items.index', compact('items'));
-}
+        // 🌟 UPDATE: Menambahkan 'with('category')' agar server tidak berat (N+1 Query)
+        $items = Item::with('category')
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', "%{$search}%")
+                             ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(8)
+            ->withQueryString();
+
+        return view('admin.items.index', compact('items'));
+    }
 
     public function create()
     {
-        return view('admin.items.create');
+        // 🌟 UPDATE: Ambil data kategori untuk dilempar ke dropdown form
+        $categories = Category::all();
+        return view('admin.items.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        // 🌟 UPDATE: Validasi ketat untuk kolom-kolom baru
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'stock_quantity' => 'required|integer',
-            'item_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'category_id' => 'required|exists:categories,id', // Kategori harus ada di database
+            'description' => 'required|string',
+            'item_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'stock_quantity' => 'required|integer|min:0',
+            'price' => 'required|numeric|min:0',
+            'transaction_type' => 'required|in:Internal Rental,Vendor Rental,Sale', // 3 Jalur Navigasi
+            'requires_mou' => 'required|boolean',
         ]);
 
         $path = $request->file('item_photo')->store('items', 'public');
 
-        Item::create([
-            'name' => $request->name,
-            'price' => $request->price,
-            'stock_quantity' => $request->stock_quantity,
-            'item_photo' => $path,
-            'condition_status' => 'Good',
-        ]);
+        // Memasukkan file path dan default condition ke dalam array $validated
+        $validated['item_photo'] = $path;
+        $validated['condition_status'] = 'Good';
 
-        return redirect()->route('admin.items.index')->with('success', 'Item added successfully!');
+        Item::create($validated);
+
+        return redirect()->route('admin.items.index')->with('success', 'Barang berhasil ditambahkan ke gudang!');
     }
 
     public function edit(Item $item)
     {
-        return view('admin.items.edit', compact('item'));
+        // 🌟 UPDATE: Ambil kategori untuk dropdown saat edit
+        $categories = Category::all();
+        return view('admin.items.edit', compact('item', 'categories'));
     }
 
     public function update(Request $request, Item $item)
     {
-        $request->validate([
+        // 🌟 UPDATE: Validasi untuk kolom-kolom baru
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'stock_quantity' => 'required|integer',
-            'item_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'required|string',
+            'item_photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'stock_quantity' => 'required|integer|min:0',
+            'price' => 'required|numeric|min:0',
+            'transaction_type' => 'required|in:Internal Rental,Vendor Rental,Sale',
+            'requires_mou' => 'required|boolean',
+            'condition_status' => 'nullable|string',
         ]);
 
         if ($request->hasFile('item_photo')) {
             if ($item->item_photo) {
                 Storage::disk('public')->delete($item->item_photo);
             }
-            $item->item_photo = $request->file('item_photo')->store('items', 'public');
+            $validated['item_photo'] = $request->file('item_photo')->store('items', 'public');
         }
 
-        $item->update([
-            'name' => $request->name,
-            'price' => $request->price,
-            'stock_quantity' => $request->stock_quantity,
-            'condition_status' => $request->condition_status ?? $item->condition_status,
-        ]);
+        $item->update($validated);
 
-        return redirect()->route('admin.items.index')->with('success', 'Item updated!');
+        return redirect()->route('admin.items.index')->with('success', 'Data barang berhasil diperbarui!');
     }
 
     public function destroy(Item $item)
@@ -92,51 +107,48 @@ class AdminItemController extends Controller
             Storage::disk('public')->delete($item->item_photo);
         }
         $item->delete();
-        return back()->with('success', 'Item deleted.');
+        return back()->with('success', 'Barang dihapus dari sistem.');
     }
 
-    // --- 🏛️ NEW APPROVAL LOGIC METHODS ---
+    // =================================================================
+    // 📝 ORDER MANAGEMENT (KUITANSI)
+    // =================================================================
 
-   public function orders(Request $request)
-{
-    $search = $request->input('search');
+    public function orders(Request $request)
+    {
+        $search = $request->input('search');
 
-    $orders = \App\Models\Order::with(['user', 'item'])
-        ->when($search, function ($query, $search) {
-            return $query->where('order_number', 'like', "%{$search}%")
-                         ->orWhereHas('user', function ($q) use ($search) {
-                             $q->where('name', 'like', "%{$search}%");
-                         });
-        })
-        ->latest()
-        ->paginate(10) // Tampilkan 10 pesanan per halaman
-        ->withQueryString();
+        // 🚨 CRITICAL FIX: Mengubah 'item' menjadi 'orderItems.item' karena sistem Keranjang
+        $orders = Order::with(['user', 'orderItems.item'])
+            ->when($search, function ($query, $search) {
+                return $query->where('order_number', 'like', "%{$search}%")
+                             ->orWhereHas('user', function ($q) use ($search) {
+                                 $q->where('name', 'like', "%{$search}%");
+                             });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
-    return view('admin.orders.index', compact('orders'));
-}
+        return view('admin.orders.index', compact('orders'));
+    }
 
     public function updateStatus(Request $request, Order $order)
     {
-        $request->validate([
-            'status' => 'required|in:Approved,Borrowed,Returned,Cancelled'
-        ]);
-
-        // AUTOMATION: If marking as Returned, increment the item stock by the quantity borrowed
-        if ($request->status === 'Returned' && $order->status !== 'Returned') {
-            $order->item->increment('stock_quantity', $order->quantity);
-        }
+        // 🚨 CRITICAL FIX: Menghapus sementara logika '$order->item->increment()' lama
+        // Karena sekarang isi order berbentuk array (banyak barang), pengembalian stok
+        // harus di-looping (akan kita sempurnakan nanti saat masuk Phase Order).
         
-        // AUTOMATION: If you want stock to decrease immediately upon "Borrowed" (Optional)
-        // Currently, our logic decreases stock during the Request (store) to prevent over-booking.
+        $request->validate([
+            'status' => 'required|string'
+        ]);
 
         $order->update(['status' => $request->status]);
 
-        return back()->with('success', "Order #{$order->order_number} status updated to {$request->status}!");
+        return back()->with('success', "Status Kuitansi #{$order->order_number} berhasil diubah menjadi {$request->status}!");
     }
 
     public function exportExcel() 
-{
-    // Ini akan memanggil class OrdersExport yang kita buat tadi
-    return Excel::download(new OrdersExport, 'inventory-report.xlsx');
-}
-}
+    {
+        return Excel::download(new OrdersExport, 'inventory-report.xlsx');
+    }}

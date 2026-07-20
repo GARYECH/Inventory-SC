@@ -1,70 +1,135 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Rental Request Management') }}</h2>
-            <div class="flex items-center space-x-3">
-                <form action="{{ route('admin.orders') }}" method="GET" class="relative">
-                    <input type="text" name="search" placeholder="Search student/order..." class="pl-10 pr-4 py-2 border-gray-200 rounded-lg text-xs focus:ring-indigo-500 w-64" value="{{ request('search') }}">
-                    <div class="absolute left-3 top-2.5 text-gray-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    </div>
-                </form>
-                <a href="{{ route('admin.orders.export') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition">Export Excel</a>
-            </div>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Order Management (Ruang Tunggu Admin)') }}
+            </h2>
+            <a href="{{ route('admin.orders.export') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow text-sm flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Export Excel
+            </a>
         </div>
     </x-slot>
 
-    <div class="py-12 text-sm">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow-sm sm:rounded-2xl border border-gray-100 overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-50 border-b border-gray-100 font-bold text-gray-500 uppercase text-[10px] tracking-widest">
-                            <th class="p-4">Order Ref.</th>
-                            <th class="p-4">Student Info</th>
-                            <th class="p-4">Item & Qty</th>
-                            <th class="p-4">Rental Period</th>
-                            <th class="p-4 text-center">Status</th>
-                            <th class="p-4 text-right">Workflow</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        @foreach($orders as $order)
-                        <tr class="hover:bg-gray-50/50 transition">
-                            <td class="p-4 font-mono text-indigo-600 font-bold">{{ $order->order_number }}</td>
-                            <td class="p-4"><span class="font-bold text-gray-900">{{ $order->user->name }}</span><br><span class="text-[10px] text-gray-400">{{ $order->user->email }}</span></td>
-                            <td class="p-4"><span class="font-bold text-gray-700">{{ $order->item->name }}</span> ({{ $order->quantity }}x)</td>
-                            <td class="p-4">{{ \Carbon\Carbon::parse($order->start_date)->format('d M') }} - {{ \Carbon\Carbon::parse($order->end_date)->format('d M Y') }}</td>
-                            <td class="p-4 text-center">
-                                <span class="px-2 py-1 rounded text-[10px] font-black uppercase border
-                                    {{ $order->status === 'Pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : '' }}
-                                    {{ $order->status === 'Approved' ? 'bg-blue-50 text-blue-600 border-blue-200' : '' }}
-                                    {{ $order->status === 'Borrowed' ? 'bg-purple-50 text-purple-600 border-purple-200' : '' }}
-                                    {{ $order->status === 'Returned' ? 'bg-green-50 text-green-600 border-green-200' : '' }}">
-                                    {{ $order->status }}
-                                </span>
-                            </td>
-                            <td class="p-4 text-right">
-                                <form action="{{ route('admin.orders.update', $order) }}" method="POST">
-                                    @csrf @method('PATCH')
-                                    @if($order->status === 'Pending')
-                                        <input type="hidden" name="status" value="Approved">
-                                        <button class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold">Approve</button>
-                                    @elseif($order->status === 'Approved')
-                                        <input type="hidden" name="status" value="Borrowed">
-                                        <button class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold">Hand Over</button>
-                                    @elseif($order->status === 'Borrowed')
-                                        <input type="hidden" name="status" value="Returned">
-                                        <button class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold animate-pulse">Mark Returned</button>
-                                    @endif
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                <div class="p-4">{{ $orders->links() }}</div>
+    <div class="py-8">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+            <!-- Search Bar -->
+            <div class="bg-white p-4 shadow-sm sm:rounded-xl border border-gray-100 flex justify-between items-center">
+                <form action="{{ route('admin.orders') }}" method="GET" class="w-full md:w-1/2 flex">
+                    <input type="text" name="search" placeholder="Cari No. Order atau Nama Mahasiswa..." value="{{ request('search') }}" class="w-full rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                    <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded-r-md hover:bg-gray-700 text-sm font-bold">Cari</button>
+                </form>
             </div>
+
+            <!-- Pesan Sukses -->
+            @if(session('success'))
+                <div class="p-4 bg-green-100 text-green-700 rounded-lg shadow-sm border-l-4 border-green-500 font-bold">
+                    ✅ {{ session('success') }}
+                </div>
+            @endif
+
+            <!-- Daftar Kuitansi -->
+            <div class="bg-white shadow-sm sm:rounded-xl border border-gray-100 overflow-hidden">
+                @if($orders->isEmpty())
+                    <div class="p-10 text-center text-gray-500">
+                        Belum ada kuitansi / order masuk.
+                    </div>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b">
+                                <tr>
+                                    <th class="px-4 py-4">Data Kuitansi</th>
+                                    <th class="px-4 py-4">Pemesan</th>
+                                    <th class="px-4 py-4">Rincian Keranjang</th>
+                                    <th class="px-4 py-4 text-center">Status & Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($orders as $order)
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <!-- Kolom 1: Data Kuitansi -->
+                                        <td class="px-4 py-4 align-top">
+                                            <div class="font-black text-indigo-600 text-base mb-1">{{ $order->order_number }}</div>
+                                            <span class="inline-block px-2 py-1 bg-gray-200 text-gray-700 text-[10px] font-bold rounded uppercase">{{ $order->order_type }}</span>
+                                            
+                                            @if($order->order_type !== 'Sale')
+                                                <div class="mt-2 text-xs font-bold text-blue-600">
+                                                    🗓️ {{ $order->start_date->format('d M') }} - {{ $order->end_date->format('d M') }}
+                                                </div>
+                                            @endif
+                                            <div class="mt-2 text-xs font-black text-gray-900">
+                                                Total: Rp {{ number_format($order->total_price, 0, ',', '.') }}
+                                            </div>
+                                        </td>
+
+                                        <!-- Kolom 2: Pemesan -->
+                                        <td class="px-4 py-4 align-top">
+                                            <div class="font-bold text-gray-900">{{ $order->user->name }}</div>
+                                            <div class="text-xs text-gray-500 mt-1">Proker: <strong>{{ $order->proker_name }}</strong></div>
+                                            <div class="text-xs text-gray-500">Dept: {{ $order->department }}</div>
+                                            <div class="text-xs text-gray-500">WA: {{ $order->phone_number }}</div>
+                                        </td>
+
+                                        <!-- Kolom 3: Rincian Keranjang -->
+                                        <td class="px-4 py-4 align-top">
+                                            <ul class="space-y-1">
+                                                @foreach($order->orderItems as $item)
+                                                    <li class="text-xs flex justify-between bg-white p-1 border rounded shadow-sm">
+                                                        <span class="font-semibold">{{ $item->item->name }}</span>
+                                                        <span class="text-gray-500 font-bold ml-4">x{{ $item->quantity }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </td>
+
+                                        <!-- Kolom 4: The Workflow Control -->
+                                        <td class="px-4 py-4 align-top text-center bg-gray-50/50">
+                                            <span class="inline-block w-full px-3 py-2 rounded text-xs font-bold uppercase tracking-wider border mb-3
+                                                {{ $order->status === 'Pending Admin Review' ? 'bg-red-100 text-red-800 border-red-200' : '' }}
+                                                {{ $order->status === 'Waiting for MoU' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : '' }}
+                                                {{ $order->status === 'Ready for Handover' ? 'bg-blue-100 text-blue-800 border-blue-200' : '' }}
+                                                {{ $order->status === 'Returned' || $order->status === 'Paid' ? 'bg-green-100 text-green-800 border-green-200' : '' }}
+                                                {{ $order->status === 'Cancelled' ? 'bg-gray-200 text-gray-500 border-gray-300' : '' }}
+                                            ">
+                                                {{ $order->status }}
+                                            </span>
+
+                                            <!-- Form Ubah Status Manual (Admin Control) -->
+                                            @if($order->status !== 'Returned' && $order->status !== 'Cancelled')
+                                                <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="flex flex-col space-y-2">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    
+                                                    <select name="status" class="text-xs rounded border-gray-300 shadow-sm focus:ring-indigo-500 py-1" required>
+                                                        <option value="" disabled selected>-- Ubah Status --</option>
+                                                        <option value="Waiting for MoU">Approve & Tunggu MoU</option>
+                                                        <option value="Waiting for Payment">Approve & Tunggu Bayar</option>
+                                                        <option value="Ready for Handover">Siap Diambil (Ready)</option>
+                                                        <option value="Handed Over">Barang Sedang Dipinjam</option>
+                                                        <option value="Paid">Lunas (Paid)</option>
+                                                        <option value="Returned">Barang Dikembalikan</option>
+                                                        <option value="Cancelled">Tolak / Cancel</option>
+                                                    </select>
+                                                    
+                                                    <button type="submit" class="w-full bg-gray-800 text-white text-[10px] font-bold py-1.5 rounded uppercase hover:bg-gray-700 transition">
+                                                        Update Status
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-4 border-t">
+                        {{ $orders->links() }}
+                    </div>
+                @endif
+            </div>
+
         </div>
     </div>
 </x-app-layout>

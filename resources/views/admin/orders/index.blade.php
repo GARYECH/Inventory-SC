@@ -1,133 +1,197 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Order Management (Ruang Tunggu Admin)') }}
-            </h2>
-            <a href="{{ route('admin.orders.export') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow text-sm flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                Export Excel
-            </a>
-        </div>
-    </x-slot>
+    <div class="min-h-screen bg-[#f8f9fa] pb-12">
+        
+        <!-- 🌟 SLEEK HEADER STICKY 🌟 -->
+        <div class="bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-40 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 rotate-3 hover:rotate-0 transition-all duration-300">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-black text-gray-900 tracking-tight leading-none">Order Management</h1>
+                            <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.2em] mt-1.5">SC Return & Approval Hub</p>
+                        </div>
+                    </div>
 
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-
-            <!-- Search Bar -->
-            <div class="bg-white p-4 shadow-sm sm:rounded-xl border border-gray-100 flex justify-between items-center">
-                <form action="{{ route('admin.orders') }}" method="GET" class="w-full md:w-1/2 flex">
-                    <input type="text" name="search" placeholder="Cari No. Order atau Nama Mahasiswa..." value="{{ request('search') }}" class="w-full rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
-                    <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded-r-md hover:bg-gray-700 text-sm font-bold">Cari</button>
-                </form>
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <form action="{{ route('admin.orders') }}" method="GET" class="relative group w-full md:w-80">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+                            <input type="text" name="search" placeholder="Cari No. Order / Mahasiswa..." value="{{ request('search') }}" 
+                                class="block w-full pl-11 pr-4 py-3 bg-gray-100/50 border-transparent rounded-2xl text-sm font-semibold text-gray-700 placeholder-gray-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300">
+                        </form>
+                        
+                        <a href="{{ route('admin.orders.export') }}" class="relative inline-flex items-center justify-center px-6 py-3 text-xs font-black text-emerald-700 uppercase tracking-widest transition-all duration-300 bg-emerald-100 rounded-2xl hover:bg-emerald-500 hover:text-white hover:shadow-xl hover:shadow-emerald-200 active:scale-95 whitespace-nowrap overflow-hidden group shrink-0 border border-emerald-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Export Excel
+                        </a>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <!-- Pesan Sukses -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+            
             @if(session('success'))
-                <div class="p-4 bg-green-100 text-green-700 rounded-lg shadow-sm border-l-4 border-green-500 font-bold">
-                    ✅ {{ session('success') }}
+                <div class="mb-8 px-6 py-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4 shadow-sm">
+                    <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 shadow-lg shadow-emerald-200">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <p class="text-sm font-bold text-emerald-800">{{ session('success') }}</p>
                 </div>
             @endif
 
-            <!-- Daftar Kuitansi -->
-            <div class="bg-white shadow-sm sm:rounded-xl border border-gray-100 overflow-hidden">
-                @if($orders->isEmpty())
-                    <div class="p-10 text-center text-gray-500">
-                        Belum ada kuitansi / order masuk.
-                    </div>
-                @else
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-600">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b">
-                                <tr>
-                                    <th class="px-4 py-4">Data Kuitansi</th>
-                                    <th class="px-4 py-4">Pemesan</th>
-                                    <th class="px-4 py-4">Rincian Keranjang</th>
-                                    <th class="px-4 py-4 text-center">Status & Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach($orders as $order)
-                                    <tr class="hover:bg-gray-50 transition">
-                                        <!-- Kolom 1: Data Kuitansi -->
-                                        <td class="px-4 py-4 align-top">
-                                            <div class="font-black text-indigo-600 text-base mb-1">{{ $order->order_number }}</div>
-                                            <span class="inline-block px-2 py-1 bg-gray-200 text-gray-700 text-[10px] font-bold rounded uppercase">{{ $order->order_type }}</span>
-                                            
-                                            @if($order->order_type !== 'Sale')
-                                                <div class="mt-2 text-xs font-bold text-blue-600">
-                                                    🗓️ {{ $order->start_date->format('d M') }} - {{ $order->end_date->format('d M') }}
-                                                </div>
-                                            @endif
-                                            <div class="mt-2 text-xs font-black text-gray-900">
-                                                Total: Rp {{ number_format($order->total_price, 0, ',', '.') }}
+            <!-- 📋 ORDER LIST -->
+            <div class="space-y-6">
+                @forelse($orders as $order)
+                    @php
+                        // Logika Warna Status
+                        $statusColors = [
+                            'Pending' => 'bg-amber-100 text-amber-800 border-amber-200',
+                            'Approved' => 'bg-blue-100 text-blue-800 border-blue-200',
+                            'Waiting for MoU' => 'bg-purple-100 text-purple-800 border-purple-200',
+                            'Paid' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                            'Handed Over' => 'bg-teal-100 text-teal-800 border-teal-200',
+                            'Returned' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                            'Rejected' => 'bg-red-100 text-red-800 border-red-200',
+                            'Cancelled' => 'bg-gray-100 text-gray-800 border-gray-200',
+                        ];
+                        $badgeClass = $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
+                        
+                        // Cek apakah order ini butuh MoU
+                        $requiresMou = $order->orderItems->contains(function($detail) {
+                            return $detail->item->requires_mou;
+                        });
+                    @endphp
+
+                    <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 p-6 flex flex-col xl:flex-row gap-6">
+                        
+                        <!-- Kolom 1: Info Mahasiswa & Proker -->
+                        <div class="xl:w-1/3 border-b xl:border-b-0 xl:border-r border-gray-100 pb-6 xl:pb-0 xl:pr-6 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border {{ $badgeClass }}">
+                                        {{ $order->status }}
+                                    </span>
+                                    <span class="text-xs font-bold text-gray-400">{{ $order->created_at->format('d M Y') }}</span>
+                                </div>
+                                <h3 class="text-xl font-black text-gray-900 leading-tight mb-1">{{ $order->order_number }}</h3>
+                                <p class="text-sm font-bold text-indigo-600">{{ $order->user->name }}</p>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gray-50 grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Proker/Event</p>
+                                    <p class="text-xs font-bold text-gray-800">{{ $order->proker_name }} ({{ $order->department }})</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">WhatsApp</p>
+                                    <p class="text-xs font-bold text-gray-800">{{ $order->phone_number }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kolom 2: Rincian Barang -->
+                        <div class="xl:w-1/3 border-b xl:border-b-0 xl:border-r border-gray-100 pb-6 xl:pb-0 xl:pr-6">
+                            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-3">Item Details</p>
+                            <div class="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                @foreach($order->orderItems as $detail)
+                                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-white rounded-lg border border-gray-200 overflow-hidden shrink-0">
+                                                @if($detail->item->item_photo)
+                                                    <img src="{{ asset('storage/' . $detail->item->item_photo) }}" class="w-full h-full object-cover">
+                                                @endif
                                             </div>
-                                        </td>
-
-                                        <!-- Kolom 2: Pemesan -->
-                                        <td class="px-4 py-4 align-top">
-                                            <div class="font-bold text-gray-900">{{ $order->user->name }}</div>
-                                            <div class="text-xs text-gray-500 mt-1">Proker: <strong>{{ $order->proker_name }}</strong></div>
-                                            <div class="text-xs text-gray-500">Dept: {{ $order->department }}</div>
-                                            <div class="text-xs text-gray-500">WA: {{ $order->phone_number }}</div>
-                                        </td>
-
-                                        <!-- Kolom 3: Rincian Keranjang -->
-                                        <td class="px-4 py-4 align-top">
-                                            <ul class="space-y-1">
-                                                @foreach($order->orderItems as $item)
-                                                    <li class="text-xs flex justify-between bg-white p-1 border rounded shadow-sm">
-                                                        <span class="font-semibold">{{ $item->item->name }}</span>
-                                                        <span class="text-gray-500 font-bold ml-4">x{{ $item->quantity }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </td>
-
-                                        <!-- Kolom 4: The Workflow Control -->
-                                        <td class="px-4 py-4 align-top text-center bg-gray-50/50">
-                                            <span class="inline-block w-full px-3 py-2 rounded text-xs font-bold uppercase tracking-wider border mb-3
-                                                {{ $order->status === 'Pending Admin Review' ? 'bg-red-100 text-red-800 border-red-200' : '' }}
-                                                {{ $order->status === 'Waiting for MoU' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : '' }}
-                                                {{ $order->status === 'Ready for Handover' ? 'bg-blue-100 text-blue-800 border-blue-200' : '' }}
-                                                {{ $order->status === 'Returned' || $order->status === 'Paid' ? 'bg-green-100 text-green-800 border-green-200' : '' }}
-                                                {{ $order->status === 'Cancelled' ? 'bg-gray-200 text-gray-500 border-gray-300' : '' }}
-                                            ">
-                                                {{ $order->status }}
-                                            </span>
-
-                                            <!-- Form Ubah Status Manual (Admin Control) -->
-                                            @if($order->status !== 'Returned' && $order->status !== 'Cancelled')
-                                                <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="flex flex-col space-y-2">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    
-                                                    <select name="status" class="text-xs rounded border-gray-300 shadow-sm focus:ring-indigo-500 py-1" required>
-                                                        <option value="" disabled selected>-- Ubah Status --</option>
-                                                        <option value="Waiting for MoU">Approve & Tunggu MoU</option>
-                                                        <option value="Waiting for Payment">Approve & Tunggu Bayar</option>
-                                                        <option value="Ready for Handover">Siap Diambil (Ready)</option>
-                                                        <option value="Handed Over">Barang Sedang Dipinjam</option>
-                                                        <option value="Paid">Lunas (Paid)</option>
-                                                        <option value="Returned">Barang Dikembalikan</option>
-                                                        <option value="Cancelled">Tolak / Cancel</option>
-                                                    </select>
-                                                    
-                                                    <button type="submit" class="w-full bg-gray-800 text-white text-[10px] font-bold py-1.5 rounded uppercase hover:bg-gray-700 transition">
-                                                        Update Status
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </td>
-                                    </tr>
+                                            <div>
+                                                <p class="text-xs font-bold text-gray-900 leading-tight">{{ $detail->item->name }}</p>
+                                                <p class="text-[9px] font-bold text-gray-500 uppercase">{{ $detail->item->transaction_type }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-xs font-black text-gray-900">x{{ $detail->quantity }}</p>
+                                        </div>
+                                    </div>
                                 @endforeach
-                            </tbody>
-                        </table>
+                            </div>
+                            
+                            <div class="mt-4 flex justify-between items-center">
+                                <div>
+                                    <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Jadwal Pinjam</p>
+                                    @if($order->start_date && $order->end_date && $order->start_date != $order->end_date)
+                                        <p class="text-xs font-bold text-gray-800">{{ \Carbon\Carbon::parse($order->start_date)->format('d/m/y') }} - {{ \Carbon\Carbon::parse($order->end_date)->format('d/m/y') }}</p>
+                                    @else
+                                        <p class="text-xs font-bold text-emerald-600">Beli Putus (Merchandise)</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kolom 3: Aksi & Total Harga -->
+                        <div class="xl:w-1/3 flex flex-col justify-between">
+                            <div class="bg-gray-900 p-5 rounded-2xl text-white mb-4">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Grand Total</p>
+                                <h4 class="text-2xl font-black text-white">Rp {{ number_format($order->total_price, 0, ',', '.') }}</h4>
+                            </div>
+
+                            <div class="space-y-3">
+                                <!-- Print Documents (Admin juga bisa print PDF-nya) -->
+                                <div class="flex gap-2">
+                                    <a target="_blank" href="{{ route('student.document.invoice', $order->id) }}" class="flex-1 bg-white border border-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl text-center hover:bg-gray-50 hover:text-indigo-600 transition-all flex justify-center items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        Invoice
+                                    </a>
+                                    
+                                    @if($requiresMou)
+                                    <a target="_blank" href="{{ route('student.document.mou', $order->id) }}" class="flex-1 bg-white border border-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl text-center hover:bg-gray-50 hover:text-indigo-600 transition-all flex justify-center items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        MoU
+                                    </a>
+                                    @endif
+                                </div>
+
+                                <!-- Update Status Form -->
+                                <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="flex gap-2">
+                                    @csrf 
+                                    @method('PATCH')
+                                    <select name="status" class="flex-grow px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs font-bold text-gray-800 appearance-none cursor-pointer">
+                                        <option value="Pending" {{ $order->status == 'Pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="Approved" {{ $order->status == 'Approved' ? 'selected' : '' }}>Approved</option>
+                                        <option value="Waiting for MoU" {{ $order->status == 'Waiting for MoU' ? 'selected' : '' }}>Waiting for MoU</option>
+                                        <option value="Paid" {{ $order->status == 'Paid' ? 'selected' : '' }}>Paid</option>
+                                        <option value="Handed Over" {{ $order->status == 'Handed Over' ? 'selected' : '' }}>Handed Over (Diambil)</option>
+                                        <option value="Returned" {{ $order->status == 'Returned' ? 'selected' : '' }}>Returned (Selesai)</option>
+                                        <option value="Rejected" {{ $order->status == 'Rejected' ? 'selected' : '' }}>Rejected</option>
+                                        <option value="Cancelled" {{ $order->status == 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                    </select>
+                                    <button type="submit" class="bg-indigo-600 text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition shadow-md shadow-indigo-200">
+                                        Update
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
                     </div>
-                    <div class="p-4 border-t">
-                        {{ $orders->links() }}
+                @empty
+                    <div class="text-center py-32">
+                        <div class="w-24 h-24 bg-white border border-gray-100 shadow-sm rounded-[2rem] rotate-12 flex items-center justify-center mx-auto mb-6 text-gray-300">
+                            <svg class="w-12 h-12 -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-black text-gray-900 mb-2 tracking-tight">Belum Ada Transaksi</h3>
+                        <p class="text-gray-400 font-bold text-sm">Gudang sedang sepi, bos. Tunggu mahasiswa order ya!</p>
                     </div>
-                @endif
+                @endforelse
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-8 flex justify-center">
+                <div class="bg-white px-2 py-1 rounded-2xl shadow-sm border border-gray-100">
+                    {{ $orders->links() }}
+                </div>
             </div>
 
         </div>

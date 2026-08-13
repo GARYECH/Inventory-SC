@@ -13,8 +13,12 @@
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                             {{ __('Admin Dashboard') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('admin.items.index')" :active="request()->routeIs('items.*')">
+                        <x-nav-link :href="route('admin.items.index')" :active="request()->routeIs('admin.items.*')">
                             {{ __('Manage Inventory') }}
+                        </x-nav-link>
+                        <!-- 🌟 MENU KATEGORI DITAMBAHKAN DI SINI 🌟 -->
+                        <x-nav-link :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')">
+                            {{ __('Manage Categories') }}
                         </x-nav-link>
                         <x-nav-link :href="route('admin.orders')" :active="request()->routeIs('admin.orders')">
                             {{ __('Confirm Returns') }}
@@ -71,8 +75,15 @@
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                     {{ __('Admin Dashboard') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.items.index')" :active="request()->routeIs('items.*')">
+                <x-responsive-nav-link :href="route('admin.items.index')" :active="request()->routeIs('admin.items.*')">
                     {{ __('Manage Inventory') }}
+                </x-responsive-nav-link>
+                <!-- 🌟 MENU KATEGORI HP DITAMBAHKAN DI SINI 🌟 -->
+                <x-responsive-nav-link :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')">
+                    {{ __('Manage Categories') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.orders')" :active="request()->routeIs('admin.orders')">
+                    {{ __('Confirm Returns') }}
                 </x-responsive-nav-link>
             @else
                 <x-responsive-nav-link :href="route('student.dashboard')" :active="request()->routeIs('student.dashboard')">

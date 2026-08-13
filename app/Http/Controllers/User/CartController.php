@@ -18,7 +18,7 @@ class CartController extends Controller
     public function viewCart()
     {
         $cart = session()->get('cart', []);
-        return view('user.cart', compact('cart')); // (Kita buat view-nya nanti)
+        return view('user.cart', compact('cart'));
     }
 
     public function addToCart(Request $request, Item $item)
@@ -26,7 +26,6 @@ class CartController extends Controller
         $cart = session()->get('cart', []);
 
         // 🚨 LOGIKA SEGREGASI (Pemisah Jalur) 🚨
-        // Jika keranjang tidak kosong, cek apakah tipe transaksinya sama!
         if (count($cart) > 0) {
             $firstItem = reset($cart);
             if ($firstItem['transaction_type'] !== $item->transaction_type) {
@@ -67,7 +66,7 @@ class CartController extends Controller
             return back()->with('error', 'Keranjangmu kosong!');
         }
 
-        // Validasi form dari mahasiswa (termasuk centang SOP)
+        // Validasi form dari mahasiswa
         $request->validate([
             'phone_number' => 'required|string',
             'proker_name' => 'required|string',
@@ -75,16 +74,21 @@ class CartController extends Controller
             'treasurer_name' => 'required|string',
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'is_sop_accepted' => 'required|accepted', // 🚨 INI WAJIB DICENTANG!
+            'is_sop_accepted' => 'required|accepted',
         ], [
             'is_sop_accepted.accepted' => 'Kamu HARUS mencentang persetujuan SOP/Terms & Conditions sebelum checkout!'
         ]);
 
-        // Ambil tipe transaksi dari barang pertama di keranjang
+        // Ambil tipe transaksi dari barang pertama
         $firstItem = reset($cart);
         $orderType = $firstItem['transaction_type'];
 
-        // Gunakan DB Transaction agar jika gagal di tengah jalan, data tidak acak-acakan
+        // 🌟 HITUNG TOTAL HARGA DULU SEBELUM BIKIN ORDER 🌟
+        $totalPrice = 0;
+        foreach ($cart as $item) {
+            $totalPrice += $item['price'] * $item['quantity'];
+        }
+
         DB::beginTransaction();
 
         try {
@@ -100,14 +104,12 @@ class CartController extends Controller
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'is_sop_accepted' => true,
-                
-                // 🚦 INI DIA! Langsung masuk "Ruang Tunggu Admin" sesuai mintamu
-                'status' => Order::STATUS_PENDING_REVIEW, 
+                'total_price' => $totalPrice, // 🌟 MASUKKAN TOTAL HARGA KE DATABASE
+                'status' => 'Pending',
             ]);
 
-            // 2. Pindahkan isi Session Keranjang ke tabel order_items di Database
+            // 2. Pindahkan isi Session Keranjang ke tabel order_items
             foreach ($cart as $item) {
-                // Logika Diskon BEM/Internal (Harga 0) bisa dimasukkan di sini jika mau
                 $subtotal = $item['price'] * $item['quantity'];
 
                 OrderItem::create([
@@ -123,8 +125,8 @@ class CartController extends Controller
 
             DB::commit();
 
-            // Lempar mahasiswa ke halaman detail pesanan mereka
-            return redirect()->route('user.orders.index')->with('success', 'Checkout berhasil! Kuitansimu sedang menunggu persetujuan (Approval) dari Admin.');
+            // 🌟 LEMPAR KE HALAMAN LOANS, BUKAN ORDERS.INDEX 🌟
+            return redirect()->route('student.loans')->with('success', 'Checkout berhasil! Kuitansimu sedang menunggu persetujuan (Approval) dari Admin.');
 
         } catch (\Exception $e) {
             DB::rollBack();

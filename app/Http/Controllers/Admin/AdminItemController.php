@@ -18,23 +18,36 @@ class AdminItemController extends Controller
     // 📦 ITEM MANAGEMENT (GUDANG)
     // =================================================================
 
-    public function index(Request $request)
+   public function index(Request $request)
     {
         $search = $request->input('search');
+        $type = $request->input('type'); // 🌟 Menangkap klik dari kartu
 
-        // 🌟 UPDATE: Menambahkan 'with('category')' agar server tidak berat (N+1 Query)
+        // 🌟 Menghitung total absolut untuk kartu (agar angkanya tidak hilang saat difilter)
+        $counts = [
+            'total' => Item::count(),
+            'internal' => Item::where('transaction_type', 'Internal Rental')->count(),
+            'external' => Item::where('transaction_type', 'Vendor Rental')->count(),
+            'merchandise' => Item::where('transaction_type', 'Sale')->count(),
+        ];
+
         $items = Item::with('category')
             ->when($search, function ($query, $search) {
-                return $query->where('name', 'like', "%{$search}%")
-                             ->orWhere('description', 'like', "%{$search}%");
+                return $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            })
+            // 🌟 Mengeksekusi filter berdasarkan tipe yang diklik
+            ->when($type, function ($query, $type) {
+                return $query->where('transaction_type', $type);
             })
             ->latest()
             ->paginate(8)
             ->withQueryString();
 
-        return view('admin.items.index', compact('items'));
+        return view('admin.items.index', compact('items', 'counts'));
     }
-
     public function create()
     {
         // 🌟 UPDATE: Ambil data kategori untuk dilempar ke dropdown form

@@ -2,9 +2,10 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminItemController;
+use App\Http\Controllers\Admin\CategoryController; // 🌟 INI TAMBAHAN UNTUK KATEGORI
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\User\CartController;
-use App\Http\Controllers\User\DocumentController; // 🌟 INI TAMBAHAN BARU UNTUK PDF
+use App\Http\Controllers\User\DocumentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -50,6 +51,9 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         
         Route::get('/dashboard', [AdminItemController::class, 'index'])->name('dashboard');
+
+        // 🌟 RUTE KELOLA KATEGORI BARU 
+        Route::resource('categories', CategoryController::class)->only(['index', 'store', 'destroy']);
 
         Route::get('/items', [AdminItemController::class, 'index'])->name('items.index');
         Route::get('/items/create', [AdminItemController::class, 'create'])->name('items.create');

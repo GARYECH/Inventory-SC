@@ -42,19 +42,19 @@ class UserDashboardController extends Controller
      */
     public function loans()
     {
-        // 1. ACTIVE ORDERS: Semua kuitansi yang belum dikembalikan/dibatalkan
+        // 1. ACTIVE ORDERS: Semua kuitansi yang aktif berjalan
         $activeLoans = Order::where('user_id', auth()->id())
-            ->whereNotIn('status', [Order::STATUS_RETURNED, Order::STATUS_CANCELLED])
-            ->with('orderItems.item') // 🌟 MENGGUNAKAN RELASI BARU
+            ->whereNotIn('status', ['Returned', 'Cancelled', 'Rejected'])
+            ->with('orderItems.item') 
             ->latest()
             ->get();
 
-        // 2. PAST HISTORY: Untuk arsip mahasiswa (Hanya Selesai / Batal)
+        // 2. PAST HISTORY: Untuk arsip mahasiswa (Selesai / Batal / Ditolak)
         $pastLoans = Order::where('user_id', auth()->id())
-            ->whereIn('status', [Order::STATUS_RETURNED, Order::STATUS_CANCELLED])
-            ->with('orderItems.item') // 🌟 MENGGUNAKAN RELASI BARU
+            ->whereIn('status', ['Returned', 'Cancelled', 'Rejected'])
+            ->with('orderItems.item')
             ->latest()
-            ->paginate(5);
+            ->paginate(5); // 🌟 Hapus get(), langsung paginate()
 
         return view('user.loans', compact('activeLoans', 'pastLoans'));
     }

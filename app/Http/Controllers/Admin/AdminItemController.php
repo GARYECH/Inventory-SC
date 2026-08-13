@@ -148,17 +148,50 @@ class AdminItemController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
-        // 🚨 CRITICAL FIX: Menghapus sementara logika '$order->item->increment()' lama
-        // Karena sekarang isi order berbentuk array (banyak barang), pengembalian stok
-        // harus di-looping (akan kita sempurnakan nanti saat masuk Phase Order).
-        
-        $request->validate([
-            'status' => 'required|string'
-        ]);
+        $request->validate(['status' => 'required|string']);
 
-        $order->update(['status' => $request->status]);
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
 
-        return back()->with('success', "Status Kuitansi #{$order->order_number} berhasil diubah menjadi {$request->status}!");
+        // Daftar status yang menandakan barang "kembali ke gudang"
+        $restockStatuses = ['Returned', 'Rejected', 'Cancelled'];
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $order->update(['status' => $newStatus]);
+
+            // 🌟 LOGIKA AUTO-RESTOCK 🌟
+            // Jika status baru adalah Kembali/Ditolak, DAN status lamanya BUKAN Kembali/Ditolak
+            if (in_array($newStatus, $restockStatuses) && !in_array($oldStatus, $restockStatuses)) {
+                foreach ($order->orderItems as $detail) {
+                    $item = \App\Models\Item::find($detail->item_id);
+                    if ($item) {
+                        $item->increment('stock_quantity', $detail->quantity);
+                    }
+                }
+            }
+            
+            // 🌟 LOGIKA TARIK STOK ULANG 🌟
+            // Jika Admin tidak sengaja pencet "Rejected", lalu diubah lagi jadi "Approved"
+            if (in_array($oldStatus, $restockStatuses) && !in_array($newStatus, $restockStatuses)) {
+                foreach ($order->orderItems as $detail) {
+                    $item = \App\Models\Item::lockForUpdate()->find($detail->item_id);
+                    if ($item) {
+                        if ($item->stock_quantity < $detail->quantity) {
+                            \Illuminate\Support\Facades\DB::rollBack();
+                            return back()->with('error', "Gagal mengubah status! Stok '{$item->name}' sudah dipinjam orang lain dan tidak cukup untuk ditarik kembali.");
+                        }
+                        $item->decrement('stock_quantity', $detail->quantity);
+                    }
+                }
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+            return back()->with('success', 'Status pesanan berhasil diperbarui!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function exportExcel() 

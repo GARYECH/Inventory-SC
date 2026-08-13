@@ -117,4 +117,30 @@ class RentalController extends Controller
             return back()->with('error', "Failed to cancel order. Please refresh and try again.");
         }
     }
+    
+    public function uploadSignedMou(Request $request, Order $order)
+    {
+        // Validasi file harus PDF atau gambar (foto) yang jelas
+        $request->validate([
+            'signed_mou' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Max 5MB
+        ]);
+
+        if ($request->hasFile('signed_mou')) {
+            $file = $request->file('signed_mou');
+            $filename = 'Signed_MoU_' . $order->order_number . '.' . $file->getClientOriginalExtension();
+            
+            // Simpan ke storage/app/public/signed_mous
+            $path = $file->storeAs('signed_mous', $filename, 'public');
+
+            // Update database dan ubah status kembali ke Pending / Waiting Approval Admin
+            $order->update([
+                'signed_mou' => $path,
+                'status' => 'Pending Review MoU' // atau biarkan sesuai alurmu
+            ]);
+
+            return back()->with('success', 'File MoU bertanda tangan berhasil di-upload! Menunggu verifikasi Admin.');
+        }
+
+        return back()->with('error', 'Gagal mengupload file.');
+    }
 }

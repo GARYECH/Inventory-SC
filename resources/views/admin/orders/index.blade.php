@@ -49,11 +49,13 @@
             <div class="space-y-6">
                 @forelse($orders as $order)
                     @php
-                        // Logika Warna Status
+                        // 🌟 LOGIKA WARNA STATUS BARU
                         $statusColors = [
                             'Pending' => 'bg-amber-100 text-amber-800 border-amber-200',
                             'Approved' => 'bg-blue-100 text-blue-800 border-blue-200',
                             'Waiting for MoU' => 'bg-purple-100 text-purple-800 border-purple-200',
+                            'Pending Review MoU' => 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200',
+                            'Waiting for Payment' => 'bg-orange-100 text-orange-800 border-orange-200',
                             'Paid' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
                             'Handed Over' => 'bg-teal-100 text-teal-800 border-teal-200',
                             'Returned' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -62,7 +64,6 @@
                         ];
                         $badgeClass = $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
                         
-                        // Cek apakah order ini butuh MoU
                         $requiresMou = $order->orderItems->contains(function($detail) {
                             return $detail->item->requires_mou;
                         });
@@ -139,36 +140,54 @@
                             </div>
 
                             <div class="space-y-3">
-                                <!-- Print Documents (Admin juga bisa print PDF-nya) -->
-                                <div class="flex gap-2">
-                                    <a target="_blank" href="{{ route('student.document.invoice', $order->id) }}" class="flex-1 bg-white border border-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl text-center hover:bg-gray-50 hover:text-indigo-600 transition-all flex justify-center items-center gap-2">
+                                <!-- Print Documents & View Uploaded Documents -->
+                                <div class="flex flex-wrap gap-2">
+                                    <a target="_blank" href="{{ route('student.document.invoice', $order->id) }}" class="flex-1 bg-white border border-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-widest py-3 px-2 rounded-xl text-center hover:bg-gray-50 hover:text-indigo-600 transition-all flex justify-center items-center gap-1 shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                         Invoice
                                     </a>
                                     
                                     @if($requiresMou)
-                                    <a target="_blank" href="{{ route('student.document.mou', $order->id) }}" class="flex-1 bg-white border border-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl text-center hover:bg-gray-50 hover:text-indigo-600 transition-all flex justify-center items-center gap-2">
+                                    <a target="_blank" href="{{ route('student.document.mou', $order->id) }}" class="flex-1 bg-white border border-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-widest py-3 px-2 rounded-xl text-center hover:bg-gray-50 hover:text-indigo-600 transition-all flex justify-center items-center gap-1 shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                         MoU
+                                    </a>
+                                    @endif
+
+                                    <!-- TOMBOL CEK MOU MAHASISWA -->
+                                    @if($order->signed_mou)
+                                    <a target="_blank" href="{{ asset('storage/' . $order->signed_mou) }}" class="w-full bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-700 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl text-center hover:bg-fuchsia-600 hover:text-white transition-all shadow-sm flex justify-center items-center gap-2 mt-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        Cek File TTD Mahasiswa
+                                    </a>
+                                    @endif
+
+                                    <!-- 🌟 TOMBOL BARU: LIHAT BUKTI TRANSFER MAHASISWA 🌟 -->
+                                    @if($order->payment_receipt)
+                                    <a target="_blank" href="{{ asset('storage/' . $order->payment_receipt) }}" class="w-full bg-orange-50 border border-orange-200 text-orange-700 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl text-center hover:bg-orange-600 hover:text-white transition-all shadow-sm flex justify-center items-center gap-2 mt-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Cek Bukti Transfer
                                     </a>
                                     @endif
                                 </div>
 
                                 <!-- Update Status Form -->
-                                <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="flex gap-2">
+                                <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="flex gap-2 mt-2">
                                     @csrf 
                                     @method('PATCH')
-                                    <select name="status" class="flex-grow px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs font-bold text-gray-800 appearance-none cursor-pointer">
+                                    <select name="status" class="flex-grow px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs font-bold text-gray-800 appearance-none cursor-pointer">
                                         <option value="Pending" {{ $order->status == 'Pending' ? 'selected' : '' }}>Pending</option>
                                         <option value="Approved" {{ $order->status == 'Approved' ? 'selected' : '' }}>Approved</option>
                                         <option value="Waiting for MoU" {{ $order->status == 'Waiting for MoU' ? 'selected' : '' }}>Waiting for MoU</option>
+                                        <option value="Pending Review MoU" {{ $order->status == 'Pending Review MoU' ? 'selected' : '' }}>Pending Review MoU</option>
+                                        <option value="Waiting for Payment" {{ $order->status == 'Waiting for Payment' ? 'selected' : '' }}>Waiting for Payment</option>
                                         <option value="Paid" {{ $order->status == 'Paid' ? 'selected' : '' }}>Paid</option>
                                         <option value="Handed Over" {{ $order->status == 'Handed Over' ? 'selected' : '' }}>Handed Over (Diambil)</option>
                                         <option value="Returned" {{ $order->status == 'Returned' ? 'selected' : '' }}>Returned (Selesai)</option>
                                         <option value="Rejected" {{ $order->status == 'Rejected' ? 'selected' : '' }}>Rejected</option>
                                         <option value="Cancelled" {{ $order->status == 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
                                     </select>
-                                    <button type="submit" class="bg-indigo-600 text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition shadow-md shadow-indigo-200">
+                                    <button type="submit" class="bg-indigo-600 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition shadow-md shadow-indigo-200">
                                         Update
                                     </button>
                                 </form>
@@ -186,7 +205,7 @@
                     </div>
                 @endforelse
             </div>
-
+            
             <!-- Pagination -->
             <div class="mt-8 flex justify-center">
                 <div class="bg-white px-2 py-1 rounded-2xl shadow-sm border border-gray-100">

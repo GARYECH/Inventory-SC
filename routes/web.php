@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminItemController;
-use App\Http\Controllers\Admin\CategoryController; // 🌟 INI TAMBAHAN UNTUK KATEGORI
+use App\Http\Controllers\Admin\CategoryController; 
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\User\CartController;
 use App\Http\Controllers\User\DocumentController;
@@ -21,8 +21,6 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 | Role-Based Dashboard Redirect
 |--------------------------------------------------------------------------
-| This is the "Traffic Controller". It sends Admins to their management
-| suite and Students to the rental catalog.
 */
 Route::get('/dashboard', function () {
     if (auth()->user()->role === 'admin') {
@@ -52,7 +50,6 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/dashboard', [AdminItemController::class, 'index'])->name('dashboard');
 
-        // 🌟 RUTE KELOLA KATEGORI BARU 
         Route::resource('categories', CategoryController::class)->only(['index', 'store', 'destroy']);
 
         Route::get('/items', [AdminItemController::class, 'index'])->name('items.index');
@@ -64,6 +61,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/orders', [AdminItemController::class, 'orders'])->name('orders');
         Route::patch('/orders/{order}/status', [AdminItemController::class, 'updateStatus'])->name('orders.update');  
+
+        Route::get('/settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
         
         Route::get('/orders/export', [AdminItemController::class, 'exportExcel'])->name('orders.export');
     });
@@ -78,6 +78,12 @@ Route::middleware('auth')->group(function () {
         // 1. Catalog & Personal History
         Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
         Route::get('/loans', [UserDashboardController::class, 'loans'])->name('loans');
+        
+        // 🌟 RUTE BARU: UPLOAD MOU BERTANDA TANGAN
+        Route::post('/orders/{order}/upload-mou', [DocumentController::class, 'uploadSignedMou'])->name('orders.upload-mou');
+        // 🌟 RUTE BARU: UPLOAD MOU & BUKTI BAYAR
+        Route::post('/orders/{order}/upload-mou', [DocumentController::class, 'uploadSignedMou'])->name('orders.upload-mou');
+        Route::post('/orders/{order}/upload-payment', [DocumentController::class, 'uploadPaymentReceipt'])->name('orders.upload-payment');
         
         // 2. 🛒 The New Enterprise Cart System
         Route::prefix('cart')->name('cart.')->group(function () {

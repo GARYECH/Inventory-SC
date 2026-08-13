@@ -24,8 +24,14 @@ class CartController extends Controller
     public function addToCart(Request $request, Item $item)
     {
         $cart = session()->get('cart', []);
+        $requestQuantity = $request->quantity ?? 1;
 
-        // 🚨 LOGIKA SEGREGASI (Pemisah Jalur) 🚨
+        // 🛡️ VALIDASI 1: Cek apakah stok di gudang cukup
+        if ($item->stock_quantity < $requestQuantity) {
+            return back()->with('error', 'Gagal! Stok barang tidak mencukupi.');
+        }
+
+        // 🚨 LOGIKA SEGREGASI (Pemisah Jalur)
         if (count($cart) > 0) {
             $firstItem = reset($cart);
             if ($firstItem['transaction_type'] !== $item->transaction_type) {
@@ -33,19 +39,29 @@ class CartController extends Controller
             }
         }
 
-        // Jika lolos, masukkan ke keranjang session
-        $cart[$item->id] = [
-            'id' => $item->id,
-            'name' => $item->name,
-            'price' => $item->price,
-            'quantity' => $request->quantity ?? 1,
-            'transaction_type' => $item->transaction_type,
-            'requires_mou' => $item->requires_mou,
-        ];
+        // 🛡️ VALIDASI 2: Akumulasi Qty & Cek Stok Gabungan
+        if (isset($cart[$item->id])) {
+            $newQuantity = $cart[$item->id]['quantity'] + $requestQuantity;
+            
+            if ($item->stock_quantity < $newQuantity) {
+                return back()->with('error', 'Gagal! Total barang ini di keranjangmu melebihi sisa stok di gudang.');
+            }
+            
+            $cart[$item->id]['quantity'] = $newQuantity;
+        } else {
+            $cart[$item->id] = [
+                'id' => $item->id,
+                'name' => $item->name,
+                'price' => $item->price,
+                'quantity' => $requestQuantity,
+                'transaction_type' => $item->transaction_type,
+                'requires_mou' => $item->requires_mou,
+            ];
+        }
 
         session()->put('cart', $cart);
 
-        return back()->with('success', 'Barang berhasil masuk keranjang!');
+        return back()->with('success', 'Barang berhasil ditambahkan ke keranjang!');
     }
 
     public function clearCart()
@@ -79,11 +95,9 @@ class CartController extends Controller
             'is_sop_accepted.accepted' => 'Kamu HARUS mencentang persetujuan SOP/Terms & Conditions sebelum checkout!'
         ]);
 
-        // Ambil tipe transaksi dari barang pertama
         $firstItem = reset($cart);
         $orderType = $firstItem['transaction_type'];
 
-        // 🌟 HITUNG TOTAL HARGA DULU SEBELUM BIKIN ORDER 🌟
         $totalPrice = 0;
         foreach ($cart as $item) {
             $totalPrice += $item['price'] * $item['quantity'];
@@ -92,6 +106,20 @@ class CartController extends Controller
         DB::beginTransaction();
 
         try {
+            // 🛡️ THE GATEKEEPER: Validasi Ulang & Pemotongan Stok Pakai Lock!
+            foreach ($cart as $item) {
+                // lockForUpdate() akan mengunci baris data ini dari request lain sampai transaksi ini beres
+                $dbItem = Item::lockForUpdate()->find($item['id']);
+                
+                if (!$dbItem || $dbItem->stock_quantity < $item['quantity']) {
+                    DB::rollBack();
+                    return back()->with('error', "Gagal! Stok '{$item['name']}' tiba-tiba habis dipinjam orang lain saat kamu mau bayar.");
+                }
+                
+                // Potong stoknya langsung di database!
+                $dbItem->decrement('stock_quantity', $item['quantity']);
+            }
+
             // 1. Buat Kuitansi Induk (Order)
             $order = Order::create([
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
@@ -104,19 +132,17 @@ class CartController extends Controller
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'is_sop_accepted' => true,
-                'total_price' => $totalPrice, // 🌟 MASUKKAN TOTAL HARGA KE DATABASE
+                'total_price' => $totalPrice, 
                 'status' => 'Pending',
             ]);
 
             // 2. Pindahkan isi Session Keranjang ke tabel order_items
             foreach ($cart as $item) {
-                $subtotal = $item['price'] * $item['quantity'];
-
                 OrderItem::create([
                     'order_id' => $order->id,
                     'item_id' => $item['id'],
                     'quantity' => $item['quantity'],
-                    'subtotal_price' => $subtotal,
+                    'subtotal_price' => ($item['price'] * $item['quantity']),
                 ]);
             }
 
@@ -125,7 +151,6 @@ class CartController extends Controller
 
             DB::commit();
 
-            // 🌟 LEMPAR KE HALAMAN LOANS, BUKAN ORDERS.INDEX 🌟
             return redirect()->route('student.loans')->with('success', 'Checkout berhasil! Kuitansimu sedang menunggu persetujuan (Approval) dari Admin.');
 
         } catch (\Exception $e) {

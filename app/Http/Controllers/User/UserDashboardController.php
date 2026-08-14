@@ -21,6 +21,12 @@ class UserDashboardController extends Controller
 
         $items = Item::where('condition_status', 'Good')
             ->where('transaction_type', $type) // 🔒 Filter ketat sesuai tab yang dipilih
+            // 🌟 TAMBAHAN: Load data order yang sedang aktif / belum selesai untuk jadwal
+            ->with(['orderItems.order' => function($q) {
+                $q->whereNotIn('status', ['Returned', 'Rejected', 'Cancelled'])
+                  ->where('end_date', '>=', now()->toDateString()) // Hanya jadwal hari ini & ke depan
+                  ->orderBy('start_date', 'asc');
+            }])
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -54,7 +60,7 @@ class UserDashboardController extends Controller
             ->whereIn('status', ['Returned', 'Cancelled', 'Rejected'])
             ->with('orderItems.item')
             ->latest()
-            ->paginate(5); // 🌟 Hapus get(), langsung paginate()
+            ->paginate(5); 
 
         return view('user.loans', compact('activeLoans', 'pastLoans'));
     }

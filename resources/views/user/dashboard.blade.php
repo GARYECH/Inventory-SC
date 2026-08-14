@@ -31,6 +31,12 @@
                         <a href="{{ route('student.cart.index') }}" class="relative inline-flex items-center justify-center px-6 py-3 text-xs font-black text-white uppercase tracking-widest transition-all duration-300 bg-gray-900 rounded-2xl hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-95 whitespace-nowrap overflow-hidden group shrink-0">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                             Checkout
+                            @if($cartCount > 0)
+                                <span class="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-500 text-[8px] justify-center items-center font-black">{{ $cartCount }}</span>
+                                </span>
+                            @endif
                         </a>
                     </div>
                 </div>
@@ -91,18 +97,51 @@
                                 <span class="text-lg font-black text-indigo-600">Rp {{ number_format($item->price, 0, ',', '.') }}</span>
                             </div>
                             <div class="text-right">
-                                <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Stok</p>
+                                <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Stok Total</p>
                                 <span class="text-sm font-black {{ $item->stock_quantity > 0 ? 'text-gray-900' : 'text-red-500' }}">{{ $item->stock_quantity }}</span>
                             </div>
                         </div>
+
+                        <!-- 🌟 📅 JADWAL TERPAKAI (Muncul jika ada yang pinjam) 🌟 -->
+                        @if($item->transaction_type !== 'Sale' && $item->orderItems->isNotEmpty())
+                            @php
+                                $bookedSchedules = $item->orderItems->filter(function($detail) {
+                                    return $detail->order != null;
+                                });
+                            @endphp
+                            
+                            @if($bookedSchedules->count() > 0)
+                                <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl">
+                                    <p class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        Telah Ter-Booking Pada:
+                                    </p>
+                                    <ul class="text-[10px] text-red-700 space-y-1.5 max-h-24 overflow-y-auto custom-scrollbar pr-1">
+                                        @foreach($bookedSchedules as $detail)
+                                            <li class="flex justify-between items-center bg-white px-2 py-1.5 rounded-lg border border-red-50 shadow-sm">
+                                                <span class="font-bold">{{ \Carbon\Carbon::parse($detail->order->start_date)->format('d M') }} - {{ \Carbon\Carbon::parse($detail->order->end_date)->format('d M y') }}</span>
+                                                <span class="font-black bg-red-100 px-1.5 py-0.5 rounded text-[8px]">{{ $detail->quantity }} Unit</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                        @endif
+
                     </div>
 
-                    <!-- Tombol Action (Form Add to Cart) -->
+                    <!-- 🌟 Tombol Action (Form Add to Cart dengan INPUT QUANTITY) 🌟 -->
                     <div class="p-4 bg-white border-t border-gray-50">
                         @if($item->stock_quantity > 0)
-                            <form action="{{ route('student.cart.add', $item->id) }}" method="POST">
+                            <form action="{{ route('student.cart.add', $item->id) }}" method="POST" class="flex gap-2">
                                 @csrf
-                                <button type="submit" class="block text-center w-full bg-gray-900 text-white py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all duration-300 shadow-xl shadow-gray-200 active:scale-95 group">
+                                
+                                <!-- KOTAK INPUT QUANTITY -->
+                                <input type="number" name="quantity" value="1" min="1" max="{{ $item->stock_quantity }}" required
+                                    class="w-16 px-2 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-black text-center text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
+                                    title="Jumlah Barang">
+
+                                <button type="submit" class="flex-grow text-center bg-gray-900 text-white py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all duration-300 shadow-xl shadow-gray-200 active:scale-95 group">
                                     <span class="inline-flex items-center">
                                         <svg class="w-4 h-4 mr-2 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                         Add to Cart

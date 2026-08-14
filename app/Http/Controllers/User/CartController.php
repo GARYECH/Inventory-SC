@@ -95,6 +95,44 @@ class CartController extends Controller
             'is_sop_accepted.accepted' => 'Kamu HARUS mencentang persetujuan SOP/Terms & Conditions sebelum checkout!'
         ]);
 
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        // ==========================================================
+        // 🌟 THE BRAIN: LOGIKA ANTI-BENTROK (OVERLAPPING DATES) 🌟
+        // ==========================================================
+        if ($startDate && $endDate) {
+            foreach ($cart as $id => $details) {
+                $item = Item::find($id);
+
+                // A. Hitung total unit yang SIBUK (dipinjam orang lain) tepat pada rentang tanggal tersebut
+                $overlappingQty = OrderItem::where('item_id', $id)
+                    ->whereHas('order', function ($query) use ($startDate, $endDate) {
+                        $query->whereNotIn('status', ['Returned', 'Rejected', 'Cancelled'])
+                              ->where('start_date', '<=', $endDate)  // Rumus Irisan Waktu
+                              ->where('end_date', '>=', $startDate); // Rumus Irisan Waktu
+                    })->sum('quantity');
+
+                // B. Hitung total stok ASLI yang SC miliki (Stok di gudang + Total yang sedang dipinjam secara keseluruhan)
+                $totalSedangDipinjam = OrderItem::where('item_id', $id)
+                    ->whereHas('order', function ($q) {
+                        $q->whereNotIn('status', ['Returned', 'Rejected', 'Cancelled']);
+                    })->sum('quantity');
+                
+                $stokAsli = $item->stock_quantity + $totalSedangDipinjam;
+
+                // C. EKSEKUSI PEMBLOKIRAN: Jika (Yang bentrok + Yang mau dipinjam > Stok Asli SC), TOLAK!
+                if (($overlappingQty + $details['quantity']) > $stokAsli) {
+                    $sisaKuota = $stokAsli - $overlappingQty;
+                    $formatStart = \Carbon\Carbon::parse($startDate)->format('d M');
+                    $formatEnd = \Carbon\Carbon::parse($endDate)->format('d M Y');
+                    
+                    return back()->with('error', "Gagal Checkout! Barang '{$item->name}' jadwalnya bentrok. Pada tanggal {$formatStart} s/d {$formatEnd} sisa kuota hanya {$sisaKuota} unit. Silakan cek kalender merah di katalog.");
+                }
+            }
+        }
+        // ==========================================================
+
         $firstItem = reset($cart);
         $orderType = $firstItem['transaction_type'];
 

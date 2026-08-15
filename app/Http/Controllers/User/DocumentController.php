@@ -28,7 +28,7 @@ class DocumentController extends Controller
     }
 
     /**
-     * Cetak Invoice / Kuitansi Lunas
+     * Cetak Invoice (Tagihan)
      */
     public function downloadInvoice(Order $order)
     {
@@ -43,7 +43,23 @@ class DocumentController extends Controller
     }
 
     /**
-     * 🌟 FUNGSI BARU: Upload MoU Bertanda Tangan 🌟
+     * Cetak Kwitansi (Official Receipt)
+     */
+    public function downloadKwitansi(Order $order)
+    {
+        if (auth()->id() !== $order->user_id && auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $pdf = Pdf::loadView('admin.pdf.kwitansi', compact('order'));
+        $pdf->setPaper('a4', 'landscape'); // Kwitansi biasanya berbentuk memanjang (landscape)
+
+        // Kita gunakan stream() agar PDF-nya terbuka di tab baru browser, bukan langsung terdownload
+        return $pdf->stream('Kwitansi_' . $order->order_number . '.pdf');
+    }
+
+    /**
+     * Upload MoU Bertanda Tangan
      */
     public function uploadSignedMou(Request $request, Order $order)
     {
@@ -70,8 +86,9 @@ class DocumentController extends Controller
 
         return back()->with('error', 'Gagal mengupload file.');
     }
+    
     /**
-     * 🌟 FUNGSI BARU: Upload Bukti Transfer 🌟
+     * Upload Bukti Transfer
      */
     public function uploadPaymentReceipt(Request $request, Order $order)
     {
@@ -93,6 +110,70 @@ class DocumentController extends Controller
             return back()->with('success', 'Bukti pembayaran berhasil di-upload! Menunggu verifikasi Admin.');
         }
 
+        return back()->with('error', 'Gagal mengupload file.');
+    }
+
+    /**
+     * 🌟 FUNGSI BARU: Upload Kwitansi Bertanda Tangan Mahasiswa 🌟
+     */
+    public function uploadSignedKwitansi(Request $request, Order $order)
+    {
+        $request->validate([
+            'signed_kwitansi' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ]);
+
+        if ($request->hasFile('signed_kwitansi')) {
+            $file = $request->file('signed_kwitansi');
+            $filename = 'Signed_KWT_' . $order->order_number . '_' . time() . '.' . $file->getClientOriginalExtension();
+            
+            // Simpan ke folder public/signed_kwitansis
+            $path = $file->storeAs('signed_kwitansis', $filename, 'public');
+
+            $order->update([
+                'signed_kwitansi' => $path,
+                'status' => 'Pending Review Kwitansi' // Otomatis ubah status biar Admin ngeh
+            ]);
+
+            return back()->with('success', 'Kwitansi bertanda tangan berhasil di-upload! Menunggu verifikasi akhir Admin SC.');
+        }
+
+        return back()->with('error', 'Gagal mengupload file kwitansi.');
+    }
+    /**
+     * 🌟 FUNGSI BARU: Submit Link Drive Bukti Pengembalian 🌟
+     */
+    public function submitReturnLink(Request $request, Order $order)
+    {
+        $request->validate([
+            'return_drive_link' => 'required|url', // Wajib berupa link URL
+        ]);
+
+        $order->update([
+            'return_drive_link' => $request->return_drive_link,
+            'status' => 'Pending Return Review' // Otomatis ubah status biar Admin ngecek
+        ]);
+
+        return back()->with('success', 'Link bukti pengembalian berhasil dikirim! Menunggu Admin SC melakukan pengecekan barang fisik.');
+    }
+    public function downloadBeritaAcara(Order $order)
+    {
+        $pdf = Pdf::loadView('admin.pdf.berita_acara', compact('order'));
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->stream('Berita_Acara_' . $order->order_number . '.pdf');
+    }
+
+    public function uploadBeritaAcara(Request $request, Order $order)
+    {
+        $request->validate(['signed_ba_file' => 'required|file|mimes:pdf|max:5120']);
+
+        if ($request->hasFile('signed_ba_file')) {
+            $path = $request->file('signed_ba_file')->storeAs('berita_acara', 'BA_'.$order->order_number.'_'.time().'.pdf', 'public');
+            $order->update([
+                'signed_ba_file' => $path,
+                'status' => 'Resolved (Fine Paid)' // Selesai
+            ]);
+            return back()->with('success', 'Berita Acara dan Bukti Denda berhasil di-upload! Kasus selesai.');
+        }
         return back()->with('error', 'Gagal mengupload file.');
     }
 }

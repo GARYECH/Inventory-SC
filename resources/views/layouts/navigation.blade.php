@@ -16,17 +16,21 @@
                         <x-nav-link :href="route('admin.items.index')" :active="request()->routeIs('admin.items.*')">
                             {{ __('Manage Inventory') }}
                         </x-nav-link>
-                        <!-- 🌟 MENU KATEGORI DITAMBAHKAN DI SINI 🌟 -->
                         <x-nav-link :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')">
                             {{ __('Manage Categories') }}
                         </x-nav-link>
                         <x-nav-link :href="route('admin.orders')" :active="request()->routeIs('admin.orders')">
                             {{ __('Confirm Returns') }}
                         </x-nav-link>
+                        <!-- 🌟 TOMBOL MENU SETTINGS (DESKTOP) 🌟 -->
+                        <x-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.index')">
+                            {{ __('System Settings') }}
+                        </x-nav-link>
                     @else
                         <x-nav-link :href="route('student.dashboard')" :active="request()->routeIs('student.dashboard')">
                             {{ __('Rent Items') }}
                         </x-nav-link>
+                        <!-- 🌟 SUDAH DIPERBAIKI MENJADI routeIs 🌟 -->
                         <x-nav-link :href="route('student.loans')" :active="request()->routeIs('student.loans')">
                             {{ __('My Active Loans') }}
                         </x-nav-link>
@@ -78,12 +82,15 @@
                 <x-responsive-nav-link :href="route('admin.items.index')" :active="request()->routeIs('admin.items.*')">
                     {{ __('Manage Inventory') }}
                 </x-responsive-nav-link>
-                <!-- 🌟 MENU KATEGORI HP DITAMBAHKAN DI SINI 🌟 -->
                 <x-responsive-nav-link :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')">
                     {{ __('Manage Categories') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.orders')" :active="request()->routeIs('admin.orders')">
                     {{ __('Confirm Returns') }}
+                </x-responsive-nav-link>
+                <!-- 🌟 TOMBOL MENU SETTINGS (HP/MOBILE) 🌟 -->
+                <x-responsive-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.index')">
+                    {{ __('System Settings') }}
                 </x-responsive-nav-link>
             @else
                 <x-responsive-nav-link :href="route('student.dashboard')" :active="request()->routeIs('student.dashboard')">

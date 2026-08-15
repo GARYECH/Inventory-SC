@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', [AdminItemController::class, 'orders'])->name('orders');
         Route::patch('/orders/{order}/status', [AdminItemController::class, 'updateStatus'])->name('orders.update');  
 
+        // 🌟 PENGATURAN SISTEM & SOP
         Route::get('/settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
         Route::post('/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
         
@@ -79,11 +80,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
         Route::get('/loans', [UserDashboardController::class, 'loans'])->name('loans');
         
-        // 🌟 RUTE BARU: UPLOAD MOU BERTANDA TANGAN
-        Route::post('/orders/{order}/upload-mou', [DocumentController::class, 'uploadSignedMou'])->name('orders.upload-mou');
-        // 🌟 RUTE BARU: UPLOAD MOU & BUKTI BAYAR
+        // 🌟 RUTE UPLOAD DOKUMEN & PENGEMBALIAN BARANG 🌟
         Route::post('/orders/{order}/upload-mou', [DocumentController::class, 'uploadSignedMou'])->name('orders.upload-mou');
         Route::post('/orders/{order}/upload-payment', [DocumentController::class, 'uploadPaymentReceipt'])->name('orders.upload-payment');
+        Route::post('/orders/{order}/upload-kwitansi', [DocumentController::class, 'uploadSignedKwitansi'])->name('orders.upload-kwitansi');
+        Route::post('/orders/{order}/return-link', [DocumentController::class, 'submitReturnLink'])->name('orders.return-link');
+        Route::post('/orders/{order}/upload-ba', [DocumentController::class, 'uploadBeritaAcara'])->name('orders.upload-ba'); // 👈 Upload BA
         
         // 2. 🛒 The New Enterprise Cart System
         Route::prefix('cart')->name('cart.')->group(function () {
@@ -97,6 +99,8 @@ Route::middleware('auth')->group(function () {
         Route::prefix('document')->name('document.')->group(function () {
             Route::get('/mou/{order}', [DocumentController::class, 'downloadMou'])->name('mou');
             Route::get('/invoice/{order}', [DocumentController::class, 'downloadInvoice'])->name('invoice');
+            Route::get('/kwitansi/{order}', [DocumentController::class, 'downloadKwitansi'])->name('kwitansi');
+            Route::get('/berita-acara/{order}', [DocumentController::class, 'downloadBeritaAcara'])->name('berita-acara'); // 👈 Download BA
         });
     });
 });

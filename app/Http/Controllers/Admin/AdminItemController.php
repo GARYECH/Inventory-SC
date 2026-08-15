@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Item;
-use App\Models\Category; // 🌟 WAJIB DITAMBAHKAN
+use App\Models\Category;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -21,9 +21,8 @@ class AdminItemController extends Controller
    public function index(Request $request)
     {
         $search = $request->input('search');
-        $type = $request->input('type'); // 🌟 Menangkap klik dari kartu
+        $type = $request->input('type');
 
-        // 🌟 Menghitung total absolut untuk kartu (agar angkanya tidak hilang saat difilter)
         $counts = [
             'total' => Item::count(),
             'internal' => Item::where('transaction_type', 'Internal Rental')->count(),
@@ -38,7 +37,6 @@ class AdminItemController extends Controller
                       ->orWhere('description', 'like', "%{$search}%");
                 });
             })
-            // 🌟 Mengeksekusi filter berdasarkan tipe yang diklik
             ->when($type, function ($query, $type) {
                 return $query->where('transaction_type', $type);
             })
@@ -48,30 +46,28 @@ class AdminItemController extends Controller
 
         return view('admin.items.index', compact('items', 'counts'));
     }
+    
     public function create()
     {
-        // 🌟 UPDATE: Ambil data kategori untuk dilempar ke dropdown form
         $categories = Category::all();
         return view('admin.items.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
-        // 🌟 UPDATE: Validasi ketat untuk kolom-kolom baru
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id', // Kategori harus ada di database
+            'category_id' => 'required|exists:categories,id',
             'description' => 'required|string',
             'item_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
             'stock_quantity' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
-            'transaction_type' => 'required|in:Internal Rental,Vendor Rental,Sale', // 3 Jalur Navigasi
+            'transaction_type' => 'required|in:Internal Rental,Vendor Rental,Sale',
             'requires_mou' => 'required|boolean',
         ]);
 
         $path = $request->file('item_photo')->store('items', 'public');
 
-        // Memasukkan file path dan default condition ke dalam array $validated
         $validated['item_photo'] = $path;
         $validated['condition_status'] = 'Good';
 
@@ -82,14 +78,12 @@ class AdminItemController extends Controller
 
     public function edit(Item $item)
     {
-        // 🌟 UPDATE: Ambil kategori untuk dropdown saat edit
         $categories = Category::all();
         return view('admin.items.edit', compact('item', 'categories'));
     }
 
     public function update(Request $request, Item $item)
     {
-        // 🌟 UPDATE: Validasi untuk kolom-kolom baru
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
@@ -124,14 +118,13 @@ class AdminItemController extends Controller
     }
 
     // =================================================================
-    // 📝 ORDER MANAGEMENT (KUITANSI)
+    // 📝 ORDER MANAGEMENT (KUITANSI & BERITA ACARA)
     // =================================================================
 
     public function orders(Request $request)
     {
         $search = $request->input('search');
 
-        // 🚨 CRITICAL FIX: Mengubah 'item' menjadi 'orderItems.item' karena sistem Keranjang
         $orders = Order::with(['user', 'orderItems.item'])
             ->when($search, function ($query, $search) {
                 return $query->where('order_number', 'like', "%{$search}%")
@@ -148,20 +141,43 @@ class AdminItemController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
-        $request->validate(['status' => 'required|string']);
+        // 🌟 TANGKAP SEMUA INPUTAN ADMIN TERMASUK BERITA ACARA
+        $request->validate([
+            'status' => 'required|string',
+            'invoice_number' => 'nullable|string|max:255',
+            'kwitansi_number' => 'nullable|string|max:255',
+            // 👇 TAMBAHAN UNTUK BERITA ACARA 👇
+            'ba_number' => 'nullable|string|max:255',
+            'ba_date' => 'nullable|string|max:255',
+            'ba_due_date' => 'nullable|string|max:255',
+            'ba_description' => 'nullable|string',
+            'ba_total_fine' => 'nullable|numeric',
+        ]);
 
         $oldStatus = $order->status;
         $newStatus = $request->status;
 
-        // Daftar status yang menandakan barang "kembali ke gudang"
-        $restockStatuses = ['Returned', 'Rejected', 'Cancelled'];
+        // 💡 Catatan: "Resolved (Fine Paid)" dimasukkan ke dalam daftar restock 
+        // asumsinya saat mahasiswa melunasi denda ganti rugi, asetnya akan dibeli ulang
+        // dan kembali tersedia di gudang SC.
+        $restockStatuses = ['Returned', 'Rejected', 'Cancelled', 'Resolved (Fine Paid)'];
 
         \Illuminate\Support\Facades\DB::beginTransaction();
         try {
-            $order->update(['status' => $newStatus]);
+            // 🌟 SIMPAN DATA STATUS DAN SEMUA NOMOR SURAT KE DATABASE
+            $order->update([
+                'status' => $newStatus,
+                'invoice_number' => $request->invoice_number,
+                'kwitansi_number' => $request->kwitansi_number,
+                // 👇 SIMPAN DATA BERITA ACARA 👇
+                'ba_number' => $request->ba_number,
+                'ba_date' => $request->ba_date,
+                'ba_due_date' => $request->ba_due_date,
+                'ba_description' => $request->ba_description,
+                'ba_total_fine' => $request->ba_total_fine,
+            ]);
 
-            // 🌟 LOGIKA AUTO-RESTOCK 🌟
-            // Jika status baru adalah Kembali/Ditolak, DAN status lamanya BUKAN Kembali/Ditolak
+            // Auto Restock (Balik ke gudang)
             if (in_array($newStatus, $restockStatuses) && !in_array($oldStatus, $restockStatuses)) {
                 foreach ($order->orderItems as $detail) {
                     $item = \App\Models\Item::find($detail->item_id);
@@ -171,8 +187,7 @@ class AdminItemController extends Controller
                 }
             }
             
-            // 🌟 LOGIKA TARIK STOK ULANG 🌟
-            // Jika Admin tidak sengaja pencet "Rejected", lalu diubah lagi jadi "Approved"
+            // Tarik kembali stok dari gudang (Kalau batal Restock)
             if (in_array($oldStatus, $restockStatuses) && !in_array($newStatus, $restockStatuses)) {
                 foreach ($order->orderItems as $detail) {
                     $item = \App\Models\Item::lockForUpdate()->find($detail->item_id);
@@ -187,7 +202,7 @@ class AdminItemController extends Controller
             }
 
             \Illuminate\Support\Facades\DB::commit();
-            return back()->with('success', 'Status pesanan berhasil diperbarui!');
+            return back()->with('success', 'Status & Dokumen berhasil diperbarui!');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -197,4 +212,5 @@ class AdminItemController extends Controller
     public function exportExcel() 
     {
         return Excel::download(new OrdersExport, 'inventory-report.xlsx');
-    }}
+    }
+}

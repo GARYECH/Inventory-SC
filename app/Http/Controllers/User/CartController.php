@@ -82,12 +82,13 @@ class CartController extends Controller
             return back()->with('error', 'Keranjangmu kosong!');
         }
 
-        // Validasi form dari mahasiswa
+        // Validasi form dari mahasiswa (🌟 TAMBAH ALAMAT DI SINI)
         $request->validate([
             'phone_number' => 'required|string',
             'proker_name' => 'required|string',
             'department' => 'required|string',
             'treasurer_name' => 'required|string',
+            'address' => 'required|string', // 🌟 KITA TANGKAP ALAMAT
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'is_sop_accepted' => 'required|accepted',
@@ -146,7 +147,6 @@ class CartController extends Controller
         try {
             // 🛡️ THE GATEKEEPER: Validasi Ulang & Pemotongan Stok Pakai Lock!
             foreach ($cart as $item) {
-                // lockForUpdate() akan mengunci baris data ini dari request lain sampai transaksi ini beres
                 $dbItem = Item::lockForUpdate()->find($item['id']);
                 
                 if (!$dbItem || $dbItem->stock_quantity < $item['quantity']) {
@@ -154,7 +154,6 @@ class CartController extends Controller
                     return back()->with('error', "Gagal! Stok '{$item['name']}' tiba-tiba habis dipinjam orang lain saat kamu mau bayar.");
                 }
                 
-                // Potong stoknya langsung di database!
                 $dbItem->decrement('stock_quantity', $item['quantity']);
             }
 
@@ -166,6 +165,7 @@ class CartController extends Controller
                 'proker_name' => $request->proker_name,
                 'department' => $request->department,
                 'treasurer_name' => $request->treasurer_name,
+                'address' => $request->address, // 🌟 MASUKKAN ALAMAT KE DATABASE
                 'order_type' => $orderType,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,

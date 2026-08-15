@@ -38,7 +38,6 @@
             @endif
 
             @if(empty($cart))
-                <!-- JIKA KERANJANG KOSONG -->
                 <div class="text-center py-32 bg-white rounded-[3rem] shadow-sm border border-gray-100">
                     <div class="w-24 h-24 bg-gray-50 border border-gray-100 shadow-inner rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -55,6 +54,7 @@
                     $firstItem = reset($cart);
                     $isRental = $firstItem['transaction_type'] !== 'Sale';
                     $totalPrice = 0;
+                    $sopPath = \App\Models\Setting::where('key', 'sop_pdf_path')->value('value');
                 @endphp
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -63,7 +63,6 @@
                     <div class="lg:col-span-7 space-y-6">
                         <div class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden relative">
                             
-                            <!-- Header Cart -->
                             <div class="p-8 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center relative overflow-hidden">
                                 <div class="relative z-10">
                                     <h3 class="font-black text-xl text-gray-900 tracking-tight mb-1">Rincian Barang</h3>
@@ -83,7 +82,6 @@
                                 </form>
                             </div>
                             
-                            <!-- Daftar Item -->
                             <div class="p-8 space-y-6">
                                 @foreach($cart as $id => $details)
                                     @php $totalPrice += $details['price'] * $details['quantity']; @endphp
@@ -107,7 +105,6 @@
                                 @endforeach
                             </div>
                             
-                            <!-- Grand Total -->
                             <div class="p-8 bg-gray-900 flex justify-between items-center rounded-b-[2.5rem]">
                                 <span class="font-black text-gray-400 uppercase tracking-[0.2em] text-[11px]">Grand Total</span>
                                 <span class="font-black text-3xl text-white">Rp {{ number_format($totalPrice, 0, ',', '.') }}</span>
@@ -115,7 +112,7 @@
                         </div>
                     </div>
 
-                    <!-- 📝 BAGIAN KANAN: FORM CHECKOUT & SOP -->
+                    <!-- 📝 BAGIAN KANAN: FORM CHECKOUT -->
                     <div class="lg:col-span-5">
                         <div class="bg-white shadow-xl shadow-gray-100/50 rounded-[2.5rem] border border-gray-100 p-8 lg:sticky lg:top-32">
                             
@@ -141,6 +138,13 @@
                                         class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
                                 </div>
 
+                                <!-- 🌟 KOTAK INPUT ALAMAT DITAMBAHKAN DI SINI 🌟 -->
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Alamat Lengkap</label>
+                                    <textarea name="address" rows="2" placeholder="e.g. Jl. Citraland CBD..." required 
+                                        class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm"></textarea>
+                                </div>
+
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">No. WhatsApp</label>
@@ -154,7 +158,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Kalender / Merchandise Logic -->
                                 @if($isRental)
                                 <div class="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl mt-6">
                                     <h4 class="font-black text-[11px] text-indigo-600 uppercase tracking-widest mb-4 flex items-center">
@@ -186,16 +189,39 @@
                                 </div>
                                 @endif
 
-                                <!-- 🚨 SOP CHECKBOX (THE GATEKEEPER) 🚨 -->
-                                <div class="mt-8 mb-6 p-5 border-2 border-red-100 bg-red-50/50 rounded-2xl relative overflow-hidden group">
-                                    <div class="absolute top-0 left-0 w-1 h-full bg-red-400"></div>
-                                    <label class="flex items-start cursor-pointer relative z-10">
-                                        <div class="flex-shrink-0 mt-0.5">
-                                            <input type="checkbox" name="is_sop_accepted" value="1" required class="w-5 h-5 text-red-600 border-red-300 rounded shadow-inner focus:ring-red-500 cursor-pointer transition-all">
+                                <div class="mt-10 mb-8 border-2 border-red-100 bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-red-100/50">
+                                    <div class="bg-red-50/80 p-6 border-b border-red-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                                        <div class="flex items-center gap-4 w-full sm:w-auto">
+                                            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-black text-red-900 text-sm uppercase tracking-widest">Wajib Baca SOP</h4>
+                                                <p class="text-[10px] text-red-600 font-bold mt-1">Syarat & Ketentuan Peminjaman SC</p>
+                                            </div>
+                                        </div>
+
+                                        @if($sopPath)
+                                            <a href="{{ asset('storage/' . $sopPath) }}" target="_blank" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3.5 bg-red-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-red-700 hover:shadow-lg hover:shadow-red-300 transition-all active:scale-95 shrink-0">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                Buka File SOP
+                                            </a>
+                                        @else
+                                            <span class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3.5 bg-gray-200 text-gray-500 font-black text-[10px] uppercase tracking-widest rounded-xl shrink-0 cursor-not-allowed">
+                                                SOP Belum Tersedia
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <label class="flex items-start p-6 cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <div class="flex-shrink-0 mt-1">
+                                            <input type="checkbox" name="is_sop_accepted" value="1" required class="w-6 h-6 text-red-600 border-gray-300 rounded-md shadow-inner focus:ring-red-500 cursor-pointer transition-all">
                                         </div>
                                         <div class="ml-4">
-                                            <span class="block text-xs font-black text-red-900 uppercase tracking-widest">Persetujuan SOP</span>
-                                            <span class="block text-[10px] text-red-700 mt-1.5 leading-relaxed font-bold">Dengan mencentang ini, saya bertanggung jawab penuh atas barang yang dipinjam/dibeli dan mematuhi denda yang berlaku jika terjadi kerusakan atau keterlambatan.</span>
+                                            <span class="block text-sm font-black text-gray-900 uppercase tracking-widest">Saya Menyetujui Persyaratan</span>
+                                            <span class="block text-[10px] text-gray-500 mt-1.5 leading-relaxed font-bold">
+                                                Dengan mencentang kotak ini, saya menyatakan telah membaca SOP dan bertanggung jawab penuh atas barang yang dipinjam/dibeli serta bersedia mematuhi denda yang berlaku jika terjadi kerusakan atau keterlambatan.
+                                            </span>
                                         </div>
                                     </label>
                                 </div>

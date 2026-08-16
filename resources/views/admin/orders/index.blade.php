@@ -58,7 +58,7 @@
             <div class="space-y-6">
                 @forelse($orders as $order)
                     @php
-                        // 🌟 LOGIKA WARNA STATUS LENGKAP (TERMASUK PENDING REVIEW BA)
+                        // 🌟 LOGIKA WARNA STATUS LENGKAP
                         $statusColors = [
                             'Pending' => 'bg-amber-100 text-amber-800 border-amber-200',
                             'Approved' => 'bg-blue-100 text-blue-800 border-blue-200',
@@ -72,7 +72,7 @@
                             'Pending Return Review' => 'bg-cyan-100 text-cyan-800 border-cyan-200',
                             'Returned' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
                             'Returned (Damaged)' => 'bg-red-100 text-red-800 border-red-200',
-                            'Pending Review BA' => 'bg-orange-100 text-orange-800 border-orange-200', // 🌟 NEW
+                            'Pending Review BA' => 'bg-orange-100 text-orange-800 border-orange-200',
                             'Resolved (Fine Paid)' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
                             'Rejected' => 'bg-red-100 text-red-800 border-red-200',
                             'Cancelled' => 'bg-gray-100 text-gray-800 border-gray-200',
@@ -225,19 +225,24 @@
                                     @csrf 
                                     @method('PATCH')
                                     
-                                    <div class="grid grid-cols-2 gap-2 mb-1">
+                                    <!-- 🌟 GRID-COLS-3 (MoU, Invoice, Kwitansi) 🌟 -->
+                                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 mb-2">
                                         <div>
-                                            <label class="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1 ml-1">Invoice Num.</label>
-                                            <input type="text" name="invoice_number" value="{{ $order->invoice_number }}" placeholder="#SC.../INV" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-[10px] font-bold text-gray-800 transition-all shadow-sm">
+                                            <label class="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1 ml-1">MoU Num.</label>
+                                            <input type="text" name="mou_number" value="{{ $order->mou_number }}" placeholder="#SC.../MOU" class="w-full px-2 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-[10px] font-bold text-gray-800 transition-all shadow-sm">
                                         </div>
                                         <div>
-                                            <label class="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1 ml-1">Kwitansi Num.</label>
-                                            <input type="text" name="kwitansi_number" value="{{ $order->kwitansi_number }}" placeholder="#SC.../KWT" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-[10px] font-bold text-gray-800 transition-all shadow-sm">
+                                            <label class="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1 ml-1">Inv Num.</label>
+                                            <input type="text" name="invoice_number" value="{{ $order->invoice_number }}" placeholder="#SC.../INV" class="w-full px-2 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-[10px] font-bold text-gray-800 transition-all shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1 ml-1">KWT Num.</label>
+                                            <input type="text" name="kwitansi_number" value="{{ $order->kwitansi_number }}" placeholder="#SC.../KWT" class="w-full px-2 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-[10px] font-bold text-gray-800 transition-all shadow-sm">
                                         </div>
                                     </div>
 
                                     <!-- BA Input Box (Muncul saat Returned Damaged ATAU Pending Review BA) -->
-                                    <div x-show="status === 'Returned (Damaged)' || status === 'Pending Review BA'" style="display: none;" class="p-4 bg-red-50 border border-red-200 rounded-xl space-y-3 mb-2">
+                                    <div x-show="status === 'Returned (Damaged)' || status === 'Pending Review BA'" style="display: none;" class="p-4 bg-red-50 border border-red-200 rounded-xl space-y-3 mb-2 mt-2">
                                         <p class="text-[10px] font-black text-red-800 uppercase tracking-widest border-b border-red-200 pb-2 mb-2">Input Berita Acara & Denda</p>
                                         
                                         <div class="grid grid-cols-2 gap-2">
@@ -269,7 +274,7 @@
                                     </div>
 
                                     <!-- DROPDOWN & BUTTON UPDATE -->
-                                    <div class="flex gap-2">
+                                    <div class="flex gap-2 mt-2">
                                         <select name="status" x-model="status" class="flex-grow px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-xs font-bold text-gray-800 appearance-none cursor-pointer shadow-sm">
                                             <option value="Pending" {{ $order->status == 'Pending' ? 'selected' : '' }}>Pending</option>
                                             <option value="Approved" {{ $order->status == 'Approved' ? 'selected' : '' }}>Approved</option>

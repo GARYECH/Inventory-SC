@@ -118,7 +118,7 @@ class AdminItemController extends Controller
     }
 
     // =================================================================
-    // 📝 ORDER MANAGEMENT (KUITANSI & BERITA ACARA)
+    // 📝 ORDER MANAGEMENT & STATUS LOGIC
     // =================================================================
 
     public function orders(Request $request)
@@ -141,12 +141,11 @@ class AdminItemController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
-        // 🌟 TANGKAP SEMUA INPUTAN ADMIN TERMASUK BERITA ACARA
         $request->validate([
             'status' => 'required|string',
+            'mou_number' => 'nullable|string|max:255', // 🌟 Menambahkan validasi MoU Number
             'invoice_number' => 'nullable|string|max:255',
             'kwitansi_number' => 'nullable|string|max:255',
-            // 👇 TAMBAHAN UNTUK BERITA ACARA 👇
             'ba_number' => 'nullable|string|max:255',
             'ba_date' => 'nullable|string|max:255',
             'ba_due_date' => 'nullable|string|max:255',
@@ -157,19 +156,16 @@ class AdminItemController extends Controller
         $oldStatus = $order->status;
         $newStatus = $request->status;
 
-        // 💡 Catatan: "Resolved (Fine Paid)" dimasukkan ke dalam daftar restock 
-        // asumsinya saat mahasiswa melunasi denda ganti rugi, asetnya akan dibeli ulang
-        // dan kembali tersedia di gudang SC.
+        // Daftar status yang menyebabkan barang KEMBALI KE GUDANG (Restock)
         $restockStatuses = ['Returned', 'Rejected', 'Cancelled', 'Resolved (Fine Paid)'];
 
         \Illuminate\Support\Facades\DB::beginTransaction();
         try {
-            // 🌟 SIMPAN DATA STATUS DAN SEMUA NOMOR SURAT KE DATABASE
             $order->update([
                 'status' => $newStatus,
+                'mou_number' => $request->mou_number, // 🌟 Menyimpan MoU Number
                 'invoice_number' => $request->invoice_number,
                 'kwitansi_number' => $request->kwitansi_number,
-                // 👇 SIMPAN DATA BERITA ACARA 👇
                 'ba_number' => $request->ba_number,
                 'ba_date' => $request->ba_date,
                 'ba_due_date' => $request->ba_due_date,
@@ -177,21 +173,32 @@ class AdminItemController extends Controller
                 'ba_total_fine' => $request->ba_total_fine,
             ]);
 
-            // Auto Restock (Balik ke gudang)
+            // 🌟 LOGIKA AUTO-RESTOCK YANG SUDAH DIPERBAIKI (ANTI-BUG MERCHANDISE) 🌟
             if (in_array($newStatus, $restockStatuses) && !in_array($oldStatus, $restockStatuses)) {
                 foreach ($order->orderItems as $detail) {
                     $item = \App\Models\Item::find($detail->item_id);
                     if ($item) {
+                        // CEK: Jika barang ini "Sale" (Merchandise), JANGAN restock jika statusnya Sukses (Returned / Resolved)
+                        // Barang Sale hanya direstock kalau transaksinya Gagal (Rejected / Cancelled)
+                        if ($item->transaction_type === 'Sale' && in_array($newStatus, ['Returned', 'Resolved (Fine Paid)'])) {
+                            continue; // Skip! Biarkan stoknya tetap berkurang karena sudah laku dibeli.
+                        }
+                        
                         $item->increment('stock_quantity', $detail->quantity);
                     }
                 }
             }
             
-            // Tarik kembali stok dari gudang (Kalau batal Restock)
+            // Tarik kembali stok dari gudang (Kalau batal Restock / status dimundurkan Admin)
             if (in_array($oldStatus, $restockStatuses) && !in_array($newStatus, $restockStatuses)) {
                 foreach ($order->orderItems as $detail) {
                     $item = \App\Models\Item::lockForUpdate()->find($detail->item_id);
                     if ($item) {
+                        // CEK: Sama seperti di atas. Barang Sale yang sudah sukses tidak perlu ditarik ulang stoknya.
+                        if ($item->transaction_type === 'Sale' && in_array($oldStatus, ['Returned', 'Resolved (Fine Paid)'])) {
+                            continue; 
+                        }
+
                         if ($item->stock_quantity < $detail->quantity) {
                             \Illuminate\Support\Facades\DB::rollBack();
                             return back()->with('error', "Gagal mengubah status! Stok '{$item->name}' sudah dipinjam orang lain dan tidak cukup untuk ditarik kembali.");

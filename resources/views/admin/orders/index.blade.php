@@ -58,21 +58,22 @@
             <div class="space-y-6">
                 @forelse($orders as $order)
                     @php
-                        // 🌟 LOGIKA WARNA STATUS BARU (TERMASUK RETURN DRIVE & BERITA ACARA)
+                        // 🌟 LOGIKA WARNA STATUS LENGKAP (TERMASUK PENDING REVIEW BA)
                         $statusColors = [
                             'Pending' => 'bg-amber-100 text-amber-800 border-amber-200',
                             'Approved' => 'bg-blue-100 text-blue-800 border-blue-200',
                             'Waiting for MoU' => 'bg-purple-100 text-purple-800 border-purple-200',
                             'Pending Review MoU' => 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200',
                             'Waiting for Payment' => 'bg-orange-100 text-orange-800 border-orange-200',
-                            'Paid' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                            'Pending Review Payment' => 'bg-yellow-100 text-yellow-800 border-yellow-200', 
                             'Waiting for Kwitansi' => 'bg-pink-100 text-pink-800 border-pink-200',
                             'Pending Review Kwitansi' => 'bg-rose-100 text-rose-800 border-rose-200',
                             'Handed Over' => 'bg-teal-100 text-teal-800 border-teal-200',
                             'Pending Return Review' => 'bg-cyan-100 text-cyan-800 border-cyan-200',
                             'Returned' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                            'Returned (Damaged)' => 'bg-red-100 text-red-800 border-red-200', // 🌟 NEW
-                            'Resolved (Fine Paid)' => 'bg-emerald-100 text-emerald-800 border-emerald-200', // 🌟 NEW
+                            'Returned (Damaged)' => 'bg-red-100 text-red-800 border-red-200',
+                            'Pending Review BA' => 'bg-orange-100 text-orange-800 border-orange-200', // 🌟 NEW
+                            'Resolved (Fine Paid)' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
                             'Rejected' => 'bg-red-100 text-red-800 border-red-200',
                             'Cancelled' => 'bg-gray-100 text-gray-800 border-gray-200',
                         ];
@@ -90,7 +91,7 @@
                             <div>
                                 <div class="flex justify-between items-start mb-4">
                                     <span class="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border {{ $badgeClass }}">
-                                        {{ $order->status }}
+                                        {{ $order->status === 'Waiting for Kwitansi' ? 'Paid / Tunggu Kwitansi' : $order->status }}
                                     </span>
                                     <span class="text-xs font-bold text-gray-400">{{ $order->created_at->format('d M Y') }}</span>
                                 </div>
@@ -154,7 +155,7 @@
                             </div>
 
                             <div class="space-y-3">
-                                <!-- 🌟 AREA DOKUMEN (INVOICE, MOU, KWITANSI) 🌟 -->
+                                <!-- 🌟 AREA DOKUMEN 🌟 -->
                                 <div class="flex flex-wrap gap-2">
                                     <a target="_blank" href="{{ route('student.document.invoice', $order->id) }}" class="flex-1 bg-white border border-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-widest py-3 px-2 rounded-xl text-center hover:bg-gray-50 hover:text-indigo-600 transition-all flex justify-center items-center gap-1 shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -204,7 +205,6 @@
                                     </a>
                                     @endif
 
-                                    <!-- 🌟 TOMBOL DOWNLOAD BERITA ACARA & CEK UPLOAD BA MHS 🌟 -->
                                     @if($order->ba_total_fine)
                                     <a target="_blank" href="{{ route('student.document.berita-acara', $order->id) }}" class="w-full bg-red-50 border border-red-200 text-red-700 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl text-center hover:bg-red-600 hover:text-white transition-all shadow-sm flex justify-center items-center gap-2 mb-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -220,12 +220,11 @@
                                     @endif
                                 </div>
 
-                                <!-- 🌟 UPDATE STATUS FORM & CUSTOM NUMBERS (DENGAN ALPINE.JS) 🌟 -->
+                                <!-- 🌟 UPDATE STATUS FORM & CUSTOM NUMBERS 🌟 -->
                                 <form x-data="{ status: '{{ $order->status }}' }" action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="flex flex-col gap-2 mt-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                                     @csrf 
                                     @method('PATCH')
                                     
-                                    <!-- INPUT CUSTOM INVOICE & KWITANSI -->
                                     <div class="grid grid-cols-2 gap-2 mb-1">
                                         <div>
                                             <label class="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1 ml-1">Invoice Num.</label>
@@ -237,8 +236,8 @@
                                         </div>
                                     </div>
 
-                                    <!-- 🌟 KOTAK INPUT BERITA ACARA (Muncul otomatis saat status "Returned (Damaged)") 🌟 -->
-                                    <div x-show="status === 'Returned (Damaged)'" style="display: none;" class="p-4 bg-red-50 border border-red-200 rounded-xl space-y-3 mb-2">
+                                    <!-- BA Input Box (Muncul saat Returned Damaged ATAU Pending Review BA) -->
+                                    <div x-show="status === 'Returned (Damaged)' || status === 'Pending Review BA'" style="display: none;" class="p-4 bg-red-50 border border-red-200 rounded-xl space-y-3 mb-2">
                                         <p class="text-[10px] font-black text-red-800 uppercase tracking-widest border-b border-red-200 pb-2 mb-2">Input Berita Acara & Denda</p>
                                         
                                         <div class="grid grid-cols-2 gap-2">
@@ -254,16 +253,16 @@
 
                                         <div>
                                             <label class="block text-[9px] font-black text-gray-500 uppercase">Rincian Rusak</label>
-                                            <textarea name="ba_description" rows="3" placeholder="Cth: 4 Headset HT (Rusak) @ Rp 35.000&#10;1 HT (Mati) @ Rp 200.000" class="w-full text-xs p-2 rounded-lg border-gray-300">{{ $order->ba_description }}</textarea>
+                                            <textarea name="ba_description" rows="3" placeholder="Cth: 4 Headset HT (Rusak) @ Rp 35.000" class="w-full text-xs p-2 rounded-lg border-gray-300">{{ $order->ba_description }}</textarea>
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-2 items-center">
                                             <div>
-                                                <label class="block text-[9px] font-black text-gray-500 uppercase">Maks. Bayar (Due Date)</label>
+                                                <label class="block text-[9px] font-black text-gray-500 uppercase">Due Date</label>
                                                 <input type="text" name="ba_due_date" value="{{ $order->ba_due_date }}" placeholder="13 April 2026" class="w-full text-xs p-2 rounded-lg border-gray-300">
                                             </div>
                                             <div>
-                                                <label class="block text-[9px] font-black text-red-600 uppercase">Total Denda (Rp)</label>
+                                                <label class="block text-[9px] font-black text-red-600 uppercase">Total Denda</label>
                                                 <input type="number" name="ba_total_fine" value="{{ $order->ba_total_fine }}" placeholder="340000" class="w-full text-xs p-2 rounded-lg border-red-300 bg-red-100 text-red-800 font-black">
                                             </div>
                                         </div>
@@ -277,15 +276,15 @@
                                             <option value="Waiting for MoU" {{ $order->status == 'Waiting for MoU' ? 'selected' : '' }}>Waiting for MoU</option>
                                             <option value="Pending Review MoU" {{ $order->status == 'Pending Review MoU' ? 'selected' : '' }}>Pending Review MoU</option>
                                             <option value="Waiting for Payment" {{ $order->status == 'Waiting for Payment' ? 'selected' : '' }}>Waiting for Payment</option>
-                                            <option value="Paid" {{ $order->status == 'Paid' ? 'selected' : '' }}>Paid</option>
-                                            <option value="Waiting for Kwitansi" {{ $order->status == 'Waiting for Kwitansi' ? 'selected' : '' }}>Waiting for Kwitansi</option>
+                                            <option value="Pending Review Payment" {{ $order->status == 'Pending Review Payment' ? 'selected' : '' }}>Pending Review Payment</option>
+                                            <option value="Waiting for Kwitansi" {{ $order->status == 'Waiting for Kwitansi' ? 'selected' : '' }}>Waiting for Kwitansi (Paid/TF Approved)</option>
                                             <option value="Pending Review Kwitansi" {{ $order->status == 'Pending Review Kwitansi' ? 'selected' : '' }}>Pending Review Kwitansi</option>
                                             <option value="Handed Over" {{ $order->status == 'Handed Over' ? 'selected' : '' }}>Handed Over</option>
                                             <option value="Pending Return Review" {{ $order->status == 'Pending Return Review' ? 'selected' : '' }}>Pending Return Review</option>
                                             
                                             <option value="Returned" {{ $order->status == 'Returned' ? 'selected' : '' }}>Returned (Aman/Selesai)</option>
-                                            <!-- 🌟 STATUS BARU UNTUK BERITA ACARA 🌟 -->
                                             <option value="Returned (Damaged)" {{ $order->status == 'Returned (Damaged)' ? 'selected' : '' }}>Returned (Ada Kerusakan/Denda)</option>
+                                            <option value="Pending Review BA" {{ $order->status == 'Pending Review BA' ? 'selected' : '' }}>Pending Review BA</option>
                                             <option value="Resolved (Fine Paid)" {{ $order->status == 'Resolved (Fine Paid)' ? 'selected' : '' }}>Resolved (Denda Lunas)</option>
                                             
                                             <option value="Rejected" {{ $order->status == 'Rejected' ? 'selected' : '' }}>Rejected</option>

@@ -54,28 +54,41 @@ class DocumentController extends Controller
         $pdf = Pdf::loadView('admin.pdf.kwitansi', compact('order'));
         $pdf->setPaper('a4', 'landscape'); // Kwitansi biasanya berbentuk memanjang (landscape)
 
-        // Kita gunakan stream() agar PDF-nya terbuka di tab baru browser, bukan langsung terdownload
         return $pdf->stream('Kwitansi_' . $order->order_number . '.pdf');
     }
 
     /**
-     * Upload MoU Bertanda Tangan
+     * Cetak Berita Acara (Barang Rusak/Hilang)
      */
+    public function downloadBeritaAcara(Order $order)
+    {
+        if (auth()->id() !== $order->user_id && auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $pdf = Pdf::loadView('admin.pdf.berita_acara', compact('order'));
+        $pdf->setPaper('a4', 'portrait');
+        
+        return $pdf->stream('Berita_Acara_' . $order->order_number . '.pdf');
+    }
+
+    /**
+     * =========================================================
+     * UPLOAD SECTION (DENGAN AUTO-TRIGGER STATUS REVIEW)
+     * =========================================================
+     */
+
     public function uploadSignedMou(Request $request, Order $order)
     {
-        // Validasi file
         $request->validate([
-            'signed_mou' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Maksimal 5MB
+            'signed_mou' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         if ($request->hasFile('signed_mou')) {
             $file = $request->file('signed_mou');
             $filename = 'Signed_MoU_' . $order->order_number . '.' . $file->getClientOriginalExtension();
-            
-            // Simpan ke storage/app/public/signed_mous
             $path = $file->storeAs('signed_mous', $filename, 'public');
 
-            // Update database dan ubah status agar Admin tahu
             $order->update([
                 'signed_mou' => $path,
                 'status' => 'Pending Review MoU'
@@ -83,13 +96,9 @@ class DocumentController extends Controller
 
             return back()->with('success', 'File MoU bertanda tangan berhasil dikirim! Menunggu verifikasi Admin SC.');
         }
-
         return back()->with('error', 'Gagal mengupload file.');
     }
     
-    /**
-     * Upload Bukti Transfer
-     */
     public function uploadPaymentReceipt(Request $request, Order $order)
     {
         $request->validate([
@@ -99,23 +108,18 @@ class DocumentController extends Controller
         if ($request->hasFile('payment_receipt')) {
             $file = $request->file('payment_receipt');
             $filename = 'Payment_' . $order->order_number . '_' . time() . '.' . $file->getClientOriginalExtension();
-            
             $path = $file->storeAs('payment_receipts', $filename, 'public');
 
             $order->update([
                 'payment_receipt' => $path,
-                // Status tidak otomatis berubah jadi Paid, biar Admin yang verifikasi
+                'status' => 'Pending Review Payment' 
             ]);
 
-            return back()->with('success', 'Bukti pembayaran berhasil di-upload! Menunggu verifikasi Admin.');
+            return back()->with('success', 'Bukti pembayaran berhasil di-upload! Menunggu verifikasi Admin SC.');
         }
-
         return back()->with('error', 'Gagal mengupload file.');
     }
 
-    /**
-     * 🌟 FUNGSI BARU: Upload Kwitansi Bertanda Tangan Mahasiswa 🌟
-     */
     public function uploadSignedKwitansi(Request $request, Order $order)
     {
         $request->validate([
@@ -125,55 +129,48 @@ class DocumentController extends Controller
         if ($request->hasFile('signed_kwitansi')) {
             $file = $request->file('signed_kwitansi');
             $filename = 'Signed_KWT_' . $order->order_number . '_' . time() . '.' . $file->getClientOriginalExtension();
-            
-            // Simpan ke folder public/signed_kwitansis
             $path = $file->storeAs('signed_kwitansis', $filename, 'public');
 
             $order->update([
                 'signed_kwitansi' => $path,
-                'status' => 'Pending Review Kwitansi' // Otomatis ubah status biar Admin ngeh
+                'status' => 'Pending Review Kwitansi' 
             ]);
 
             return back()->with('success', 'Kwitansi bertanda tangan berhasil di-upload! Menunggu verifikasi akhir Admin SC.');
         }
-
         return back()->with('error', 'Gagal mengupload file kwitansi.');
     }
-    /**
-     * 🌟 FUNGSI BARU: Submit Link Drive Bukti Pengembalian 🌟
-     */
+
     public function submitReturnLink(Request $request, Order $order)
     {
         $request->validate([
-            'return_drive_link' => 'required|url', // Wajib berupa link URL
+            'return_drive_link' => 'required|url', 
         ]);
 
         $order->update([
             'return_drive_link' => $request->return_drive_link,
-            'status' => 'Pending Return Review' // Otomatis ubah status biar Admin ngecek
+            'status' => 'Pending Return Review' 
         ]);
 
         return back()->with('success', 'Link bukti pengembalian berhasil dikirim! Menunggu Admin SC melakukan pengecekan barang fisik.');
     }
-    public function downloadBeritaAcara(Order $order)
-    {
-        $pdf = Pdf::loadView('admin.pdf.berita_acara', compact('order'));
-        $pdf->setPaper('a4', 'portrait');
-        return $pdf->stream('Berita_Acara_' . $order->order_number . '.pdf');
-    }
 
     public function uploadBeritaAcara(Request $request, Order $order)
     {
-        $request->validate(['signed_ba_file' => 'required|file|mimes:pdf|max:5120']);
+        $request->validate([
+            'signed_ba_file' => 'required|file|mimes:pdf|max:5120'
+        ]);
 
         if ($request->hasFile('signed_ba_file')) {
             $path = $request->file('signed_ba_file')->storeAs('berita_acara', 'BA_'.$order->order_number.'_'.time().'.pdf', 'public');
+            
             $order->update([
                 'signed_ba_file' => $path,
-                'status' => 'Resolved (Fine Paid)' // Selesai
+                'status' => 'Pending Review BA' // 🌟 Otomatis minta Admin review BA
             ]);
-            return back()->with('success', 'Berita Acara dan Bukti Denda berhasil di-upload! Kasus selesai.');
+            
+            return back()->with('success', 'Berita Acara dan Bukti Denda berhasil di-upload! Menunggu konfirmasi Admin SC.');
         }
-        return back()->with('error', 'Gagal mengupload file.');
+        return back()->with('error', 'Gagal mengupload file Berita Acara.');
     }
 }

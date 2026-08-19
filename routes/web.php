@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/orders', [AdminItemController::class, 'orders'])->name('orders');
         Route::patch('/orders/{order}/status', [AdminItemController::class, 'updateStatus'])->name('orders.update');  
+        Route::delete('/orders/{id}', [AdminItemController::class, 'destroyOrder'])->name('orders.destroy');
 
         // 🌟 PENGATURAN SISTEM & SOP
         Route::get('/settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');

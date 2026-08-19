@@ -16,27 +16,29 @@ class UserDashboardController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        
-        // 🌟 TIGA JALUR NAVIGASI: Default ke Internal Rental jika tidak ada filter
-        $type = $request->input('type', 'Internal Rental'); 
+        $type = $request->input('type'); // Kosong = Menampilkan Semua Barang
 
-        $items = Item::where('condition_status', 'Good')
-            ->where('transaction_type', $type) // 🔒 Filter ketat sesuai tab yang dipilih
-            // 🌟 TAMBAHAN: Load data order yang sedang aktif / belum selesai untuk jadwal
+        $query = Item::where('condition_status', 'Good')
             ->with(['orderItems.order' => function($q) {
-                $q->whereNotIn('status', ['Returned', 'Rejected', 'Cancelled'])
+                $q->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
                   ->where('end_date', '>=', now()->toDateString()) // Hanya jadwal hari ini & ke depan
                   ->orderBy('start_date', 'asc');
-            }])
-            ->when($search, function ($query, $search) {
-                return $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
-                });
-            })
-            ->latest()
-            ->paginate(8)
-            ->withQueryString();
+            }]);
+
+        // 🌟 JIKA ADA TAB YANG DIKLIK, BARU FILTER KATEGORINYA
+        if ($type) {
+            $query->where('transaction_type', $type);
+        }
+
+        // 🌟 LOGIKA PENCARIAN
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $items = $query->latest()->paginate(12)->withQueryString();
         
         // Cek isi keranjang saat ini untuk memunculkan notifikasi angka
         $cartCount = count(session()->get('cart', []));
@@ -51,36 +53,40 @@ class UserDashboardController extends Controller
     {
         // 1. ACTIVE ORDERS: Semua kuitansi yang aktif berjalan
         $activeLoans = Order::where('user_id', auth()->id())
-            ->whereNotIn('status', ['Returned', 'Cancelled', 'Rejected'])
+            ->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Cancelled', 'Rejected'])
             ->with('orderItems.item') 
             ->latest()
             ->get();
 
         // 2. PAST HISTORY: Untuk arsip mahasiswa (Selesai / Batal / Ditolak)
         $pastLoans = Order::where('user_id', auth()->id())
-            ->whereIn('status', ['Returned', 'Cancelled', 'Rejected'])
+            ->whereIn('status', ['Returned', 'Resolved (Fine Paid)', 'Cancelled', 'Rejected'])
             ->with('orderItems.item')
             ->latest()
             ->paginate(5); 
 
         return view('user.loans', compact('activeLoans', 'pastLoans'));
     }
+
+    /**
+     * 🗓️ Menampilkan jadwal detail suatu barang
+     */
     public function itemSchedule($id)
-{
-    $item = Item::findOrFail($id);
+    {
+        $item = Item::findOrFail($id);
 
-    // Ambil semua transaksi aktif untuk barang ini (Selain yang sudah dikembalikan/batal/beli putus)
-    $activeBookings = OrderItem::where('item_id', $id)
-        ->whereHas('order', function ($query) {
-            $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
-                  ->where('order_type', '!=', 'Sale');
-        })
-        ->with('order.user') // Load data order dan user
-        ->get()
-        ->sortBy(function ($orderItem) {
-            return $orderItem->order->start_date; // Urutkan dari tanggal terdekat
-        });
+        // Ambil semua transaksi aktif untuk barang ini (Selain yang sudah dikembalikan/batal/beli putus)
+        $activeBookings = OrderItem::where('item_id', $id)
+            ->whereHas('order', function ($query) {
+                $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
+                      ->where('order_type', '!=', 'Sale');
+            })
+            ->with('order.user') // Load data order dan user
+            ->get()
+            ->sortBy(function ($orderItem) {
+                return $orderItem->order->start_date; // Urutkan dari tanggal terdekat
+            });
 
-    return view('user.item_schedule', compact('item', 'activeBookings'));
-}
+        return view('user.item_schedule', compact('item', 'activeBookings'));
+    }
 }

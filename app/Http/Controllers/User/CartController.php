@@ -76,6 +76,7 @@ class CartController extends Controller
             'position' => 'required|string',
             'phone_number' => 'required|string',
             'proker_name' => 'required|string',
+            
             'treasurer_name' => 'required|string',
             'address' => 'required|string',
             'start_date' => 'nullable|date|after_or_equal:today',
@@ -98,7 +99,7 @@ class CartController extends Controller
                 // Hitung total unit yang sedang dipinjam oleh order lain PADA TANGGAL YANG BERSINGGUNGAN
                 $overlappingQty = OrderItem::where('item_id', $id)
                     ->whereHas('order', function ($query) use ($startDate, $endDate) {
-                        $query->whereNotIn('status', ['Returned', 'Rejected', 'Cancelled'])
+                        $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
                               ->where('order_type', '!=', 'Sale') // Abaikan transaksi Beli Putus
                               ->where('start_date', '<=', $endDate)  // Rumus Overlap Tgl
                               ->where('end_date', '>=', $startDate); // Rumus Overlap Tgl
@@ -153,6 +154,9 @@ class CartController extends Controller
                 'position' => $request->position,
                 'phone_number' => $request->phone_number,
                 'proker_name' => $request->proker_name,
+
+                'department' => '-',
+
                 'treasurer_name' => $request->treasurer_name,
                 'address' => $request->address,
                 'order_type' => $orderType,

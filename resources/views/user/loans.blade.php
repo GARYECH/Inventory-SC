@@ -29,16 +29,16 @@
             @endif
 
             <!-- 🟢 TRANSAKSI AKTIF -->
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+            <div class="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
                 <div class="flex items-center justify-between border-b border-gray-100 pb-5 mb-8">
-                    <h3 class="text-lg font-black text-gray-900 tracking-tight">Transaksi Aktif & Menunggu Persetujuan</h3>
-                    <span class="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl">Real-time Status</span>
+                    <h3 class="text-xl font-black text-gray-900 tracking-tight">Transaksi Aktif & Menunggu Persetujuan</h3>
+                    <span class="px-4 py-1.5 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl">Real-time Status</span>
                 </div>
                 
                 @if($activeLoans->isEmpty())
-                    <div class="text-center py-16"><p class="text-gray-400 font-bold text-xs uppercase tracking-widest">Belum ada transaksi aktif saat ini.</p></div>
+                    <div class="text-center py-16"><p class="text-gray-400 font-bold text-sm uppercase tracking-widest">Belum ada transaksi aktif saat ini.</p></div>
                 @else
-                    <div class="space-y-6">
+                    <div class="space-y-8">
                         @foreach($activeLoans as $order)
                             @php
                                 $statusColors = [
@@ -60,198 +60,212 @@
                                 $badgeClass = $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
                             @endphp
 
-                            <div class="border border-gray-100 rounded-3xl p-6 bg-gray-50/50 hover:bg-white hover:shadow-xl transition-all duration-300">
-                                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 pb-5 mb-5 gap-4">
+                            <!-- THE ORDER CARD -->
+                            <div class="border border-gray-100 rounded-[2.5rem] p-6 md:p-8 bg-gray-50/50 hover:bg-white hover:shadow-xl transition-all duration-300">
+                                
+                                <!-- 🌟 HEADER INFO -->
+                                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-200 pb-6 mb-8 gap-4">
                                     <div>
-                                        <h4 class="font-black text-indigo-600 text-xl tracking-tight">{{ $order->order_number }}</h4>
-                                        <p class="text-xs font-bold text-gray-500 mt-1">
-                                            Proker: <span class="text-gray-800">{{ $order->proker_name }}</span> | Tipe: <span class="text-gray-800">{{ $order->order_type }}</span>
-                                        </p>
+                                        <h4 class="font-black text-indigo-600 text-2xl tracking-tight mb-2">{{ $order->order_number }}</h4>
+                                        <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-gray-500">
+                                            <span>Proker: <span class="text-gray-900">{{ $order->proker_name }}</span></span>
+                                            <span class="w-1 h-1 bg-gray-300 rounded-full mx-1"></span>
+                                            <span>Org: <span class="text-gray-900">{{ $order->organization }}</span></span>
+                                            <span class="w-1 h-1 bg-gray-300 rounded-full mx-1"></span>
+                                            <span>Tipe: <span class="text-gray-900">{{ $order->order_type }}</span></span>
+                                        </div>
                                         @if($order->order_type !== 'Sale' && $order->start_date)
-                                            <p class="text-xs font-black text-indigo-500 mt-1.5 flex items-center">
-                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <div class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-[11px] font-black text-indigo-600 uppercase tracking-widest">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                                 Jadwal: {{ \Carbon\Carbon::parse($order->start_date)->format('d M Y') }} - {{ \Carbon\Carbon::parse($order->end_date)->format('d M Y') }}
-                                            </p>
+                                            </div>
                                         @endif
                                     </div>
-                                    <div>
-                                        <span class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border {{ $badgeClass }} shadow-sm inline-block">
+                                    <div class="md:text-right mt-2 md:mt-0">
+                                        <span class="px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest border {{ $badgeClass }} shadow-sm inline-block">
                                             {{ $order->status === 'Waiting for Kwitansi' ? 'Paid / Tunggu Kwitansi' : $order->status }}
                                         </span>
                                     </div>
                                 </div>
                                 
-                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    <div class="lg:col-span-2">
-                                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Rincian Barang:</p>
-                                        <div class="space-y-2">
-                                            <!-- 🌟 HARGA SATUAN & SUBTOTAL DITAMBAHKAN DI SINI 🌟 -->
+                                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                                    
+                                    <!-- 🌟 KIRI: RINCIAN BARANG -->
+                                    <div class="lg:col-span-7 flex flex-col">
+                                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Rincian Barang</p>
+                                        
+                                        <div class="space-y-4 flex-grow">
                                             @foreach($order->orderItems as $detail)
-                                                <div class="flex justify-between items-center bg-white p-4 border border-gray-100 rounded-2xl shadow-sm">
-                                                    <div class="flex items-center gap-3">
-                                                        <div class="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center font-black text-xs text-indigo-600 border border-indigo-100 shrink-0">
-                                                            {{ $detail->quantity }}x
+                                                @php
+                                                    // 🌟 LOGIKA ANTI BOCOR (SUPER KETAT) 🌟
+                                                    // 1. Cek secara eksplisit nama organisasinya
+                                                    $isSC = $order->organization === 'Student Council';
+                                                    $isInternal = str_contains($detail->item->transaction_type, 'Internal');
+                                                    $isFree = $isSC && $isInternal;
+                                                    
+                                                    // 2. Ambil harga asli. Kalau dari pivot error/0, tembak langsung ke tabel master Item.
+                                                    $basePrice = ($detail->price && $detail->price > 0) ? $detail->price : $detail->item->price;
+                                                    
+                                                    // 3. Kalkulasi Akhir
+                                                    $actualPrice = $isFree ? 0 : $basePrice;
+                                                    $subtotal = $actualPrice * $detail->quantity;
+                                                @endphp
+
+                                                <div class="flex flex-col sm:flex-row justify-between sm:items-center bg-white p-5 border border-gray-100 rounded-2xl shadow-sm gap-4">
+                                                    
+                                                    <div class="flex items-center gap-5">
+                                                        <div class="w-14 h-14 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center shrink-0">
+                                                            <span class="font-black text-xl text-indigo-600">{{ $detail->quantity }}<span class="text-xs text-indigo-400 ml-0.5">x</span></span>
                                                         </div>
                                                         <div>
-                                                            <span class="block font-black text-gray-900 text-sm leading-tight">{{ $detail->item->name }}</span>
-                                                            <span class="block text-[10px] font-bold mt-1">
-                                                                @if($detail->price == 0)
-                                                                    <span class="text-emerald-500">FREE (SC Internal)</span>
-                                                                @else
-                                                                    <span class="text-gray-400">Harga Satuan: Rp {{ number_format($detail->price, 0, ',', '.') }}</span>
-                                                                @endif
-                                                            </span>
+                                                            <span class="block font-black text-gray-900 text-lg leading-tight mb-1.5">{{ $detail->item->name }}</span>
+                                                            
+                                                            @if($isFree)
+                                                                <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-emerald-100 inline-block">Free (SC Internal)</span>
+                                                            @else
+                                                                <span class="block text-xs font-bold text-gray-500">Harga Satuan: Rp {{ number_format($actualPrice, 0, ',', '.') }}</span>
+                                                            @endif
                                                         </div>
                                                     </div>
-                                                    <div class="text-right shrink-0 pl-4 border-l border-gray-50">
-                                                        <span class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Subtotal</span>
-                                                        <span class="block font-black text-indigo-600 text-sm">Rp {{ number_format($detail->price * $detail->quantity, 0, ',', '.') }}</span>
+
+                                                    <div class="sm:text-right pl-[4.5rem] sm:pl-0">
+                                                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Subtotal</span>
+                                                        <span class="block font-black text-indigo-600 text-xl leading-none">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                                                     </div>
                                                 </div>
                                             @endforeach
                                         </div>
                                     </div>
                                     
-                                    <div class="flex flex-col justify-between bg-white p-5 border border-gray-100 rounded-2xl shadow-sm">
-                                        <div>
-                                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Grand Total</p>
-                                            <p class="text-2xl font-black text-gray-900">Rp {{ number_format($order->total_price, 0, ',', '.') }}</p>
+                                    <!-- 🌟 KANAN: TOTAL & ACTION BOX -->
+                                    <div class="lg:col-span-5 flex flex-col gap-5">
+                                        <!-- GRAND TOTAL -->
+                                        <div class="bg-gray-900 p-6 rounded-2xl text-white shadow-xl shadow-gray-200 flex justify-between items-center">
+                                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Grand Total</p>
+                                            <p class="text-3xl font-black tracking-tight">Rp {{ number_format($order->total_price, 0, ',', '.') }}</p>
                                         </div>
                                         
-                                        <!-- 🌟 LOGIKA FASE PADA LAYAR MAHASISWA 🌟 -->
-                                        <div class="mt-6 space-y-2">
+                                        <!-- ACTION BOX -->
+                                        <div class="bg-white p-6 border border-gray-100 rounded-2xl shadow-sm flex-grow">
                                             
                                             <!-- ================= FASE 1: MOU ================= -->
                                             @if($order->status === 'Waiting for MoU' || $order->status === 'Pending Review MoU')
-                                                <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
-                                                    <p class="text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-3">📄 Tahap 1: Surat MoU</p>
-                                                    
-                                                    <a href="{{ route('student.document.mou', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-indigo-600 text-white py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 mb-3 shadow-sm">
-                                                        📥 Download MoU Kosong
-                                                    </a>
-                                                    
-                                                    @if($order->status === 'Waiting for MoU') <!-- TOMBOL MUNCUL -->
-                                                        <form action="{{ route('student.orders.upload-mou', $order->id) }}" method="POST" enctype="multipart/form-data" class="bg-white p-3 rounded-lg border border-indigo-100">
-                                                            @csrf
-                                                            <input type="file" name="signed_mou" accept=".pdf,.jpg,.png" required class="w-full text-[9px] mb-2 cursor-pointer font-bold text-gray-500">
-                                                            <button type="submit" class="w-full py-2 bg-gray-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-sm">Upload MoU TTD</button>
-                                                        </form>
-                                                    @else <!-- TOMBOL NGUMPET -->
-                                                        <div class="p-2 bg-white rounded-lg text-center border border-indigo-100"><p class="text-[9px] font-black text-indigo-600 uppercase tracking-widest">MoU Sedang Direview Admin</p></div>
-                                                    @endif
-                                                </div>
+                                                <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4">📄 Tahap 1: Surat MoU</p>
+                                                
+                                                <a href="{{ route('student.document.mou', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-indigo-50 text-indigo-700 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 mb-4 shadow-sm">
+                                                    📥 Download MoU Kosong
+                                                </a>
+                                                
+                                                @if($order->status === 'Waiting for MoU')
+                                                    <form action="{{ route('student.orders.upload-mou', $order->id) }}" method="POST" enctype="multipart/form-data">
+                                                        @csrf
+                                                        <input type="file" name="signed_mou" accept=".pdf,.jpg,.png" required class="block w-full text-[10px] mb-3 cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                                                        <button type="submit" class="w-full py-3.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-sm">Upload MoU TTD</button>
+                                                    </form>
+                                                @else
+                                                    <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">MoU Sedang Direview Admin</p></div>
+                                                @endif
 
                                             <!-- ================= FASE 2: PAYMENT ================= -->
                                             @elseif($order->status === 'Waiting for Payment' || $order->status === 'Pending Review Payment')
-                                                <div class="p-4 bg-orange-50 border border-orange-200 rounded-xl">
-                                                    <p class="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-3">💳 Tahap 2: Pembayaran</p>
-                                                    
-                                                    <a href="{{ route('student.document.invoice', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-gray-900 text-white py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 mb-3 shadow-sm">
-                                                        📥 Download Tagihan (Invoice)
-                                                    </a>
-                                                    
-                                                    @if($order->status === 'Waiting for Payment') <!-- TOMBOL MUNCUL -->
-                                                        <form action="{{ route('student.orders.upload-payment', $order->id) }}" method="POST" enctype="multipart/form-data" class="bg-white p-3 rounded-lg border border-orange-100">
-                                                            @csrf
-                                                            <input type="file" name="payment_receipt" accept=".pdf,.jpg,.png" required class="w-full text-[9px] mb-2 cursor-pointer font-bold text-gray-500">
-                                                            <button type="submit" class="w-full py-2 bg-orange-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-orange-700 transition shadow-sm">Upload Bukti Transfer</button>
-                                                        </form>
-                                                    @else <!-- TOMBOL NGUMPET -->
-                                                        <div class="p-2 bg-white rounded-lg text-center border border-orange-100"><p class="text-[9px] font-black text-orange-600 uppercase tracking-widest">Bukti Transfer Direview Admin</p></div>
-                                                    @endif
-                                                </div>
+                                                <p class="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-4">💳 Tahap 2: Pembayaran</p>
+                                                
+                                                <a href="{{ route('student.document.invoice', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-orange-50 text-orange-700 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 mb-4 shadow-sm">
+                                                    📥 Download Invoice
+                                                </a>
+                                                
+                                                @if($order->status === 'Waiting for Payment')
+                                                    <form action="{{ route('student.orders.upload-payment', $order->id) }}" method="POST" enctype="multipart/form-data">
+                                                        @csrf
+                                                        <input type="file" name="payment_receipt" accept=".pdf,.jpg,.png" required class="block w-full text-[10px] mb-3 cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                                                        <button type="submit" class="w-full py-3.5 bg-orange-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition shadow-sm">Upload Bukti Transfer</button>
+                                                    </form>
+                                                @else
+                                                    <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bukti Transfer Direview Admin</p></div>
+                                                @endif
 
                                             <!-- ================= FASE 3: PAID / KWITANSI ================= -->
                                             @elseif($order->status === 'Waiting for Kwitansi' || $order->status === 'Pending Review Kwitansi')
                                                 
-                                                <!-- 🌟 NOTIFIKASI PAYMENT APPROVED 🌟 -->
                                                 @if($order->status === 'Waiting for Kwitansi')
-                                                <div class="mb-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 shadow-sm">
-                                                    <div class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shrink-0">
+                                                <div class="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 shadow-sm">
+                                                    <div class="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shrink-0">
                                                         <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                                     </div>
-                                                    <p class="text-[9px] font-black text-emerald-800 uppercase tracking-widest">Bukti Transfer Approved!</p>
+                                                    <p class="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Pembayaran Approved!</p>
                                                 </div>
                                                 @endif
 
-                                                <div class="p-4 bg-pink-50 border border-pink-200 rounded-xl">
-                                                    <p class="text-[10px] font-black text-pink-800 uppercase tracking-widest mb-1">🧾 Tahap 3: Kwitansi Resmi</p>
-                                                    <p class="text-[9px] text-pink-600 mb-3 font-bold">Download, tandatangani, dan upload ulang Kwitansi SC.</p>
+                                                <p class="text-[10px] font-black text-pink-600 uppercase tracking-widest mb-1">🧾 Tahap 3: Kwitansi Resmi</p>
+                                                <p class="text-[10px] text-gray-500 mb-4 font-bold">Download, tandatangani, dan upload ulang.</p>
 
-                                                    <a href="{{ route('student.document.kwitansi', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-emerald-500 text-white py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 mb-3 shadow-sm">
-                                                        📥 Download Kwitansi
+                                                <a href="{{ route('student.document.kwitansi', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-pink-50 text-pink-700 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-pink-100 mb-4 shadow-sm">
+                                                    📥 Download Kwitansi
+                                                </a>
+                                                
+                                                @if($order->status === 'Waiting for Kwitansi')
+                                                    <form action="{{ route('student.orders.upload-kwitansi', $order->id) }}" method="POST" enctype="multipart/form-data">
+                                                        @csrf
+                                                        <input type="file" name="signed_kwitansi" accept=".pdf,.jpg,.png" required class="block w-full text-[10px] mb-3 cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                                                        <button type="submit" class="w-full py-3.5 bg-pink-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-pink-700 transition shadow-sm">Upload Kwitansi TTD</button>
+                                                    </form>
+                                                @else
+                                                    <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Kwitansi TTD Direview Admin</p></div>
+                                                @endif
+
+                                            <!-- ================= FASE 4: HANDED OVER ================= -->
+                                            @elseif($order->status === 'Handed Over' || $order->status === 'Pending Return Review')
+                                                <p class="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-1">📦 Tahap 4: Pengembalian Barang</p>
+                                                <p class="text-[10px] text-gray-500 mb-4 font-bold">Masukkan Link Drive foto aset sebelum dikembalikan.</p>
+                                                
+                                                @if($order->status === 'Handed Over')
+                                                    <form action="{{ route('student.orders.return-link', $order->id) }}" method="POST">
+                                                        @csrf
+                                                        <input type="url" name="return_drive_link" placeholder="https://drive.google.com/..." required class="w-full px-4 py-3.5 border border-gray-200 bg-gray-50 rounded-xl text-xs mb-3 font-bold text-gray-800 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
+                                                        <button type="submit" class="w-full bg-cyan-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-cyan-700 transition shadow-sm">Submit Bukti Return</button>
+                                                    </form>
+                                                @else
+                                                    <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Drive Terkirim. Admin Cek Fisik.</p></div>
+                                                @endif
+
+                                            <!-- ================= FASE 5: BARANG RUSAK ================= -->
+                                            @elseif($order->status === 'Returned (Damaged)' || $order->status === 'Pending Review BA')
+                                                <p class="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">⚠️ Tahap 5: Penyelesaian Denda</p>
+                                                
+                                                @if($order->ba_total_fine)
+                                                    <p class="text-[10px] text-gray-500 mb-4 font-bold">Download BA, TTD, gabung Bukti TF Denda jadi 1 PDF.</p>
+                                                    <a href="{{ route('student.document.berita-acara', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-red-50 text-red-600 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 mb-4 shadow-sm">
+                                                        📥 Download Berita Acara
                                                     </a>
                                                     
-                                                    @if($order->status === 'Waiting for Kwitansi') <!-- TOMBOL MUNCUL -->
-                                                        <form action="{{ route('student.orders.upload-kwitansi', $order->id) }}" method="POST" enctype="multipart/form-data" class="bg-white p-3 rounded-lg border border-pink-100 flex flex-col gap-2">
+                                                    @if($order->status === 'Returned (Damaged)')
+                                                        <form action="{{ route('student.orders.upload-ba', $order->id) }}" method="POST" enctype="multipart/form-data">
                                                             @csrf
-                                                            <input type="file" name="signed_kwitansi" accept=".pdf,.jpg,.png" required class="w-full text-[9px] cursor-pointer font-bold text-gray-500">
-                                                            <button type="submit" class="w-full py-2 bg-pink-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-pink-700 transition shadow-sm">Upload Kwitansi TTD</button>
+                                                            <input type="file" name="signed_ba_file" accept=".pdf" required class="block w-full text-[10px] mb-3 cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                                                            <button type="submit" class="w-full bg-gray-900 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">Upload Penyelesaian</button>
                                                         </form>
-                                                    @else <!-- TOMBOL NGUMPET -->
-                                                        <div class="p-2 bg-white rounded-lg text-center border border-pink-100"><p class="text-[9px] font-black text-pink-600 uppercase tracking-widest">Kwitansi TTD Direview Admin</p></div>
-                                                    @endif
-                                                </div>
-
-                                            <!-- ================= FASE 4: HANDED OVER (DRIVE PENGEMBALIAN) ================= -->
-                                            @elseif($order->status === 'Handed Over' || $order->status === 'Pending Return Review')
-                                                <div class="p-4 bg-cyan-50 border border-cyan-200 rounded-xl">
-                                                    <p class="text-[10px] font-black text-cyan-800 uppercase tracking-widest mb-1">📦 Tahap 4: Pengembalian Barang</p>
-                                                    
-                                                    @if($order->status === 'Handed Over') <!-- TOMBOL MUNCUL -->
-                                                        <p class="text-[9px] text-cyan-600 mb-3 font-bold">Masukkan Link Drive foto aset sebelum dikembalikan.</p>
-                                                        <form action="{{ route('student.orders.return-link', $order->id) }}" method="POST" class="bg-white p-3 rounded-lg border border-cyan-100">
-                                                            @csrf
-                                                            <input type="url" name="return_drive_link" placeholder="https://drive.google.com/..." required class="w-full px-3 py-2 border border-cyan-200 bg-gray-50 rounded-lg text-[10px] mb-2 font-bold text-gray-800">
-                                                            <button type="submit" class="w-full bg-cyan-600 text-white py-2 rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-cyan-700 transition shadow-sm">Submit Bukti Return</button>
-                                                        </form>
-                                                    @else <!-- TOMBOL NGUMPET -->
-                                                        <div class="p-2 bg-white rounded-lg text-center border border-cyan-100"><p class="text-[9px] font-black text-cyan-700 uppercase tracking-widest">Drive Terkirim. Admin Cek Fisik.</p></div>
-                                                    @endif
-                                                </div>
-
-                                            <!-- ================= FASE 5: BARANG RUSAK (BERITA ACARA) ================= -->
-                                            @elseif($order->status === 'Returned (Damaged)' || $order->status === 'Pending Review BA')
-                                                <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
-                                                    <p class="text-[10px] font-black text-red-800 uppercase tracking-widest mb-1">⚠️ Tahap 5: Penyelesaian Denda</p>
-                                                    
-                                                    <!-- CEK APAKAH ADA TOTAL DENDA (ADMIN SUDAH INPUT BA) -->
-                                                    @if($order->ba_total_fine)
-                                                        <p class="text-[9px] text-red-600 mb-3 font-bold">Download BA, TTD, gabungkan dengan Bukti Transfer Denda jadi 1 file PDF.</p>
-                                                        <a href="{{ route('student.document.berita-acara', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-red-600 text-white py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-700 mb-3 shadow-sm">
-                                                            📥 Download Berita Acara
-                                                        </a>
-                                                        
-                                                        @if($order->status === 'Returned (Damaged)') <!-- TOMBOL MUNCUL -->
-                                                            <form action="{{ route('student.orders.upload-ba', $order->id) }}" method="POST" enctype="multipart/form-data" class="bg-white p-3 rounded-lg border border-red-100 flex flex-col gap-2">
-                                                                @csrf
-                                                                <input type="file" name="signed_ba_file" accept=".pdf" required class="w-full text-[9px] cursor-pointer font-bold text-gray-500">
-                                                                <button type="submit" class="w-full bg-gray-900 text-white py-2 rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">Upload Penyelesaian</button>
-                                                            </form>
-                                                        @else <!-- TOMBOL NGUMPET -->
-                                                            <div class="p-2 bg-white rounded-lg text-center border border-red-100"><p class="text-[9px] font-black text-red-700 uppercase tracking-widest">Dokumen Denda Direview Admin</p></div>
-                                                        @endif
                                                     @else
-                                                        <div class="p-2 bg-white rounded-lg text-center border border-red-100"><p class="text-[9px] font-black text-red-700 uppercase tracking-widest">Menunggu Rincian dari Admin SC</p></div>
+                                                        <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dokumen Denda Direview Admin</p></div>
                                                     @endif
-                                                </div>
+                                                @else
+                                                    <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200 mt-4"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Menunggu Rincian dari Admin</p></div>
+                                                @endif
 
-                                            <!-- ================= FASE 6: AMAN / SELESAI ================= -->
+                                            <!-- ================= FASE 6: SELESAI ================= -->
                                             @elseif(in_array($order->status, ['Returned', 'Resolved (Fine Paid)']))
-                                                <div class="p-3 bg-emerald-50 rounded-xl text-center border border-emerald-200">
-                                                    <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">✅ Transaksi Selesai & Ditutup</p>
+                                                <div class="p-4 bg-emerald-50 rounded-xl text-center border border-emerald-100 mb-3">
+                                                    <p class="text-[11px] font-black text-emerald-600 uppercase tracking-widest">✅ Transaksi Selesai</p>
                                                 </div>
-                                                <a href="{{ route('student.document.invoice', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-gray-900 text-white py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-sm mt-2">
+                                                <a href="{{ route('student.document.invoice', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-gray-900 text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-sm">
                                                     Lihat Invoice Terakhir
                                                 </a>
 
                                             @else
-                                                <div class="py-2 px-3 bg-gray-50 rounded-xl text-center border border-gray-200">
-                                                    <p class="text-[9px] font-bold text-gray-400 italic">Menunggu pembaruan status dari Admin SC...</p>
+                                                <div class="py-6 px-4 text-center">
+                                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Menunggu pembaruan status...</p>
                                                 </div>
                                             @endif
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
@@ -261,28 +275,31 @@
             </div>
 
             <!-- 🔴 RIWAYAT MASA LALU (Arsip) -->
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
-                <h3 class="text-lg font-black text-gray-400 tracking-tight border-b border-gray-100 pb-5 mb-8">Arsip Transaksi (Selesai / Batal / Ditolak)</h3>
+            <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
+                <h3 class="text-xl font-black text-gray-900 tracking-tight border-b border-gray-100 pb-5 mb-8">Arsip Transaksi (Selesai / Batal / Ditolak)</h3>
                 
                 @if($pastLoans->isEmpty())
-                    <div class="text-center py-12"><p class="text-gray-400 font-bold text-xs uppercase tracking-widest">Belum ada riwayat arsip transaksi.</p></div>
+                    <div class="text-center py-12"><p class="text-gray-400 font-bold text-sm uppercase tracking-widest">Belum ada riwayat arsip transaksi.</p></div>
                 @else
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500">
                             <thead class="text-[10px] text-gray-400 uppercase bg-gray-50/50 border-b border-gray-100 tracking-wider">
                                 <tr>
-                                    <th class="px-6 py-4 rounded-l-2xl">No. Order</th>
-                                    <th class="px-6 py-4">Total Tagihan</th>
-                                    <th class="px-6 py-4 text-right rounded-r-2xl">Status Akhir</th>
+                                    <th class="px-6 py-5 rounded-l-2xl">No. Order</th>
+                                    <th class="px-6 py-5">Total Tagihan</th>
+                                    <th class="px-6 py-5 text-right rounded-r-2xl">Status Akhir</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
                                 @foreach($pastLoans as $order)
                                     <tr class="hover:bg-gray-50/50 transition-colors">
-                                        <td class="px-6 py-4 font-black text-gray-900">{{ $order->order_number }}</td>
-                                        <td class="px-6 py-4 font-black text-indigo-600">Rp {{ number_format($order->total_price, 0, ',', '.') }}</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <span class="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border {{ in_array($order->status, ['Returned', 'Resolved (Fine Paid)']) ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-red-100 text-red-800 border-red-200' }}">
+                                        <td class="px-6 py-5">
+                                            <span class="block font-black text-gray-900 text-base">{{ $order->order_number }}</span>
+                                            <span class="block text-xs font-bold text-gray-400 mt-1">{{ $order->proker_name }}</span>
+                                        </td>
+                                        <td class="px-6 py-5 font-black text-indigo-600 text-base">Rp {{ number_format($order->total_price, 0, ',', '.') }}</td>
+                                        <td class="px-6 py-5 text-right">
+                                            <span class="px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl border {{ in_array($order->status, ['Returned', 'Resolved (Fine Paid)']) ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100' }}">
                                                 {{ $order->status }}
                                             </span>
                                         </td>
@@ -291,7 +308,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <!-- Pagination (Opsional jika dibutuhkan) -->
                     <div class="mt-8 flex justify-center">
                         <div class="bg-white px-2 py-1 rounded-2xl shadow-sm border border-gray-100">
                             {{ $pastLoans->links() }}

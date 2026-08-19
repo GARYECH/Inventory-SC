@@ -20,6 +20,10 @@
                     <!-- Search & Cart Action -->
                     <div class="flex items-center gap-4 w-full md:w-auto flex-1 justify-end">
                         <form action="{{ route('student.dashboard') }}" method="GET" id="searchForm" class="relative group w-full md:w-80">
+                            <!-- Pertahankan Filter Type saat mencari -->
+                            @if(request('type'))
+                                <input type="hidden" name="type" value="{{ request('type') }}">
+                            @endif
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <svg class="h-4 w-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
@@ -65,9 +69,59 @@
                 </div>
             @endif
 
+            <!-- 🗂️ PREMIUM CATEGORY TABS (SCROLLABLE ON MOBILE) -->
+            <div class="mb-10">
+                <div class="flex flex-nowrap overflow-x-auto gap-4 pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    
+                    <!-- Tab: Semua Barang -->
+                    <a href="{{ route('student.dashboard') }}" 
+                       class="relative flex items-center gap-3 px-6 py-3.5 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all duration-300 shrink-0 border-2 {{ !request('type') ? 'bg-gray-900 border-gray-900 text-white shadow-xl shadow-gray-300/50' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50' }}">
+                        <svg class="w-5 h-5 {{ !request('type') ? 'text-white' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        Semua Katalog
+                    </a>
+                    
+                    <!-- Tab: Internal Rental -->
+                    <a href="{{ route('student.dashboard', ['type' => 'Internal Rental']) }}" 
+                       class="relative flex items-center gap-3 px-6 py-3.5 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all duration-300 shrink-0 border-2 {{ request('type') == 'Internal Rental' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xl shadow-indigo-100/50' : 'bg-white border-gray-100 text-gray-500 hover:border-indigo-100 hover:text-indigo-600 hover:bg-indigo-50/50' }}">
+                        <div class="w-2.5 h-2.5 rounded-full {{ request('type') == 'Internal Rental' ? 'bg-indigo-500 animate-pulse' : 'bg-gray-300' }}"></div>
+                        Internal SC
+                    </a>
+
+                    <!-- Tab: Vendor Rental -->
+                    <a href="{{ route('student.dashboard', ['type' => 'Vendor Rental']) }}" 
+                       class="relative flex items-center gap-3 px-6 py-3.5 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all duration-300 shrink-0 border-2 {{ request('type') == 'Vendor Rental' ? 'bg-amber-50 border-amber-200 text-amber-700 shadow-xl shadow-amber-100/50' : 'bg-white border-gray-100 text-gray-500 hover:border-amber-100 hover:text-amber-600 hover:bg-amber-50/50' }}">
+                        <div class="w-2.5 h-2.5 rounded-full {{ request('type') == 'Vendor Rental' ? 'bg-amber-500 animate-pulse' : 'bg-gray-300' }}"></div>
+                        External / Vendor
+                    </a>
+
+                    <!-- Tab: Merchandise -->
+                    <a href="{{ route('student.dashboard', ['type' => 'Sale']) }}" 
+                       class="relative flex items-center gap-3 px-6 py-3.5 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all duration-300 shrink-0 border-2 {{ request('type') == 'Sale' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-xl shadow-emerald-100/50' : 'bg-white border-gray-100 text-gray-500 hover:border-emerald-100 hover:text-emerald-600 hover:bg-emerald-50/50' }}">
+                        <div class="w-2.5 h-2.5 rounded-full {{ request('type') == 'Sale' ? 'bg-emerald-500 animate-pulse' : 'bg-gray-300' }}"></div>
+                        Merchandise (Beli)
+                    </a>
+                </div>
+            </div>
+
             <!-- 🗃️ GRID BARANG -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 @foreach($items as $item)
+                
+                @php
+                    if($item->transaction_type !== 'Sale') {
+                        $activeSchedules = $item->orderItems->filter(function($detail) {
+                            return $detail->order && !in_array($detail->order->status, ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled']) && $detail->order->order_type !== 'Sale';
+                        });
+                        
+                        // Sorting untuk Timeline Preview
+                        $activeSchedules = $activeSchedules->sortBy(function($detail) {
+                            return \Carbon\Carbon::parse($detail->order->start_date)->timestamp;
+                        });
+                        $displaySchedules = $activeSchedules->take(2); // Cuma nampilin 2 terdekat
+                        $remainingCount = $activeSchedules->count() - 2;
+                    }
+                @endphp
+
                 <div class="group relative bg-white overflow-hidden shadow-sm sm:rounded-[2rem] flex flex-col border border-gray-100 hover:shadow-2xl hover:shadow-indigo-100/50 transition-all duration-500 transform hover:-translate-y-2">
                     
                     <!-- Area Foto -->
@@ -107,56 +161,43 @@
                                 <span class="text-lg font-black text-indigo-600">Rp {{ number_format($item->price, 0, ',', '.') }}</span>
                             </div>
                             <div class="text-right">
+                                <!-- 🌟 TAMPILAN STOK TOTAL ASET 🌟 -->
                                 <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Stok Total Aset</p>
                                 <span class="text-sm font-black {{ $item->stock_quantity > 0 ? 'text-gray-900' : 'text-red-500' }}">{{ $item->stock_quantity }}</span>
                             </div>
                         </div>
 
-                        <!-- 🌟 📅 JADWAL TERPAKAI (Diperbaiki agar hanya menampilkan status AKTIF) 🌟 -->
-                    
-@if($item->transaction_type !== 'Sale')
-    @php
-        $activeSchedules = $item->orderItems->filter(function($detail) {
-            return $detail->order && !in_array($detail->order->status, ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled']) && $detail->order->order_type !== 'Sale';
-        })->sortBy(function($detail) {
-            return \Carbon\Carbon::parse($detail->order->start_date)->timestamp;
-        });
-        
-        $displaySchedules = $activeSchedules->take(2); // Ambil 2 terdekat
-        $remainingCount = $activeSchedules->count() - 2; // Hitung sisanya
-    @endphp
-    
-    @if($activeSchedules->count() > 0)
-        <div class="mt-4 p-3 bg-orange-50/80 border border-orange-100 rounded-2xl">
-            <p class="text-[9px] font-black text-orange-600 uppercase tracking-widest mb-2 flex items-center gap-1">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                Sedang Ter-Booking:
-            </p>
-            <ul class="text-[10px] text-orange-700 space-y-1.5">
-                @foreach($displaySchedules as $detail)
-                    <li class="flex justify-between items-center bg-white px-2.5 py-2 rounded-xl border border-orange-50 shadow-sm">
-                        <span class="font-bold">{{ \Carbon\Carbon::parse($detail->order->start_date)->format('d M') }} - {{ \Carbon\Carbon::parse($detail->order->end_date)->format('d M') }}</span>
-                        <span class="font-black bg-orange-100 text-orange-600 px-2 py-1 rounded-lg text-[9px]">{{ $detail->quantity }} Unit</span>
-                    </li>
-                @endforeach
-            </ul>
-            
-            <!-- Jika jadwal lebih dari 2 -->
-            @if($remainingCount > 0)
-                <div class="mt-2 text-center bg-orange-100/50 py-1.5 rounded-lg border border-orange-100 border-dashed">
-                    <p class="text-[9px] font-black text-orange-500 uppercase tracking-widest">+ {{ $remainingCount }} Jadwal Lainnya</p>
-                </div>
-            @endif
-        </div>
-    @endif
-@endif
+                        <!-- 🌟 📅 JADWAL TERPAKAI (LIMIT 2 ITEM TERDEKAT) 🌟 -->
+                        @if($item->transaction_type !== 'Sale' && $activeSchedules->count() > 0)
+                            <div class="mt-4 p-3 bg-orange-50/80 border border-orange-100 rounded-2xl">
+                                <p class="text-[9px] font-black text-orange-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Sedang Ter-Booking:
+                                </p>
+                                <ul class="text-[10px] text-orange-700 space-y-1.5">
+                                    @foreach($displaySchedules as $detail)
+                                        <li class="flex justify-between items-center bg-white px-2.5 py-2 rounded-xl border border-orange-50 shadow-sm">
+                                            <span class="font-bold">{{ \Carbon\Carbon::parse($detail->order->start_date)->format('d M') }} - {{ \Carbon\Carbon::parse($detail->order->end_date)->format('d M') }}</span>
+                                            <span class="font-black bg-orange-100 text-orange-600 px-2 py-1 rounded-lg text-[9px]">{{ $detail->quantity }} Unit</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                
+                                <!-- Jika jadwal lebih dari 2 -->
+                                @if($remainingCount > 0)
+                                    <div class="mt-2 text-center bg-orange-100/50 py-1.5 rounded-lg border border-orange-100 border-dashed">
+                                        <p class="text-[9px] font-black text-orange-500 uppercase tracking-widest">+ {{ $remainingCount }} Jadwal Lainnya</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
 
                     </div>
 
                     <!-- 🌟 AREA ACTION: TOMBOL CEK JADWAL & ADD TO CART 🌟 -->
                     <div class="p-4 bg-white border-t border-gray-50 flex flex-col gap-2.5">
                         
-                        <!-- TOMBOL CEK JADWAL LENGKAP (HANYA MUNCUL UNTUK BARANG SEWAAN) -->
+                        <!-- TOMBOL CEK JADWAL LENGKAP -->
                         @if($item->transaction_type !== 'Sale')
                             <a href="{{ route('student.item.schedule', $item->id) }}" class="w-full inline-flex justify-center items-center py-2.5 bg-indigo-50/50 text-indigo-600 border border-indigo-100 font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-indigo-600 hover:text-white transition-all active:scale-95 group">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -164,11 +205,11 @@
                             </a>
                         @endif
 
+                        <!-- TOMBOL ADD TO CART -->
                         @if($item->stock_quantity > 0)
                             <form action="{{ route('student.cart.add', $item->id) }}" method="POST" class="flex gap-2">
                                 @csrf
                                 
-                                <!-- KOTAK INPUT QUANTITY -->
                                 <input type="number" name="quantity" value="1" min="1" max="{{ $item->stock_quantity }}" required
                                     class="w-16 px-2 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-black text-center text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
                                     title="Jumlah Barang">

@@ -1,10 +1,11 @@
 <x-app-layout>
     <div class="min-h-screen bg-[#f4f6f9] pb-20 font-sans selection:bg-indigo-500 selection:text-white">
         
-        <!-- 🌟 PREMIUM HEADER 🌟 -->
-        <div class="bg-white/70 backdrop-blur-2xl border-b border-gray-100 sticky top-0 z-50">
+        <!-- 🌟 HEADER STICKY 🌟 -->
+        <div class="bg-white/80 backdrop-blur-2xl border-b border-gray-100 sticky top-0 z-50">
             <div class="max-w-4xl mx-auto px-6 py-5 flex justify-between items-center">
                 <div class="flex items-center gap-4">
+                    <!-- 🌟 LOGO KEMBALI HITAM SEPERTI ORIGINAL 🌟 -->
                     <div class="w-12 h-12 bg-gray-900 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     </div>
@@ -13,35 +14,35 @@
                         <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.2em] mt-1">{{ $item->name }}</p>
                     </div>
                 </div>
-                <a href="{{ route('student.dashboard') }}" class="flex items-center justify-center w-10 h-10 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-indigo-600 transition-all shadow-sm group">
-                    <svg class="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <a href="{{ route('student.dashboard') }}" class="flex items-center justify-center px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-600 uppercase tracking-widest hover:bg-gray-50 hover:text-indigo-600 transition-all shadow-sm group">
+                    <svg class="w-4 h-4 mr-2 text-gray-400 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Kembali
                 </a>
             </div>
         </div>
 
         <div class="max-w-4xl mx-auto px-6 mt-10">
             
-            <!-- 🌟 HERO CAPACITY CARD (DARK MODE ACCENT) 🌟 -->
-            <div class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-indigo-900 to-gray-900 rounded-[2.5rem] p-10 shadow-2xl shadow-indigo-200 border border-gray-800 mb-12 group">
-                <!-- Abstract Glow -->
-                <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500 rounded-full mix-blend-screen filter blur-[4rem] opacity-40 group-hover:opacity-60 transition-opacity duration-700"></div>
-                <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500 rounded-full mix-blend-screen filter blur-[4rem] opacity-30 group-hover:opacity-50 transition-opacity duration-700"></div>
+            <!-- 🌟 HERO CAPACITY CARD (FULL BLACK ELEGANT - TANPA BOX ANEH) 🌟 -->
+            <div class="bg-gray-900 rounded-[2.5rem] p-10 shadow-2xl shadow-gray-300/50 border border-gray-800 mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 
-                <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div>
-                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 mb-4">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span class="text-[9px] font-black text-indigo-100 uppercase tracking-widest">Inventory SC Capacity</span>
-                        </div>
-                        <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-md">
-                            {{ $item->stock_quantity }} <span class="text-indigo-300 font-bold text-3xl">Unit Total</span>
-                        </h2>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 mb-4">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-[9px] font-black text-gray-300 uppercase tracking-widest">Inventory SC Capacity</span>
                     </div>
-                    
-                    <div class="w-24 h-24 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center backdrop-blur-xl shadow-inner shrink-0 rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                        <svg class="w-12 h-12 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                    </div>
+                    <h2 class="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-md">
+                        Total Aset Tersedia
+                    </h2>
+                    <p class="text-gray-400 text-xs font-bold mt-2">Kapasitas maksimal keseluruhan aset yang dimiliki SC.</p>
                 </div>
+                
+                <!-- 🌟 ANGKA MURNI BESAR & ELEGAN (TIDAK ADA BOX MELINGKAR ANEH) 🌟 -->
+                <div class="flex items-baseline gap-2">
+                    <span class="text-7xl font-black text-white leading-none tracking-tighter">{{ $item->stock_quantity }}</span>
+                    <span class="text-xl font-black text-gray-500 uppercase tracking-widest">Unit</span>
+                </div>
+
             </div>
 
             <!-- 🌟 MODERN TIMELINE SECTION 🌟 -->
@@ -51,15 +52,16 @@
             </div>
 
             @if($activeBookings->isEmpty())
-                <div class="bg-white rounded-[2.5rem] border border-gray-100 p-16 text-center shadow-sm">
-                    <div class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-inner">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <!-- 🌟 EMPTY STATE (Di-stretch luas ke bawah) 🌟 -->
+                <div class="bg-white rounded-[2.5rem] border border-gray-100 p-10 min-h-[400px] flex flex-col items-center justify-center text-center shadow-sm">
+                    <div class="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-inner">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
-                    <h4 class="text-2xl font-black text-gray-900 mb-2 tracking-tight">Jadwal Kosong!</h4>
-                    <p class="text-sm font-bold text-gray-400">Belum ada yang meminjam barang ini. Seluruh kuota {{ $item->stock_quantity }} unit tersedia utuh.</p>
+                    <h4 class="text-3xl font-black text-gray-900 mb-3 tracking-tight">Jadwal Kosong!</h4>
+                    <p class="text-base font-bold text-gray-400 max-w-sm mx-auto">Belum ada yang meminjam barang ini. Seluruh kuota <span class="text-gray-700">{{ $item->stock_quantity }} unit</span> tersedia utuh.</p>
                 </div>
             @else
-                <!-- Timeline Container -->
+                <!-- Timeline Container (Original) -->
                 <div class="relative pl-4 md:pl-8 border-l-2 border-indigo-100 space-y-10 py-4">
                     
                     @foreach($activeBookings as $index => $booking)

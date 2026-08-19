@@ -220,4 +220,41 @@ class AdminItemController extends Controller
     {
         return Excel::download(new OrdersExport, 'inventory-report.xlsx');
     }
+    // ==========================================================
+    // 🗑️ FITUR HARD DELETE (HAPUS SPAM & BERSIHKAN MEMORI)
+    // ==========================================================
+    public function destroyOrder($id)
+    {
+        $order = Order::with('orderItems.item')->findOrFail($id);
+
+        // 1. HAPUS FILE FISIK DI SERVER (HEMAT MEMORI cPANEL)
+        $filesToDelete = [
+            $order->signed_mou,
+            $order->payment_receipt,
+            $order->signed_kwitansi,
+            $order->signed_ba_file,
+            $order->return_drive_link // Kalau misal drive link disimpan sbg file (opsional)
+        ];
+
+        foreach ($filesToDelete as $file) {
+            // Cek apakah data bukan null dan benar-benar ada wujud filenya di folder storage/app/public
+            if (!empty($file) && Storage::disk('public')->exists($file)) {
+                Storage::disk('public')->delete($file);
+            }
+        }
+
+        // 2. KEMBALIKAN STOK GUDANG JIKA TIPENYA "SALE" (Beli Putus)
+        // Kalau rental kan stoknya gak dipotong, jadi gak perlu dibalikin
+        if ($order->order_type === 'Sale' && !in_array($order->status, ['Rejected', 'Cancelled'])) {
+            foreach ($order->orderItems as $detail) {
+                $detail->item->increment('stock_quantity', $detail->quantity);
+            }
+        }
+
+        // 3. HAPUS DATA DARI DATABASE
+        $order->orderItems()->delete(); // Hapus rincian barangnya dulu
+        $order->delete(); // Baru hapus kuitansi induknya
+
+        return back()->with('success', '🔥 Transaksi SPAM dan file dokumennya berhasil dimusnahkan dari server!');
+    }
 }

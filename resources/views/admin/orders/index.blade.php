@@ -115,21 +115,36 @@
                         <div class="xl:w-1/3 border-b xl:border-b-0 xl:border-r border-gray-100 pb-6 xl:pb-0 xl:pr-6">
                             <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-3">Item Details</p>
                             <div class="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                <!-- 🌟 HARGA SATUAN & SUBTOTAL DITAMBAHKAN DI SINI 🌟 -->
                                 @foreach($order->orderItems as $detail)
-                                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 bg-white rounded-lg border border-gray-200 overflow-hidden shrink-0">
-                                                @if($detail->item->item_photo)
-                                                    <img src="{{ asset('storage/' . $detail->item->item_photo) }}" class="w-full h-full object-cover">
-                                                @endif
+                                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-white rounded-lg border border-gray-200 overflow-hidden shrink-0">
+                                                    @if($detail->item->item_photo)
+                                                        <img src="{{ asset('storage/' . $detail->item->item_photo) }}" class="w-full h-full object-cover">
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs font-bold text-gray-900 leading-tight">{{ $detail->item->name }}</p>
+                                                    <p class="text-[9px] font-bold mt-0.5">
+                                                        @if($detail->price == 0)
+                                                            <span class="text-emerald-500">FREE (SC Internal)</span>
+                                                        @else
+                                                            <span class="text-gray-500">Satuan: Rp {{ number_format($detail->price, 0, ',', '.') }}</span>
+                                                        @endif
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p class="text-xs font-bold text-gray-900 leading-tight">{{ $detail->item->name }}</p>
-                                                <p class="text-[9px] font-bold text-gray-500 uppercase">{{ $detail->item->transaction_type }}</p>
+                                            <div class="text-right shrink-0">
+                                                <p class="text-xs font-black text-gray-900 mb-0.5">{{ $detail->quantity }}x</p>
                                             </div>
                                         </div>
-                                        <div class="text-right">
-                                            <p class="text-xs font-black text-gray-900">x{{ $detail->quantity }}</p>
+                                        <div class="flex justify-between items-center pt-2 border-t border-gray-200 border-dashed">
+                                            <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">Subtotal</p>
+                                            <p class="text-[11px] font-black text-indigo-600">
+                                                Rp {{ number_format($detail->price * $detail->quantity, 0, ',', '.') }}
+                                            </p>
                                         </div>
                                     </div>
                                 @endforeach

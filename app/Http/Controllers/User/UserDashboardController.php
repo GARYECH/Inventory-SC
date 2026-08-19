@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 
 class UserDashboardController extends Controller
@@ -64,4 +65,22 @@ class UserDashboardController extends Controller
 
         return view('user.loans', compact('activeLoans', 'pastLoans'));
     }
+    public function itemSchedule($id)
+{
+    $item = Item::findOrFail($id);
+
+    // Ambil semua transaksi aktif untuk barang ini (Selain yang sudah dikembalikan/batal/beli putus)
+    $activeBookings = OrderItem::where('item_id', $id)
+        ->whereHas('order', function ($query) {
+            $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
+                  ->where('order_type', '!=', 'Sale');
+        })
+        ->with('order.user') // Load data order dan user
+        ->get()
+        ->sortBy(function ($orderItem) {
+            return $orderItem->order->start_date; // Urutkan dari tanggal terdekat
+        });
+
+    return view('user.item_schedule', compact('item', 'activeBookings'));
+}
 }

@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
         // 1. Catalog & Personal History
         Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
         Route::get('/loans', [UserDashboardController::class, 'loans'])->name('loans');
+        Route::get('/item/{id}/schedule', [UserDashboardController::class, 'itemSchedule'])->name('item.schedule');
         
         // 🌟 RUTE UPLOAD DOKUMEN & PENGEMBALIAN BARANG 🌟
         Route::post('/orders/{order}/upload-mou', [DocumentController::class, 'uploadSignedMou'])->name('orders.upload-mou');

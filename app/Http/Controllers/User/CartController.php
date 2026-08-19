@@ -8,13 +8,10 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class CartController extends Controller
 {
-    // ==========================================================
-    // 🛒 FITUR KERANJANG
-    // ==========================================================
-    
     public function viewCart()
     {
         $cart = session()->get('cart', []);
@@ -26,27 +23,23 @@ class CartController extends Controller
         $cart = session()->get('cart', []);
         $requestQuantity = $request->quantity ?? 1;
 
-        // 🛡️ VALIDASI 1: Cek apakah stok di gudang cukup
+        // Validasi: Jangan biarkan order melebihi total aset SC
         if ($item->stock_quantity < $requestQuantity) {
-            return back()->with('error', 'Gagal! Stok barang tidak mencukupi.');
+            return back()->with('error', 'Gagal! Stok total aset tidak mencukupi.');
         }
 
-        // 🚨 LOGIKA SEGREGASI (Pemisah Jalur)
         if (count($cart) > 0) {
             $firstItem = reset($cart);
             if ($firstItem['transaction_type'] !== $item->transaction_type) {
-                return back()->with('error', "WOY! Kamu nggak bisa mencampur barang '{$item->transaction_type}' dengan '{$firstItem['transaction_type']}' di satu kuitansi. Checkout dulu yang ada di keranjang!");
+                return back()->with('error', "WOY! Kamu nggak bisa mencampur barang '{$item->transaction_type}' dengan '{$firstItem['transaction_type']}'. Checkout dulu yang ada di keranjang!");
             }
         }
 
-        // 🛡️ VALIDASI 2: Akumulasi Qty & Cek Stok Gabungan
         if (isset($cart[$item->id])) {
             $newQuantity = $cart[$item->id]['quantity'] + $requestQuantity;
-            
             if ($item->stock_quantity < $newQuantity) {
-                return back()->with('error', 'Gagal! Total barang ini di keranjangmu melebihi sisa stok di gudang.');
+                return back()->with('error', 'Gagal! Total barang ini di keranjang melebihi total aset SC.');
             }
-            
             $cart[$item->id]['quantity'] = $newQuantity;
         } else {
             $cart[$item->id] = [
@@ -60,8 +53,7 @@ class CartController extends Controller
         }
 
         session()->put('cart', $cart);
-
-        return back()->with('success', 'Barang berhasil ditambahkan ke keranjang!');
+        return back()->with('success', 'Barang ditambahkan ke keranjang!');
     }
 
     public function clearCart()
@@ -69,10 +61,6 @@ class CartController extends Controller
         session()->forget('cart');
         return back()->with('success', 'Keranjang dikosongkan.');
     }
-
-    // ==========================================================
-    // 🚀 FITUR CHECKOUT (SOP & PEMBUATAN ORDER)
-    // ==========================================================
 
     public function processCheckout(Request $request)
     {
@@ -82,114 +70,119 @@ class CartController extends Controller
             return back()->with('error', 'Keranjangmu kosong!');
         }
 
-        // Validasi form dari mahasiswa (🌟 TAMBAH ALAMAT DI SINI)
         $request->validate([
+            'full_name' => 'required|string',
+            'organization' => 'required|string',
+            'position' => 'required|string',
             'phone_number' => 'required|string',
             'proker_name' => 'required|string',
-            'department' => 'required|string',
             'treasurer_name' => 'required|string',
-            'address' => 'required|string', // 🌟 KITA TANGKAP ALAMAT
+            'address' => 'required|string',
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'is_sop_accepted' => 'required|accepted',
-        ], [
-            'is_sop_accepted.accepted' => 'Kamu HARUS mencentang persetujuan SOP/Terms & Conditions sebelum checkout!'
         ]);
 
         $startDate = $request->start_date;
         $endDate = $request->end_date;
-
-        // ==========================================================
-        // 🌟 THE BRAIN: LOGIKA ANTI-BENTROK (OVERLAPPING DATES) 🌟
-        // ==========================================================
-        if ($startDate && $endDate) {
-            foreach ($cart as $id => $details) {
-                $item = Item::find($id);
-
-                // A. Hitung total unit yang SIBUK (dipinjam orang lain) tepat pada rentang tanggal tersebut
-                $overlappingQty = OrderItem::where('item_id', $id)
-                    ->whereHas('order', function ($query) use ($startDate, $endDate) {
-                        $query->whereNotIn('status', ['Returned', 'Rejected', 'Cancelled'])
-                              ->where('start_date', '<=', $endDate)  // Rumus Irisan Waktu
-                              ->where('end_date', '>=', $startDate); // Rumus Irisan Waktu
-                    })->sum('quantity');
-
-                // B. Hitung total stok ASLI yang SC miliki (Stok di gudang + Total yang sedang dipinjam secara keseluruhan)
-                $totalSedangDipinjam = OrderItem::where('item_id', $id)
-                    ->whereHas('order', function ($q) {
-                        $q->whereNotIn('status', ['Returned', 'Rejected', 'Cancelled']);
-                    })->sum('quantity');
-                
-                $stokAsli = $item->stock_quantity + $totalSedangDipinjam;
-
-                // C. EKSEKUSI PEMBLOKIRAN: Jika (Yang bentrok + Yang mau dipinjam > Stok Asli SC), TOLAK!
-                if (($overlappingQty + $details['quantity']) > $stokAsli) {
-                    $sisaKuota = $stokAsli - $overlappingQty;
-                    $formatStart = \Carbon\Carbon::parse($startDate)->format('d M');
-                    $formatEnd = \Carbon\Carbon::parse($endDate)->format('d M Y');
-                    
-                    return back()->with('error', "Gagal Checkout! Barang '{$item->name}' jadwalnya bentrok. Pada tanggal {$formatStart} s/d {$formatEnd} sisa kuota hanya {$sisaKuota} unit. Silakan cek kalender merah di katalog.");
-                }
-            }
-        }
-        // ==========================================================
-
         $firstItem = reset($cart);
         $orderType = $firstItem['transaction_type'];
 
+        // ==========================================================
+        // 🌟 LOGIKA KALENDER: CEK KETERSEDIAAN DI TANGGAL TERSEBUT 🌟
+        // ==========================================================
+        if ($startDate && $endDate && str_contains($orderType, 'Rental')) {
+            foreach ($cart as $id => $details) {
+                $item = Item::find($id);
+
+                // Hitung total unit yang sedang dipinjam oleh order lain PADA TANGGAL YANG BERSINGGUNGAN
+                $overlappingQty = OrderItem::where('item_id', $id)
+                    ->whereHas('order', function ($query) use ($startDate, $endDate) {
+                        $query->whereNotIn('status', ['Returned', 'Rejected', 'Cancelled'])
+                              ->where('order_type', '!=', 'Sale') // Abaikan transaksi Beli Putus
+                              ->where('start_date', '<=', $endDate)  // Rumus Overlap Tgl
+                              ->where('end_date', '>=', $startDate); // Rumus Overlap Tgl
+                    })->sum('quantity');
+
+                // Kapasitas maksimal SC
+                $stokMaksimal = $item->stock_quantity;
+
+                // Jika (yang sedang dipakai orang di tanggal tsb + yang mau kita pinjam) > Kapasitas SC
+                if (($overlappingQty + $details['quantity']) > $stokMaksimal) {
+                    $sisaKuota = $stokMaksimal - $overlappingQty;
+                    $formatStart = Carbon::parse($startDate)->format('d M');
+                    $formatEnd = Carbon::parse($endDate)->format('d M Y');
+                    return back()->with('error', "Gagal! Barang '{$item->name}' bentrok. Pada {$formatStart} - {$formatEnd}, sisa barang yang tersedia hanya {$sisaKuota} unit.");
+                }
+            }
+        }
+
+        // 🌟 HITUNG GRAND TOTAL + DISKON 100% STUDENT COUNCIL
         $totalPrice = 0;
         foreach ($cart as $item) {
-            $totalPrice += $item['price'] * $item['quantity'];
+            $dbItem = Item::find($item['id']);
+            $unitPrice = $item['price'];
+            if ($request->organization === 'Student Council' && str_contains($dbItem->transaction_type, 'Internal')) {
+                $unitPrice = 0; // SC Internal = Gratis!
+            }
+            $totalPrice += ($unitPrice * $item['quantity']);
         }
 
         DB::beginTransaction();
 
         try {
-            // 🛡️ THE GATEKEEPER: Validasi Ulang & Pemotongan Stok Pakai Lock!
+            // 🛡️ THE GATEKEEPER: HANYA DECREMENT STOK JIKA BELI PUTUS (SALE)
             foreach ($cart as $item) {
-                $dbItem = Item::lockForUpdate()->find($item['id']);
-                
-                if (!$dbItem || $dbItem->stock_quantity < $item['quantity']) {
-                    DB::rollBack();
-                    return back()->with('error', "Gagal! Stok '{$item['name']}' tiba-tiba habis dipinjam orang lain saat kamu mau bayar.");
+                if ($orderType === 'Sale') {
+                    $dbItem = Item::lockForUpdate()->find($item['id']);
+                    if (!$dbItem || $dbItem->stock_quantity < $item['quantity']) {
+                        DB::rollBack();
+                        return back()->with('error', "Gagal! Stok '{$item['name']}' habis.");
+                    }
+                    // Beli putus = barang hilang dari gudang selamanya
+                    $dbItem->decrement('stock_quantity', $item['quantity']);
                 }
-                
-                $dbItem->decrement('stock_quantity', $item['quantity']);
+                // JIKA RENTAL: Kita biarkan stoknya UTUH! Kita cuma catat transaksinya.
             }
 
-            // 1. Buat Kuitansi Induk (Order)
             $order = Order::create([
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
                 'user_id' => auth()->id(),
+                'full_name' => $request->full_name,
+                'organization' => $request->organization,
+                'position' => $request->position,
                 'phone_number' => $request->phone_number,
                 'proker_name' => $request->proker_name,
-                'department' => $request->department,
                 'treasurer_name' => $request->treasurer_name,
-                'address' => $request->address, // 🌟 MASUKKAN ALAMAT KE DATABASE
+                'address' => $request->address,
                 'order_type' => $orderType,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
                 'is_sop_accepted' => true,
                 'total_price' => $totalPrice, 
                 'status' => 'Pending',
             ]);
 
-            // 2. Pindahkan isi Session Keranjang ke tabel order_items
             foreach ($cart as $item) {
+                $dbItem = Item::find($item['id']);
+                $unitPrice = $item['price'];
+                if ($request->organization === 'Student Council' && str_contains($dbItem->transaction_type, 'Internal')) {
+                    $unitPrice = 0;
+                }
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'item_id' => $item['id'],
                     'quantity' => $item['quantity'],
-                    'subtotal_price' => ($item['price'] * $item['quantity']),
+                    'price' => $unitPrice,
+                    'subtotal_price' => ($unitPrice * $item['quantity']),
                 ]);
             }
 
-            // 3. Bersihkan keranjang
             session()->forget('cart');
-
             DB::commit();
 
-            return redirect()->route('student.loans')->with('success', 'Checkout berhasil! Kuitansimu sedang menunggu persetujuan (Approval) dari Admin.');
+            return redirect()->route('student.loans')->with('success', 'Checkout berhasil! Kuitansimu sedang menunggu persetujuan Admin.');
 
         } catch (\Exception $e) {
             DB::rollBack();

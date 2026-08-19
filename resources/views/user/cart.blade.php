@@ -126,19 +126,41 @@
                             <form action="{{ route('student.cart.checkout') }}" method="POST" class="space-y-5">
                                 @csrf
                                 
+                                <!-- 🌟 TAMBAHAN: NAMA LENGKAP 🌟 -->
                                 <div>
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nama Proker / Event</label>
-                                    <input type="text" name="proker_name" placeholder="e.g. O-Week 2026" required 
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nama Lengkap PIC</label>
+                                    <input type="text" name="full_name" placeholder="Masukkan nama lengkap..." required 
                                         class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
                                 </div>
                                 
-                                <div>
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Departemen</label>
-                                    <input type="text" name="department" placeholder="e.g. BEM / UKM Musik" required 
-                                        class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
+                                <!-- 🌟 TAMBAHAN: ORGANISASI & JABATAN (GRID) 🌟 -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Organisasi</label>
+                                        <select name="organization" required 
+                                            class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 transition-all shadow-inner text-sm cursor-pointer appearance-none">
+                                            <option value="" disabled selected>Pilih Organisasi...</option>
+                                            <option value="Student Council">Student Council</option>
+                                            <option value="Student Union">Student Union</option>
+                                            <option value="Mentoring Department">Mentoring Department</option>
+                                            <option value="Student Representative Board">Student Representative Board</option>
+                                            <option value="Unit Kegiatan Mahasiswa (UKM)">Unit Kegiatan Mahasiswa (UKM)</option>
+                                            <option value="Organisasi External">Organisasi External</option> 
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Jabatan</label>
+                                        <input type="text" name="position" placeholder="e.g. Koordinator Inventory " required 
+                                            class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
+                                    </div>
                                 </div>
 
-                                <!-- 🌟 KOTAK INPUT ALAMAT DITAMBAHKAN DI SINI 🌟 -->
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nama Proker / Event</label>
+                                    <input type="text" name="proker_name" placeholder="e.g. Rector Cup 2026" required 
+                                        class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
+                                </div>
+                                
                                 <div>
                                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Alamat Lengkap</label>
                                     <textarea name="address" rows="2" placeholder="e.g. Jl. Citraland CBD..." required 

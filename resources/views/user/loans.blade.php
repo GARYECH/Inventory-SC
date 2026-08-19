@@ -85,15 +85,28 @@
                                     <div class="lg:col-span-2">
                                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Rincian Barang:</p>
                                         <div class="space-y-2">
+                                            <!-- 🌟 HARGA SATUAN & SUBTOTAL DITAMBAHKAN DI SINI 🌟 -->
                                             @foreach($order->orderItems as $detail)
-                                                <div class="flex justify-between items-center bg-white p-3.5 border border-gray-100 rounded-2xl shadow-sm">
+                                                <div class="flex justify-between items-center bg-white p-4 border border-gray-100 rounded-2xl shadow-sm">
                                                     <div class="flex items-center gap-3">
-                                                        <div class="w-8 h-8 bg-gray-50 rounded-xl flex items-center justify-center font-black text-xs text-indigo-600 border border-gray-100">
+                                                        <div class="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center font-black text-xs text-indigo-600 border border-indigo-100 shrink-0">
                                                             {{ $detail->quantity }}x
                                                         </div>
-                                                        <span class="font-bold text-gray-900 text-sm">{{ $detail->item->name }}</span>
+                                                        <div>
+                                                            <span class="block font-black text-gray-900 text-sm leading-tight">{{ $detail->item->name }}</span>
+                                                            <span class="block text-[10px] font-bold mt-1">
+                                                                @if($detail->price == 0)
+                                                                    <span class="text-emerald-500">FREE (SC Internal)</span>
+                                                                @else
+                                                                    <span class="text-gray-400">Harga Satuan: Rp {{ number_format($detail->price, 0, ',', '.') }}</span>
+                                                                @endif
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <span class="font-black text-gray-700 text-sm">Rp {{ number_format($detail->subtotal_price, 0, ',', '.') }}</span>
+                                                    <div class="text-right shrink-0 pl-4 border-l border-gray-50">
+                                                        <span class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Subtotal</span>
+                                                        <span class="block font-black text-indigo-600 text-sm">Rp {{ number_format($detail->price * $detail->quantity, 0, ',', '.') }}</span>
+                                                    </div>
                                                 </div>
                                             @endforeach
                                         </div>

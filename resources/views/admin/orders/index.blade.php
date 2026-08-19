@@ -38,18 +38,14 @@
             
             @if(session('success'))
                 <div class="mb-8 px-6 py-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4 shadow-sm">
-                    <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 shadow-lg shadow-emerald-200">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    </div>
+                    <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 shadow-lg shadow-emerald-200"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
                     <p class="text-sm font-bold text-emerald-800">{{ session('success') }}</p>
                 </div>
             @endif
             
             @if(session('error'))
                 <div class="mb-8 px-6 py-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-4 shadow-sm">
-                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shrink-0 shadow-lg shadow-red-200">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    </div>
+                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shrink-0 shadow-lg shadow-red-200"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
                     <p class="text-sm font-bold text-red-800">{{ session('error') }}</p>
                 </div>
             @endif
@@ -58,7 +54,7 @@
             <div class="space-y-6">
                 @forelse($orders as $order)
                     @php
-                        // 🌟 LOGIKA WARNA STATUS LENGKAP
+                        // 🌟 LOGIKA WARNA STATUS
                         $statusColors = [
                             'Pending' => 'bg-amber-100 text-amber-800 border-amber-200',
                             'Approved' => 'bg-blue-100 text-blue-800 border-blue-200',
@@ -78,10 +74,10 @@
                             'Cancelled' => 'bg-gray-100 text-gray-800 border-gray-200',
                         ];
                         $badgeClass = $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
+                        $requiresMou = $order->orderItems->contains(function($detail) { return $detail->item->requires_mou; });
                         
-                        $requiresMou = $order->orderItems->contains(function($detail) {
-                            return $detail->item->requires_mou;
-                        });
+                        // Hitung jumlah barang
+                        $totalItemsCount = $order->orderItems->count();
                     @endphp
 
                     <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 p-6 flex flex-col xl:flex-row gap-6">
@@ -101,24 +97,43 @@
                             
                             <div class="mt-4 pt-4 border-t border-gray-50 grid grid-cols-2 gap-4">
                                 <div>
-                                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Proker/Event</p>
-                                    <p class="text-xs font-bold text-gray-800">{{ $order->proker_name }} ({{ $order->department }})</p>
+                                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Organisasi</p>
+                                    <p class="text-xs font-bold text-gray-800">{{ $order->organization }}</p>
                                 </div>
                                 <div>
+                                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Proker/Event</p>
+                                    <p class="text-xs font-bold text-gray-800">{{ $order->proker_name }}</p>
+                                </div>
+                                <div class="col-span-2">
                                     <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">WhatsApp</p>
                                     <p class="text-xs font-bold text-gray-800">{{ $order->phone_number }}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Kolom 2: Rincian Barang -->
-                        <div class="xl:w-1/3 border-b xl:border-b-0 xl:border-r border-gray-100 pb-6 xl:pb-0 xl:pr-6">
-                            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-3">Item Details</p>
-                            <div class="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                                @foreach($order->orderItems as $detail)
+                        <!-- Kolom 2: Rincian Barang (DENGAN TOMBOL VIEW ALL) -->
+                        <div class="xl:w-1/3 border-b xl:border-b-0 xl:border-r border-gray-100 pb-6 xl:pb-0 xl:pr-6 flex flex-col">
+                            <div class="flex justify-between items-end mb-3">
+                                <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Item Details ({{ $totalItemsCount }})</p>
+                            </div>
+                            
+                            <!-- Area Rincian yang dibungkus x-data -->
+                            <div class="space-y-3 flex-grow" x-data="{ showAllItems: false }">
+                                
+                                <!-- 🌟 TAMPILKAN 2 BARANG PERTAMA SELALU 🌟 -->
+                                @foreach($order->orderItems->take(2) as $detail)
+                                    @php
+                                        $isSC = $order->organization === 'Student Council';
+                                        $isInternal = str_contains($detail->item->transaction_type, 'Internal');
+                                        $isFree = $isSC && $isInternal;
+                                        
+                                        $basePrice = ($detail->price && $detail->price > 0) ? $detail->price : $detail->item->price;
+                                        $actualPrice = $isFree ? 0 : $basePrice;
+                                        $subtotal = $actualPrice * $detail->quantity;
+                                    @endphp
                                     <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <div class="flex items-center gap-3">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div class="flex items-start gap-3">
                                                 <div class="w-10 h-10 bg-white rounded-lg border border-gray-200 overflow-hidden shrink-0">
                                                     @if($detail->item->item_photo)
                                                         <img src="{{ asset('storage/' . $detail->item->item_photo) }}" class="w-full h-full object-cover">
@@ -127,10 +142,10 @@
                                                 <div>
                                                     <p class="text-xs font-bold text-gray-900 leading-tight">{{ $detail->item->name }}</p>
                                                     <p class="text-[9px] font-bold mt-0.5">
-                                                        @if($detail->price == 0)
+                                                        @if($isFree)
                                                             <span class="text-emerald-500">FREE (SC Internal)</span>
                                                         @else
-                                                            <span class="text-gray-500">Satuan: Rp {{ number_format($detail->price, 0, ',', '.') }}</span>
+                                                            <span class="text-gray-500">Satuan: Rp {{ number_format($actualPrice, 0, ',', '.') }}</span>
                                                         @endif
                                                     </p>
                                                 </div>
@@ -141,23 +156,69 @@
                                         </div>
                                         <div class="flex justify-between items-center pt-2 border-t border-gray-200 border-dashed">
                                             <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">Subtotal</p>
-                                            <p class="text-[11px] font-black text-indigo-600">
-                                                Rp {{ number_format($detail->price * $detail->quantity, 0, ',', '.') }}
-                                            </p>
+                                            <p class="text-[11px] font-black text-indigo-600">Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
                                         </div>
                                     </div>
                                 @endforeach
+
+                                <!-- 🌟 TAMPILKAN SISA BARANG JIKA TOMBOL DIKLIK 🌟 -->
+                                @if($totalItemsCount > 2)
+                                    <div x-show="showAllItems" x-collapse x-cloak class="space-y-3 mt-3">
+                                        @foreach($order->orderItems->skip(2) as $detail)
+                                            @php
+                                                $isSC = $order->organization === 'Student Council';
+                                                $isInternal = str_contains($detail->item->transaction_type, 'Internal');
+                                                $isFree = $isSC && $isInternal;
+                                                $basePrice = ($detail->price && $detail->price > 0) ? $detail->price : $detail->item->price;
+                                                $actualPrice = $isFree ? 0 : $basePrice;
+                                                $subtotal = $actualPrice * $detail->quantity;
+                                            @endphp
+                                            <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                                <div class="flex justify-between items-start mb-2">
+                                                    <div class="flex items-start gap-3">
+                                                        <div class="w-10 h-10 bg-white rounded-lg border border-gray-200 overflow-hidden shrink-0">
+                                                            @if($detail->item->item_photo)
+                                                                <img src="{{ asset('storage/' . $detail->item->item_photo) }}" class="w-full h-full object-cover">
+                                                            @endif
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-xs font-bold text-gray-900 leading-tight">{{ $detail->item->name }}</p>
+                                                            <p class="text-[9px] font-bold mt-0.5">
+                                                                @if($isFree)
+                                                                    <span class="text-emerald-500">FREE (SC Internal)</span>
+                                                                @else
+                                                                    <span class="text-gray-500">Satuan: Rp {{ number_format($actualPrice, 0, ',', '.') }}</span>
+                                                                @endif
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right shrink-0">
+                                                        <p class="text-xs font-black text-gray-900 mb-0.5">{{ $detail->quantity }}x</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex justify-between items-center pt-2 border-t border-gray-200 border-dashed">
+                                                    <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">Subtotal</p>
+                                                    <p class="text-[11px] font-black text-indigo-600">Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    
+                                    <!-- 🌟 TOMBOL TOGGLE 🌟 -->
+                                    <button type="button" @click="showAllItems = !showAllItems" class="w-full py-2.5 mt-2 bg-white border border-dashed border-gray-300 rounded-xl text-[9px] font-black text-gray-500 uppercase tracking-widest hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-300 transition-all flex items-center justify-center gap-2">
+                                        <span x-text="showAllItems ? 'Sembunyikan' : 'Lihat {{ $totalItemsCount - 2 }} Barang Lainnya'"></span>
+                                        <svg :class="showAllItems ? 'rotate-180' : ''" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                @endif
                             </div>
                             
-                            <div class="mt-4 flex justify-between items-center">
-                                <div>
-                                    <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Jadwal Pinjam</p>
-                                    @if($order->start_date && $order->end_date && $order->start_date != $order->end_date)
-                                        <p class="text-xs font-bold text-gray-800">{{ \Carbon\Carbon::parse($order->start_date)->format('d/m/y') }} - {{ \Carbon\Carbon::parse($order->end_date)->format('d/m/y') }}</p>
-                                    @else
-                                        <p class="text-xs font-bold text-emerald-600">Beli Putus (Merchandise)</p>
-                                    @endif
-                                </div>
+                            <div class="mt-4 pt-4 border-t border-gray-50">
+                                <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5">Jadwal Pinjam / Tipe</p>
+                                @if($order->start_date && $order->end_date && $order->start_date != $order->end_date)
+                                    <p class="text-[11px] font-bold text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 inline-block">{{ \Carbon\Carbon::parse($order->start_date)->format('d/m/y') }} <span class="mx-1 text-gray-400">➔</span> {{ \Carbon\Carbon::parse($order->end_date)->format('d/m/y') }}</p>
+                                @else
+                                    <p class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 inline-block">Beli Putus (Merchandise)</p>
+                                @endif
                             </div>
                         </div>
 

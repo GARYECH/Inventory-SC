@@ -4,6 +4,8 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\User; // 🌟 Import Model User
+use App\Notifications\AdminNotification; // 🌟 Import Notifikasi Admin
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -82,6 +84,13 @@ class DocumentController extends Controller
             $path = $file->storeAs('signed_mous', $filename, 'public');
 
             $order->update(['signed_mou' => $path, 'status' => 'Pending Review MoU']);
+
+            // 🌟 KABARIN ADMIN 🌟
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AdminNotification("Pembaruan Dokumen! Mahasiswa mengunggah MoU untuk pesanan: {$order->order_number}"));
+            }
+
             return back()->with('success', 'File MoU bertanda tangan berhasil dikirim! Menunggu verifikasi Admin SC.');
         }
         return back()->with('error', 'Gagal mengupload file.');
@@ -97,6 +106,13 @@ class DocumentController extends Controller
             $path = $file->storeAs('payment_receipts', $filename, 'public');
 
             $order->update(['payment_receipt' => $path, 'status' => 'Pending Review Payment']);
+
+            // 🌟 KABARIN ADMIN 🌟
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AdminNotification("Bukti TF Masuk! Mahasiswa mengunggah Bukti Pembayaran untuk pesanan: {$order->order_number}"));
+            }
+
             return back()->with('success', 'Bukti pembayaran berhasil di-upload! Menunggu verifikasi Admin SC.');
         }
         return back()->with('error', 'Gagal mengupload file.');
@@ -112,6 +128,13 @@ class DocumentController extends Controller
             $path = $file->storeAs('signed_kwitansis', $filename, 'public');
 
             $order->update(['signed_kwitansi' => $path, 'status' => 'Pending Review Kwitansi']);
+
+            // 🌟 KABARIN ADMIN 🌟
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AdminNotification("Pembaruan Dokumen! Mahasiswa mengunggah Kwitansi TTD untuk pesanan: {$order->order_number}"));
+            }
+
             return back()->with('success', 'Kwitansi bertanda tangan berhasil di-upload! Menunggu verifikasi akhir Admin SC.');
         }
         return back()->with('error', 'Gagal mengupload file kwitansi.');
@@ -122,6 +145,13 @@ class DocumentController extends Controller
         $request->validate(['return_drive_link' => 'required|url']);
 
         $order->update(['return_drive_link' => $request->return_drive_link, 'status' => 'Pending Return Review']);
+
+        // 🌟 KABARIN ADMIN 🌟
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new AdminNotification("Pengembalian Barang! Mahasiswa mengirimkan Link Bukti Pengembalian untuk pesanan: {$order->order_number}"));
+        }
+
         return back()->with('success', 'Link bukti pengembalian berhasil dikirim! Menunggu Admin SC melakukan pengecekan.');
     }
 
@@ -135,6 +165,13 @@ class DocumentController extends Controller
             $path = $file->storeAs('berita_acara', $filename, 'public');
             
             $order->update(['signed_ba_file' => $path, 'status' => 'Pending Review BA']);
+
+            // 🌟 KABARIN ADMIN 🌟
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AdminNotification("Pembayaran Denda! Mahasiswa mengunggah Berita Acara untuk pesanan: {$order->order_number}"));
+            }
+
             return back()->with('success', 'Berita Acara dan Bukti Denda berhasil di-upload!');
         }
         return back()->with('error', 'Gagal mengupload file Berita Acara.');

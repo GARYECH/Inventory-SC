@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\User; // 🌟 Tambahkan import User
+use App\Notifications\AdminNotification; // 🌟 Tambahkan import Notifikasi Admin
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -184,6 +186,15 @@ class CartController extends Controller
             }
 
             session()->forget('cart');
+
+            // ==========================================================
+            // 🌟 TEMBAK NOTIFIKASI KE SEMUA ADMIN (LONCENG BUNYI) 🌟
+            // ==========================================================
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AdminNotification('Order Baru: ' . $order->order_number . ' dari ' . $order->proker_name));
+            }
+
             DB::commit();
 
             return redirect()->route('student.loans')->with('success', 'Checkout berhasil! Kuitansimu sedang menunggu persetujuan Admin.');

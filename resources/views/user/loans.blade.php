@@ -97,16 +97,11 @@
                                         <div class="space-y-4 flex-grow">
                                             @foreach($order->orderItems as $detail)
                                                 @php
-                                                    // 🌟 LOGIKA ANTI BOCOR (SUPER KETAT) 🌟
-                                                    // 1. Cek secara eksplisit nama organisasinya
                                                     $isSC = $order->organization === 'Student Council';
                                                     $isInternal = str_contains($detail->item->transaction_type, 'Internal');
                                                     $isFree = $isSC && $isInternal;
                                                     
-                                                    // 2. Ambil harga asli. Kalau dari pivot error/0, tembak langsung ke tabel master Item.
                                                     $basePrice = ($detail->price && $detail->price > 0) ? $detail->price : $detail->item->price;
-                                                    
-                                                    // 3. Kalkulasi Akhir
                                                     $actualPrice = $isFree ? 0 : $basePrice;
                                                     $subtotal = $actualPrice * $detail->quantity;
                                                 @endphp
@@ -153,14 +148,18 @@
                                                 <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4">📄 Tahap 1: Surat MoU</p>
                                                 
                                                 <a href="{{ route('student.document.mou', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-indigo-50 text-indigo-700 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 mb-4 shadow-sm">
-                                                    📥 Download MoU Kosong
+                                                    📥 Download MoU Kosong (PDF)
                                                 </a>
                                                 
                                                 @if($order->status === 'Waiting for MoU')
                                                     <form action="{{ route('student.orders.upload-mou', $order->id) }}" method="POST" enctype="multipart/form-data">
                                                         @csrf
-                                                        <input type="file" name="signed_mou" accept=".pdf,.jpg,.png" required class="block w-full text-[10px] mb-3 cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-                                                        <button type="submit" class="w-full py-3.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-sm">Upload MoU TTD</button>
+                                                        <div class="mb-2">
+                                                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Upload MoU Bertanda Tangan</label>
+                                                            <input type="file" name="signed_mou" accept=".pdf" required class="block w-full text-[10px] cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                                                            <p class="text-[9px] font-bold text-amber-600 mt-1">⚠️ Format: PDF | Maksimal: 5 MB</p>
+                                                        </div>
+                                                        <button type="submit" class="w-full mt-2 py-3.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-sm">Upload MoU TTD</button>
                                                     </form>
                                                 @else
                                                     <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">MoU Sedang Direview Admin</p></div>
@@ -171,14 +170,18 @@
                                                 <p class="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-4">💳 Tahap 2: Pembayaran</p>
                                                 
                                                 <a href="{{ route('student.document.invoice', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-orange-50 text-orange-700 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 mb-4 shadow-sm">
-                                                    📥 Download Invoice
+                                                    📥 Download Invoice (PDF)
                                                 </a>
                                                 
                                                 @if($order->status === 'Waiting for Payment')
                                                     <form action="{{ route('student.orders.upload-payment', $order->id) }}" method="POST" enctype="multipart/form-data">
                                                         @csrf
-                                                        <input type="file" name="payment_receipt" accept=".pdf,.jpg,.png" required class="block w-full text-[10px] mb-3 cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-                                                        <button type="submit" class="w-full py-3.5 bg-orange-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition shadow-sm">Upload Bukti Transfer</button>
+                                                        <div class="mb-2">
+                                                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Upload Bukti Transfer / Kwitansi Bayar</label>
+                                                            <input type="file" name="payment_receipt" accept=".pdf,.jpg,.jpeg,.png" required class="block w-full text-[10px] cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                                                            <p class="text-[9px] font-bold text-amber-600 mt-1">⚠️ Format: PDF / JPG / PNG | Maksimal: 5 MB</p>
+                                                        </div>
+                                                        <button type="submit" class="w-full mt-2 py-3.5 bg-orange-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition shadow-sm">Upload Bukti Transfer</button>
                                                     </form>
                                                 @else
                                                     <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bukti Transfer Direview Admin</p></div>
@@ -200,14 +203,18 @@
                                                 <p class="text-[10px] text-gray-500 mb-4 font-bold">Download, tandatangani, dan upload ulang.</p>
 
                                                 <a href="{{ route('student.document.kwitansi', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-pink-50 text-pink-700 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-pink-100 mb-4 shadow-sm">
-                                                    📥 Download Kwitansi
+                                                    📥 Download Kwitansi (PDF)
                                                 </a>
                                                 
                                                 @if($order->status === 'Waiting for Kwitansi')
                                                     <form action="{{ route('student.orders.upload-kwitansi', $order->id) }}" method="POST" enctype="multipart/form-data">
                                                         @csrf
-                                                        <input type="file" name="signed_kwitansi" accept=".pdf,.jpg,.png" required class="block w-full text-[10px] mb-3 cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-                                                        <button type="submit" class="w-full py-3.5 bg-pink-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-pink-700 transition shadow-sm">Upload Kwitansi TTD</button>
+                                                        <div class="mb-2">
+                                                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Upload Kwitansi Bertanda Tangan</label>
+                                                            <input type="file" name="signed_kwitansi" accept=".pdf" required class="block w-full text-[10px] cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                                                            <p class="text-[9px] font-bold text-amber-600 mt-1">⚠️ Format: PDF | Maksimal: 5 MB</p>
+                                                        </div>
+                                                        <button type="submit" class="w-full mt-2 py-3.5 bg-pink-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-pink-700 transition shadow-sm">Upload Kwitansi TTD</button>
                                                     </form>
                                                 @else
                                                     <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Kwitansi TTD Direview Admin</p></div>
@@ -216,13 +223,17 @@
                                             <!-- ================= FASE 4: HANDED OVER ================= -->
                                             @elseif($order->status === 'Handed Over' || $order->status === 'Pending Return Review')
                                                 <p class="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-1">📦 Tahap 4: Pengembalian Barang</p>
-                                                <p class="text-[10px] text-gray-500 mb-4 font-bold">Masukkan Link Drive foto aset sebelum dikembalikan.</p>
+                                                <p class="text-[10px] text-gray-500 mb-4 font-bold">Kirim Link Google Drive (Berisi foto kondisi fisik aset saat dikembalikan).</p>
                                                 
                                                 @if($order->status === 'Handed Over')
                                                     <form action="{{ route('student.orders.return-link', $order->id) }}" method="POST">
                                                         @csrf
-                                                        <input type="url" name="return_drive_link" placeholder="https://drive.google.com/..." required class="w-full px-4 py-3.5 border border-gray-200 bg-gray-50 rounded-xl text-xs mb-3 font-bold text-gray-800 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
-                                                        <button type="submit" class="w-full bg-cyan-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-cyan-700 transition shadow-sm">Submit Bukti Return</button>
+                                                        <div class="mb-2">
+                                                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">URL Google Drive Folder</label>
+                                                            <input type="url" name="return_drive_link" placeholder="https://drive.google.com/..." required class="w-full px-4 py-3.5 border border-gray-200 bg-gray-50 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
+                                                            <p class="text-[9px] font-bold text-cyan-600 mt-1">🔗 Pastikan link berstatus "Public" / Bisa diakses siapa saja</p>
+                                                        </div>
+                                                        <button type="submit" class="w-full mt-2 bg-cyan-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-cyan-700 transition shadow-sm">Submit Link Return</button>
                                                     </form>
                                                 @else
                                                     <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Drive Terkirim. Admin Cek Fisik.</p></div>
@@ -233,16 +244,20 @@
                                                 <p class="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">⚠️ Tahap 5: Penyelesaian Denda</p>
                                                 
                                                 @if($order->ba_total_fine)
-                                                    <p class="text-[10px] text-gray-500 mb-4 font-bold">Download BA, TTD, gabung Bukti TF Denda jadi 1 PDF.</p>
+                                                    <p class="text-[10px] text-gray-500 mb-4 font-bold">Download Berita Acara, TTD, dan gabungkan dengan Bukti TF Denda menjadi 1 file PDF.</p>
                                                     <a href="{{ route('student.document.berita-acara', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-red-50 text-red-600 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 mb-4 shadow-sm">
-                                                        📥 Download Berita Acara
+                                                        📥 Download Berita Acara (PDF)
                                                     </a>
                                                     
                                                     @if($order->status === 'Returned (Damaged)')
                                                         <form action="{{ route('student.orders.upload-ba', $order->id) }}" method="POST" enctype="multipart/form-data">
                                                             @csrf
-                                                            <input type="file" name="signed_ba_file" accept=".pdf" required class="block w-full text-[10px] mb-3 cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-                                                            <button type="submit" class="w-full bg-gray-900 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">Upload Penyelesaian</button>
+                                                            <div class="mb-2">
+                                                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Upload Berita Acara + Bukti Denda</label>
+                                                                <input type="file" name="signed_ba_file" accept=".pdf" required class="block w-full text-[10px] cursor-pointer font-bold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                                                                <p class="text-[9px] font-bold text-amber-600 mt-1">⚠️ Format: PDF (Gabung jadi 1 file) | Maksimal: 5 MB</p>
+                                                            </div>
+                                                            <button type="submit" class="w-full mt-2 bg-gray-900 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 transition shadow-sm">Upload Penyelesaian</button>
                                                         </form>
                                                     @else
                                                         <div class="p-3 bg-gray-50 rounded-xl text-center border border-gray-200"><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dokumen Denda Direview Admin</p></div>
@@ -257,7 +272,7 @@
                                                     <p class="text-[11px] font-black text-emerald-600 uppercase tracking-widest">✅ Transaksi Selesai</p>
                                                 </div>
                                                 <a href="{{ route('student.document.invoice', $order->id) }}" target="_blank" class="w-full inline-flex justify-center items-center bg-gray-900 text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-sm">
-                                                    Lihat Invoice Terakhir
+                                                    Lihat Invoice Terakhir (PDF)
                                                 </a>
 
                                             @else

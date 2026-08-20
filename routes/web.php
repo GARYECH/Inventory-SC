@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\GoogleController;
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -43,6 +44,30 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // ==========================================================
+    // 🔔 INBOX NOTIFIKASI (HALAMAN KHUSUS ALA GOJEK/GRAB)
+    // ==========================================================
+    Route::get('/notifications', function () {
+        // 1. Otomatis ubah status semua notif jadi "Sudah dibaca"
+        auth()->user()->unreadNotifications->markAsRead();
+        // 2. Reset memori Laravel biar titik merah langsung hilang!
+        auth()->user()->unsetRelation('unreadNotifications');
+        
+        return view('notifications.index');
+    })->name('notifications.index');
+
+    // 🌟 ROUTE UNTUK MENGHAPUS SEMUA NOTIFIKASI SEKALIGUS
+    Route::post('/notifications/clear', function () {
+        auth()->user()->notifications()->delete();
+        return back()->with('success', 'Semua notifikasi telah dibersihkan!');
+    })->name('notifications.clear');
+
+    // 🌟 ROUTE UNTUK MENGHAPUS NOTIFIKASI SATU PER SATU (TONG SAMPAH)
+    Route::delete('/notifications/{id}', function ($id) {
+        auth()->user()->notifications()->where('id', $id)->delete();
+        return back()->with('success', 'Notifikasi berhasil dihapus.');
+    })->name('notifications.destroy');
 
     /*
     |----------------------------------------------------------------------

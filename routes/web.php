@@ -7,7 +7,10 @@ use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\User\CartController;
 use App\Http\Controllers\User\DocumentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\GoogleController;
 
+Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 /*
 |--------------------------------------------------------------------------
 | Public Routes

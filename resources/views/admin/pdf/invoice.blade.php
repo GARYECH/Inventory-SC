@@ -109,9 +109,17 @@
                 <td style="text-align: center;">{{ $index + 1 }}</td>
                 <td>{{ $detail->item->name }}</td>
                 <td style="text-align: center;">{{ $detail->quantity }}</td>
+                
+                <!-- 🌟 PERBAIKAN HARGA SATUAN: MENGGUNAKAN LOGIKA PINTAR 🌟 -->
                 <td>
-                    <table class="no-border-table"><tr><td style="text-align: left; width: 20%;">Rp</td><td style="text-align: right; width: 80%;">{{ number_format($detail->item->price, 0, ',', '.') }},-</td></tr></table>
+                    @if($detail->price == 0)
+                        <div style="text-align: center; color: #a00000; font-weight: bold; font-size: 11px; margin-top: 2px;">FREE (SC Internal)</div>
+                    @else
+                        <table class="no-border-table"><tr><td style="text-align: left; width: 20%;">Rp</td><td style="text-align: right; width: 80%;">{{ number_format($detail->price, 0, ',', '.') }},-</td></tr></table>
+                    @endif
                 </td>
+                
+                <!-- 🌟 PERBAIKAN SUBTOTAL: MENGGUNAKAN LOGIKA PINTAR 🌟 -->
                 <td>
                     <table class="no-border-table"><tr><td style="text-align: left; width: 20%;">Rp</td><td style="text-align: right; width: 80%;">{{ number_format($detail->subtotal_price, 0, ',', '.') }},-</td></tr></table>
                 </td>

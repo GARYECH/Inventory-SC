@@ -133,13 +133,29 @@
         </thead>
         <tbody>
             @foreach($order->orderItems as $index => $detail)
+                @php
+                    // 🌟 LOGIKA ANTI-BOCOR DIMASUKKAN KE MoU 🌟
+                    $isSC = $order->organization === 'Student Council';
+                    $isInternal = str_contains($detail->item->transaction_type, 'Internal');
+                    $isFree = $isSC && $isInternal;
+                    
+                    $basePrice = ($detail->price && $detail->price > 0) ? $detail->price : $detail->item->price;
+                    $actualPrice = $isFree ? 0 : $basePrice;
+                    $subtotal = $actualPrice * $detail->quantity;
+                @endphp
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td class="left">{{ $detail->item->name }}</td>
                 <td>{{ $detail->quantity }}</td>
                 <td>Unit</td>
-                <td class="right">Rp {{ number_format($detail->item->price, 0, ',', '.') }}</td>
-                <td class="right">Rp {{ number_format($detail->subtotal_price, 0, ',', '.') }}</td>
+                <td class="right">
+                    @if($isFree)
+                        <span style="color: #a00000; font-weight: bold; font-size: 9pt;">FREE (SC)</span>
+                    @else
+                        Rp {{ number_format($actualPrice, 0, ',', '.') }}
+                    @endif
+                </td>
+                <td class="right">Rp {{ number_format($subtotal, 0, ',', '.') }}</td>
             </tr>
             @endforeach
             <tr class="total-row">

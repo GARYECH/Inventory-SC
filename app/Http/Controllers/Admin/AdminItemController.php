@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Exports\OrdersExport;
 use Maatwebsite\Excel\Facades\Excel;
 
+use App\Notifications\OrderStatusUpdated;
+
 class AdminItemController extends Controller
 {
     // =================================================================
@@ -143,7 +145,7 @@ class AdminItemController extends Controller
     {
         $request->validate([
             'status' => 'required|string',
-            'mou_number' => 'nullable|string|max:255', // 🌟 Menambahkan validasi MoU Number
+            'mou_number' => 'nullable|string|max:255',
             'invoice_number' => 'nullable|string|max:255',
             'kwitansi_number' => 'nullable|string|max:255',
             'ba_number' => 'nullable|string|max:255',
@@ -163,7 +165,7 @@ class AdminItemController extends Controller
         try {
             $order->update([
                 'status' => $newStatus,
-                'mou_number' => $request->mou_number, // 🌟 Menyimpan MoU Number
+                'mou_number' => $request->mou_number,
                 'invoice_number' => $request->invoice_number,
                 'kwitansi_number' => $request->kwitansi_number,
                 'ba_number' => $request->ba_number,
@@ -173,17 +175,14 @@ class AdminItemController extends Controller
                 'ba_total_fine' => $request->ba_total_fine,
             ]);
 
-            // 🌟 LOGIKA AUTO-RESTOCK YANG SUDAH DIPERBAIKI (ANTI-BUG MERCHANDISE) 🌟
+            // 🌟 LOGIKA AUTO-RESTOCK 🌟
             if (in_array($newStatus, $restockStatuses) && !in_array($oldStatus, $restockStatuses)) {
                 foreach ($order->orderItems as $detail) {
                     $item = \App\Models\Item::find($detail->item_id);
                     if ($item) {
-                        // CEK: Jika barang ini "Sale" (Merchandise), JANGAN restock jika statusnya Sukses (Returned / Resolved)
-                        // Barang Sale hanya direstock kalau transaksinya Gagal (Rejected / Cancelled)
                         if ($item->transaction_type === 'Sale' && in_array($newStatus, ['Returned', 'Resolved (Fine Paid)'])) {
-                            continue; // Skip! Biarkan stoknya tetap berkurang karena sudah laku dibeli.
+                            continue;
                         }
-                        
                         $item->increment('stock_quantity', $detail->quantity);
                     }
                 }
@@ -194,7 +193,6 @@ class AdminItemController extends Controller
                 foreach ($order->orderItems as $detail) {
                     $item = \App\Models\Item::lockForUpdate()->find($detail->item_id);
                     if ($item) {
-                        // CEK: Sama seperti di atas. Barang Sale yang sudah sukses tidak perlu ditarik ulang stoknya.
                         if ($item->transaction_type === 'Sale' && in_array($oldStatus, ['Returned', 'Resolved (Fine Paid)'])) {
                             continue; 
                         }
@@ -206,6 +204,12 @@ class AdminItemController extends Controller
                         $item->decrement('stock_quantity', $detail->quantity);
                     }
                 }
+            }
+
+            // 🌟 TEMBAK NOTIFIKASINYA KE USER DI SINI 🌟
+            // Mencegah spam: Notif cuma jalan kalau admin beneran ganti status (misal Pending ke Approved)
+            if ($oldStatus !== $newStatus) {
+                $order->user->notify(new OrderStatusUpdated($order));
             }
 
             \Illuminate\Support\Facades\DB::commit();
@@ -220,6 +224,7 @@ class AdminItemController extends Controller
     {
         return Excel::download(new OrdersExport, 'inventory-report.xlsx');
     }
+
     // ==========================================================
     // 🗑️ FITUR HARD DELETE (HAPUS SPAM & BERSIHKAN MEMORI)
     // ==========================================================
@@ -233,18 +238,16 @@ class AdminItemController extends Controller
             $order->payment_receipt,
             $order->signed_kwitansi,
             $order->signed_ba_file,
-            $order->return_drive_link // Kalau misal drive link disimpan sbg file (opsional)
+            $order->return_drive_link 
         ];
 
         foreach ($filesToDelete as $file) {
-            // Cek apakah data bukan null dan benar-benar ada wujud filenya di folder storage/app/public
             if (!empty($file) && Storage::disk('public')->exists($file)) {
                 Storage::disk('public')->delete($file);
             }
         }
 
-        // 2. KEMBALIKAN STOK GUDANG JIKA TIPENYA "SALE" (Beli Putus)
-        // Kalau rental kan stoknya gak dipotong, jadi gak perlu dibalikin
+        // 2. KEMBALIKAN STOK GUDANG JIKA TIPENYA "SALE"
         if ($order->order_type === 'Sale' && !in_array($order->status, ['Rejected', 'Cancelled'])) {
             foreach ($order->orderItems as $detail) {
                 $detail->item->increment('stock_quantity', $detail->quantity);
@@ -252,8 +255,8 @@ class AdminItemController extends Controller
         }
 
         // 3. HAPUS DATA DARI DATABASE
-        $order->orderItems()->delete(); // Hapus rincian barangnya dulu
-        $order->delete(); // Baru hapus kuitansi induknya
+        $order->orderItems()->delete();
+        $order->delete(); 
 
         return back()->with('success', '🔥 Transaksi SPAM dan file dokumennya berhasil dimusnahkan dari server!');
     }

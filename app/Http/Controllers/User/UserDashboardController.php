@@ -90,13 +90,13 @@ class UserDashboardController extends Controller
         return view('user.item_schedule', compact('item', 'activeBookings'));
     }
 
-    // 🌟 API UNTUK KALENDER TRAVELOKA (UPDATE ANTI-TIMEZONE BUG) 🌟
+   // 🌟 API KALENDER TRAVELOKA (FIX AKURASI RENTANG TANGGAL) 🌟
     public function checkStock($id)
     {
         $item = \App\Models\Item::findOrFail($id);
         $totalStock = $item->stock_quantity;
 
-        // Ambil semua transaksi rental yang lagi aktif (belum dibalikin)
+        // Ambil semua transaksi rental yang lagi aktif (belum dibalikin/batal)
         $activeLoans = \App\Models\OrderItem::where('item_id', $id)
             ->whereHas('order', function ($query) {
                 $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
@@ -105,16 +105,22 @@ class UserDashboardController extends Controller
 
         $availability = [];
         
-        // 🌟 MUNDURKAN 7 HARI: Antisipasi perbedaan zona waktu server dan HP
+        // Mulai dari 7 hari ke belakang untuk keamanan timezone
         $startDate = \Carbon\Carbon::today()->subDays(7);
         
-        // Hitung untuk 90 hari ke depan biar aman dan nggak ada yang bolong
+        // Hitung untuk 90 hari ke depan
         for ($i = 0; $i < 90; $i++) {
-            $date = $startDate->copy()->addDays($i)->format('Y-m-d');
+            // Ubah ke format string Y-m-d murni agar tidak terganggu jam/timezone
+            $date = $startDate->copy()->addDays($i)->toDateString();
             $bookedToday = 0;
 
             foreach ($activeLoans as $loan) {
-                if ($date >= $loan->order->start_date && $date <= $loan->order->end_date) {
+                // Pastikan format start_date dan end_date order juga berupa string Y-m-d
+                $loanStart = \Carbon\Carbon::parse($loan->order->start_date)->toDateString();
+                $loanEnd = \Carbon\Carbon::parse($loan->order->end_date)->toDateString();
+
+                // 🌟 CEK APAKAH TANGGAL INI MASUK DALAM RENTANG PEMINJAMAN 🌟
+                if ($date >= $loanStart && $date <= $loanEnd) {
                     $bookedToday += $loan->quantity;
                 }
             }

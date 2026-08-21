@@ -4,7 +4,7 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage; // 🌟 WAJIB DITAMBAH UNTUK EMAIL
+use Illuminate\Notifications\Messages\MailMessage;
 
 class AdminNotification extends Notification
 {
@@ -12,33 +12,29 @@ class AdminNotification extends Notification
 
     public $message;
 
-    // Kita bikin dinamis, jadi pesannya bisa diatur bebas nanti
     public function __construct($message)
     {
         $this->message = $message;
     }
 
-    // 🌟 AKTIFKAN JALUR EMAIL UNTUK ADMIN JUGA 🌟
     public function via($notifiable)
     {
         return ['database', 'mail'];
     }
 
-    // 🌟 FORMAT EMAIL KHUSUS UNTUK ADMIN SC 🌟
+    // 🌟 FORMAT EMAIL ADMIN (PROFESIONAL & TO-THE-POINT) 🌟
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('🚨 [Admin Alert] Ada Update dari Mahasiswa!')
-            ->greeting('Halo Tim Admin SC! 🫡')
-            ->line('Sistem mendeteksi ada aktivitas baru dari mahasiswa nih. Tolong segera dicek ya:')
+            ->subject('[Inventory SC] Update Status Mahasiswa')
+            ->greeting('Halo, Tim Admin SC.')
+            ->line('Sistem mengidentifikasi adanya pembaruan aktivitas terkait peminjaman inventaris:')
             ->line('**' . $this->message . '**')
-            ->line('Yuk, segera login ke Order Management untuk melakukan review dokumen (Approve/Reject) supaya proker teman-teman mahasiswa bisa jalan dengan lancar.')
+            ->line('Harap segera melakukan peninjauan dan validasi dokumen agar operasional kegiatan mahasiswa dapat berjalan lancar.')
             ->action('Buka Order Management', route('admin.orders'))
-            ->line('Semangat terus ngurusin inventarisnya! 🔥')
-            ->salutation("System Auto-Bot,\nSCIS Kabinet Keong");
+            ->salutation("Hormat kami,\nSistem Inventaris Student Council (SCIS)");
     }
 
-    // 🌟 MASUK KE LONCENG WEB 🌟
     public function toArray($notifiable)
     {
         return [

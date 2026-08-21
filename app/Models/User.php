@@ -38,4 +38,22 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * 🌟 JALAN NINJA: MEMBELOKKAN TUJUAN EMAIL NOTIFIKASI 🌟
+     * Fitur bawaan Laravel untuk memanipulasi alamat tujuan email.
+     */
+    public function routeNotificationForMail($notification)
+    {
+        // 1. Kalau Admin, kirim ke email SC dan email UC pribadimu sekaligus!
+        if ($this->role === 'admin') {
+            return [
+                'studentcouncil@ciputra.ac.id',
+                'gchristian02@student.ciputra.ac.id'
+            ];
+        }
+
+        // 2. Kalau Mahasiswa, kirim ke email aslinya
+        return $this->email;
+    }
 }

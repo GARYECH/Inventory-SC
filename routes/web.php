@@ -12,6 +12,8 @@ use App\Http\Controllers\Auth\GoogleController;
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
+Route::get('/api/check-stock/{id}', [\App\Http\Controllers\User\UserDashboardController::class, 'checkStock']);
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -115,7 +117,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/orders/{order}/upload-payment', [DocumentController::class, 'uploadPaymentReceipt'])->name('orders.upload-payment');
         Route::post('/orders/{order}/upload-kwitansi', [DocumentController::class, 'uploadSignedKwitansi'])->name('orders.upload-kwitansi');
         Route::post('/orders/{order}/return-link', [DocumentController::class, 'submitReturnLink'])->name('orders.return-link');
-        Route::post('/orders/{order}/upload-ba', [DocumentController::class, 'uploadBeritaAcara'])->name('orders.upload-ba'); // 👈 Upload BA
+        Route::post('/orders/{order}/upload-ba', [DocumentController::class, 'uploadBeritaAcara'])->name('orders.upload-ba'); 
         
         // 2. 🛒 The New Enterprise Cart System
         Route::prefix('cart')->name('cart.')->group(function () {
@@ -123,6 +125,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/add/{item}', [CartController::class, 'addToCart'])->name('add');
             Route::post('/clear', [CartController::class, 'clearCart'])->name('clear');
             Route::post('/checkout', [CartController::class, 'processCheckout'])->name('checkout');
+
+            // 🌟 INI DIA RUTE YANG TADI HILANG BOSKU! 🌟
+            Route::patch('/{id}/update', [CartController::class, 'updateCart'])->name('update');
+            Route::delete('/{id}/remove', [CartController::class, 'removeItem'])->name('remove');
         });
 
         // 3. 📄 PDF & Document Generator (RUANG CETAK SURAT)
@@ -130,9 +136,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/mou/{order}', [DocumentController::class, 'downloadMou'])->name('mou');
             Route::get('/invoice/{order}', [DocumentController::class, 'downloadInvoice'])->name('invoice');
             Route::get('/kwitansi/{order}', [DocumentController::class, 'downloadKwitansi'])->name('kwitansi');
-            Route::get('/berita-acara/{order}', [DocumentController::class, 'downloadBeritaAcara'])->name('berita-acara'); // 👈 Download BA
+            Route::get('/berita-acara/{order}', [DocumentController::class, 'downloadBeritaAcara'])->name('berita-acara'); 
         });
     });
 });
 
+// Typo huruf "a" di sini udah aku basmi! 🔫
 require __DIR__.'/auth.php';

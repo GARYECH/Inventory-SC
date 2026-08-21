@@ -37,6 +37,15 @@
                 </div>
             @endif
 
+            @if(session('success'))
+                <div class="mb-8 px-6 py-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4 shadow-sm">
+                    <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 shadow-lg shadow-emerald-200">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <p class="text-sm font-bold text-emerald-800">{{ session('success') }}</p>
+                </div>
+            @endif
+
             @if(empty($cart))
                 <div class="text-center py-32 bg-white rounded-[3rem] shadow-sm border border-gray-100">
                     <div class="w-24 h-24 bg-gray-50 border border-gray-100 shadow-inner rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
@@ -82,28 +91,80 @@
                                 </form>
                             </div>
                             
-                            <div class="p-8 space-y-6">
+                            <!-- 🌟 KODE RESPONSIVE KERANJANG (FLEXBOX MURNI ANTI-NABRAK) 🌟 -->
+                            <div class="p-6 space-y-5">
                                 @foreach($cart as $id => $details)
                                     @php $totalPrice += $details['price'] * $details['quantity']; @endphp
-                                    <div class="flex justify-between items-center p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-indigo-100 hover:shadow-md transition-all group">
-                                        <div class="flex items-center gap-4">
-                                            <div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-100 group-hover:bg-indigo-50 transition-colors">
-                                                <svg class="w-6 h-6 text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                    
+                                    <!-- ITEM CARD -->
+                                    <div class="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-indigo-100 hover:shadow-md transition-all flex flex-col gap-4">
+                                        
+                                        <!-- AREA ATAS: Info Barang & Tombol Hapus -->
+                                        <div class="flex items-start gap-4">
+                                            <!-- Kiri: Icon -->
+                                            <div class="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-100 shrink-0">
+                                                <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                                             </div>
-                                            <div>
-                                                <h4 class="font-black text-gray-900 text-lg">{{ $details['name'] }}</h4>
-                                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Harga Satuan: Rp {{ number_format($details['price'], 0, ',', '.') }}</p>
+
+                                            <!-- Tengah: Info Text -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex justify-between items-start">
+                                                    <!-- Nama Barang -->
+                                                    <h4 class="font-black text-gray-900 text-base sm:text-lg leading-tight truncate pr-4">{{ $details['name'] }}</h4>
+                                                    
+                                                    <!-- Kanan Pojok: Tombol Hapus (Icon Tong Sampah Elegan) -->
+                                                    <form action="{{ route('student.cart.remove', $id) }}" method="POST" class="shrink-0">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Barang">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                        </button>
+                                                    </form>
+                                                </div>
+
+                                                <!-- Tanggal Pinjam -->
+                                                @if(isset($details['start_date']) && $details['start_date'])
+                                                    <div class="mt-1.5 inline-flex items-center gap-1.5 px-2 py-1 bg-indigo-50 border border-indigo-100 rounded text-[10px] font-bold text-indigo-600 uppercase tracking-widest">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                        {{ \Carbon\Carbon::parse($details['start_date'])->format('d M y') }} - {{ \Carbon\Carbon::parse($details['end_date'])->format('d M y') }}
+                                                    </div>
+                                                @endif
+                                                
+                                                <!-- Harga Satuan -->
+                                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">Harga: Rp {{ number_format($details['price'], 0, ',', '.') }}</p>
                                             </div>
                                         </div>
-                                        <div class="text-right">
-                                            <span class="bg-gray-100 text-gray-800 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-gray-200 inline-block mb-1">
-                                                Qty: {{ $details['quantity'] }}
-                                            </span>
-                                            <p class="font-black text-indigo-600 text-lg">Rp {{ number_format($details['price'] * $details['quantity'], 0, ',', '.') }}</p>
+
+                                        <!-- AREA BAWAH: Update QTY & Subtotal -->
+                                        <div class="flex flex-row items-center justify-between border-t border-gray-100 pt-4 mt-1">
+                                            
+                                            <!-- Form Update QTY (LEBAR DIPERBESAR BIAR ANGKA KELIAHATAN JELAS) -->
+                                            <form action="{{ route('student.cart.update', $id) }}" method="POST" class="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm h-10">
+                                                @csrf
+                                                @method('PATCH')
+                                                <!-- Label QTY -->
+                                                <div class="px-3 bg-gray-50 flex items-center justify-center h-full border-r border-gray-200">
+                                                    <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">QTY</span>
+                                                </div>
+                                                <!-- Input Angka (Lebar 16 biar panah gk nutupin angka) -->
+                                                <input type="number" name="quantity" value="{{ $details['quantity'] }}" min="1" required class="w-16 h-full bg-transparent border-none text-center text-sm font-black text-gray-900 focus:ring-0 px-2">
+                                                <!-- Tombol Ubah -->
+                                                <button type="submit" class="px-4 h-full bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors border-l border-gray-200">
+                                                    Update
+                                                </button>
+                                            </form>
+
+                                            <!-- Subtotal Item -->
+                                            <div class="text-right">
+                                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Subtotal</p>
+                                                <p class="font-black text-indigo-600 text-lg sm:text-xl leading-none">Rp {{ number_format($details['price'] * $details['quantity'], 0, ',', '.') }}</p>
+                                            </div>
                                         </div>
+
                                     </div>
                                 @endforeach
                             </div>
+                            <!-- 🌟 END KODE RESPONSIVE KERANJANG 🌟 -->
                             
                             <div class="p-8 bg-gray-900 flex justify-between items-center rounded-b-[2.5rem]">
                                 <span class="font-black text-gray-400 uppercase tracking-[0.2em] text-[11px]">Grand Total</span>
@@ -126,14 +187,12 @@
                             <form action="{{ route('student.cart.checkout') }}" method="POST" class="space-y-5">
                                 @csrf
                                 
-                                <!-- 🌟 TAMBAHAN: NAMA LENGKAP 🌟 -->
                                 <div>
                                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nama Lengkap PIC</label>
                                     <input type="text" name="full_name" placeholder="Masukkan nama lengkap..." required 
                                         class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
                                 </div>
                                 
-                                <!-- 🌟 TAMBAHAN: ORGANISASI & JABATAN (GRID) 🌟 -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Organisasi</label>
@@ -180,26 +239,18 @@
                                     </div>
                                 </div>
 
+                                <!-- 🌟 BANNER INFO: PENGGANTI FORM KALENDER 🌟 -->
                                 @if($isRental)
-                                <div class="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl mt-6">
-                                    <h4 class="font-black text-[11px] text-indigo-600 uppercase tracking-widest mb-4 flex items-center">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        Jadwal Peminjaman
-                                    </h4>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-indigo-400 uppercase mb-1">Start Date</label>
-                                            <input type="date" name="start_date" required class="w-full px-4 py-3 bg-white border-none rounded-xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-700 shadow-sm text-xs cursor-pointer">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-indigo-400 uppercase mb-1">End Date</label>
-                                            <input type="date" name="end_date" required class="w-full px-4 py-3 bg-white border-none rounded-xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-700 shadow-sm text-xs cursor-pointer">
-                                        </div>
+                                <div class="mt-6 p-5 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center gap-4 shadow-sm">
+                                    <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black text-indigo-900 uppercase tracking-widest">Jadwal Terkunci</p>
+                                        <p class="text-[10px] font-bold text-indigo-600 mt-1 leading-snug">Tanggal peminjaman sudah dikunci otomatis sesuai dengan pilihanmu di katalog sebelumnya.</p>
                                     </div>
                                 </div>
                                 @else
-                                <input type="hidden" name="start_date" value="{{ now()->format('Y-m-d') }}">
-                                <input type="hidden" name="end_date" value="{{ now()->format('Y-m-d') }}">
                                 <div class="mt-6 p-5 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4 shadow-sm">
                                     <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
@@ -211,6 +262,7 @@
                                 </div>
                                 @endif
 
+                                <!-- Wajib SOP -->
                                 <div class="mt-10 mb-8 border-2 border-red-100 bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-red-100/50">
                                     <div class="bg-red-50/80 p-6 border-b border-red-100 flex flex-col sm:flex-row justify-between items-center gap-4">
                                         <div class="flex items-center gap-4 w-full sm:w-auto">

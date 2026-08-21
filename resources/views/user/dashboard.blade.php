@@ -20,7 +20,6 @@
                     <!-- Search & Cart Action -->
                     <div class="flex items-center gap-4 w-full md:w-auto flex-1 justify-end">
                         <form action="{{ route('student.dashboard') }}" method="GET" id="searchForm" class="relative group w-full md:w-80">
-                            <!-- Pertahankan Filter Type saat mencari -->
                             @if(request('type'))
                                 <input type="hidden" name="type" value="{{ request('type') }}">
                             @endif
@@ -59,7 +58,7 @@
                 </div>
             @endif
 
-            <!-- Notifikasi Error -->
+            <!-- Notifikasi Error (Gagal Booking Tanggal, dll) -->
             @if(session('error'))
                 <div class="mb-8 px-6 py-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-4 shadow-sm">
                     <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shrink-0 shadow-lg shadow-red-200">
@@ -69,32 +68,27 @@
                 </div>
             @endif
 
-            <!-- 🗂️ PREMIUM CATEGORY TABS (SCROLLABLE ON MOBILE) -->
+            <!-- 🗂️ PREMIUM CATEGORY TABS -->
             <div class="mb-10">
                 <div class="flex flex-nowrap overflow-x-auto gap-4 pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                    
-                    <!-- Tab: Semua Barang -->
                     <a href="{{ route('student.dashboard') }}" 
                        class="relative flex items-center gap-3 px-6 py-3.5 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all duration-300 shrink-0 border-2 {{ !request('type') ? 'bg-gray-900 border-gray-900 text-white shadow-xl shadow-gray-300/50' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50' }}">
                         <svg class="w-5 h-5 {{ !request('type') ? 'text-white' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                         Semua Katalog
                     </a>
                     
-                    <!-- Tab: Internal Rental -->
                     <a href="{{ route('student.dashboard', ['type' => 'Internal Rental']) }}" 
                        class="relative flex items-center gap-3 px-6 py-3.5 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all duration-300 shrink-0 border-2 {{ request('type') == 'Internal Rental' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xl shadow-indigo-100/50' : 'bg-white border-gray-100 text-gray-500 hover:border-indigo-100 hover:text-indigo-600 hover:bg-indigo-50/50' }}">
                         <div class="w-2.5 h-2.5 rounded-full {{ request('type') == 'Internal Rental' ? 'bg-indigo-500 animate-pulse' : 'bg-gray-300' }}"></div>
                         Internal SC
                     </a>
 
-                    <!-- Tab: Vendor Rental -->
                     <a href="{{ route('student.dashboard', ['type' => 'Vendor Rental']) }}" 
                        class="relative flex items-center gap-3 px-6 py-3.5 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all duration-300 shrink-0 border-2 {{ request('type') == 'Vendor Rental' ? 'bg-amber-50 border-amber-200 text-amber-700 shadow-xl shadow-amber-100/50' : 'bg-white border-gray-100 text-gray-500 hover:border-amber-100 hover:text-amber-600 hover:bg-amber-50/50' }}">
                         <div class="w-2.5 h-2.5 rounded-full {{ request('type') == 'Vendor Rental' ? 'bg-amber-500 animate-pulse' : 'bg-gray-300' }}"></div>
                         External / Vendor
                     </a>
 
-                    <!-- Tab: Merchandise -->
                     <a href="{{ route('student.dashboard', ['type' => 'Sale']) }}" 
                        class="relative flex items-center gap-3 px-6 py-3.5 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all duration-300 shrink-0 border-2 {{ request('type') == 'Sale' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-xl shadow-emerald-100/50' : 'bg-white border-gray-100 text-gray-500 hover:border-emerald-100 hover:text-emerald-600 hover:bg-emerald-50/50' }}">
                         <div class="w-2.5 h-2.5 rounded-full {{ request('type') == 'Sale' ? 'bg-emerald-500 animate-pulse' : 'bg-gray-300' }}"></div>
@@ -113,11 +107,10 @@
                             return $detail->order && !in_array($detail->order->status, ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled']) && $detail->order->order_type !== 'Sale';
                         });
                         
-                        // Sorting untuk Timeline Preview
                         $activeSchedules = $activeSchedules->sortBy(function($detail) {
                             return \Carbon\Carbon::parse($detail->order->start_date)->timestamp;
                         });
-                        $displaySchedules = $activeSchedules->take(2); // Cuma nampilin 2 terdekat
+                        $displaySchedules = $activeSchedules->take(2); 
                         $remainingCount = $activeSchedules->count() - 2;
                     }
                 @endphp
@@ -132,7 +125,7 @@
                             <div class="w-full h-48 rounded-3xl bg-gray-100 flex items-center justify-center text-gray-300 font-bold text-xs uppercase tracking-widest">No Image</div>
                         @endif
                         
-                        <!-- Badge Tipe Transaksi (Kiri) -->
+                        <!-- Badges -->
                         <span class="absolute top-5 left-5 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest rounded-xl shadow-lg
                             {{ $item->transaction_type === 'Internal Rental' ? 'bg-indigo-600 text-white' : '' }}
                             {{ $item->transaction_type === 'Vendor Rental' ? 'bg-amber-500 text-white' : '' }}
@@ -140,7 +133,6 @@
                             {{ $item->transaction_type === 'Internal Rental' ? 'Internal' : ($item->transaction_type === 'Vendor Rental' ? 'External' : 'Merch') }}
                         </span>
 
-                        <!-- Badge Kondisi (Kanan) -->
                         <span class="absolute top-5 right-5 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest rounded-xl shadow-lg backdrop-blur-md {{ $item->condition_status === 'Good' ? 'bg-white/90 text-green-600' : 'bg-red-500/90 text-white' }}">
                             {{ $item->condition_status }}
                         </span>
@@ -161,13 +153,12 @@
                                 <span class="text-lg font-black text-indigo-600">Rp {{ number_format($item->price, 0, ',', '.') }}</span>
                             </div>
                             <div class="text-right">
-                                <!-- 🌟 TAMPILAN STOK TOTAL ASET 🌟 -->
-                                <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Stok Total Aset</p>
-                                <span class="text-sm font-black {{ $item->stock_quantity > 0 ? 'text-gray-900' : 'text-red-500' }}">{{ $item->stock_quantity }}</span>
+                                <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Stok Gudang</p>
+                                <span class="text-sm font-black {{ $item->stock_quantity > 0 ? 'text-gray-900' : 'text-red-500' }}">{{ $item->stock_quantity }} Unit</span>
                             </div>
                         </div>
 
-                        <!-- 🌟 📅 JADWAL TERPAKAI (LIMIT 2 ITEM TERDEKAT) 🌟 -->
+                        <!-- Jadwal Terpakai (Preview 2 Terdekat) -->
                         @if($item->transaction_type !== 'Sale' && $activeSchedules->count() > 0)
                             <div class="mt-4 p-3 bg-orange-50/80 border border-orange-100 rounded-2xl">
                                 <p class="text-[9px] font-black text-orange-600 uppercase tracking-widest mb-2 flex items-center gap-1">
@@ -183,7 +174,6 @@
                                     @endforeach
                                 </ul>
                                 
-                                <!-- Jika jadwal lebih dari 2 -->
                                 @if($remainingCount > 0)
                                     <div class="mt-2 text-center bg-orange-100/50 py-1.5 rounded-lg border border-orange-100 border-dashed">
                                         <p class="text-[9px] font-black text-orange-500 uppercase tracking-widest">+ {{ $remainingCount }} Jadwal Lainnya</p>
@@ -194,33 +184,74 @@
 
                     </div>
 
-                    <!-- 🌟 AREA ACTION: TOMBOL CEK JADWAL & ADD TO CART 🌟 -->
-                    <div class="p-4 bg-white border-t border-gray-50 flex flex-col gap-2.5">
+                    <!-- ========================================== -->
+                    <!-- 🌟 AREA ACTION TRAVELOKA (INLINE EXPAND) 🌟-->
+                    <!-- ========================================== -->
+                    <div x-data="{ showDateForm: false }" class="p-4 bg-white border-t border-gray-50 flex flex-col gap-2.5 transition-all duration-300">
                         
-                        <!-- TOMBOL CEK JADWAL LENGKAP -->
-                        @if($item->transaction_type !== 'Sale')
-                            <a href="{{ route('student.item.schedule', $item->id) }}" class="w-full inline-flex justify-center items-center py-2.5 bg-indigo-50/50 text-indigo-600 border border-indigo-100 font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-indigo-600 hover:text-white transition-all active:scale-95 group">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                Lihat Jadwal Detail
-                            </a>
-                        @endif
-
-                        <!-- TOMBOL ADD TO CART -->
                         @if($item->stock_quantity > 0)
-                            <form action="{{ route('student.cart.add', $item->id) }}" method="POST" class="flex gap-2">
-                                @csrf
+                            
+                            @if($item->transaction_type !== 'Sale')
+                                <!-- JIKA BARANG SEWA (RENTAL) -->
                                 
-                                <input type="number" name="quantity" value="1" min="1" max="{{ $item->stock_quantity }}" required
-                                    class="w-16 px-2 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-black text-center text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
-                                    title="Jumlah Barang">
+                                <a href="{{ route('student.item.schedule', $item->id) }}" class="w-full inline-flex justify-center items-center py-2.5 bg-indigo-50/50 text-indigo-600 border border-indigo-100 font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-indigo-600 hover:text-white transition-all active:scale-95 group">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Lihat Siapa Saja Yang Booking
+                                </a>
 
-                                <button type="submit" class="flex-grow text-center bg-gray-900 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all duration-300 shadow-lg shadow-gray-200 active:scale-95 group">
-                                    <span class="inline-flex items-center">
-                                        <svg class="w-4 h-4 mr-2 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                        Add to Cart
-                                    </span>
+                                <button type="button" x-show="!showDateForm" @click="showDateForm = true" data-item-id="{{ $item->id }}" class="btn-pilih-jadwal w-full text-center bg-gray-900 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all duration-300 shadow-lg shadow-gray-200 active:scale-95 group flex justify-center items-center">
+                                    <svg class="w-4 h-4 mr-2 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Pilih Jadwal Sewa
                                 </button>
-                            </form>
+                                
+                                <form action="{{ route('student.cart.add', $item->id) }}" method="POST" x-show="showDateForm" style="display: none;" class="flex flex-col gap-3">
+                                    @csrf
+                                    
+                                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 relative">
+                                        <button type="button" @click="showDateForm = false" class="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm z-10">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+
+                                        <label class="block text-[9px] font-black uppercase text-indigo-800 tracking-widest mb-2">Pilih Rentang Waktu</label>
+                                        
+                                        <input type="text" id="date_range_{{ $item->id }}" placeholder="Memuat kalender..." readonly class="w-full text-xs p-3 rounded-xl border-transparent shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 cursor-pointer font-black text-gray-800 bg-white text-center">
+                                        
+                                        <input type="hidden" name="start_date" id="start_date_{{ $item->id }}" required>
+                                        <input type="hidden" name="end_date" id="end_date_{{ $item->id }}" required>
+                                    </div>
+
+                                    <div class="flex gap-2">
+                                        <div class="relative w-20 shrink-0">
+                                            <span class="absolute -top-2 left-2 bg-white px-1 text-[8px] font-black text-gray-400 uppercase tracking-widest z-10">Jumlah</span>
+                                            <input type="number" name="quantity" value="1" min="1" max="{{ $item->stock_quantity }}" required
+                                                class="w-full h-full px-2 py-3 bg-white border border-gray-200 rounded-xl text-xs font-black text-center text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm relative pt-3">
+                                        </div>
+
+                                        <button type="submit" class="flex-grow text-center bg-indigo-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-900 transition-all duration-300 shadow-md shadow-indigo-200 active:scale-95 group">
+                                            <span class="inline-flex items-center">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                                Ke Keranjang
+                                            </span>
+                                        </button>
+                                    </div>
+                                </form>
+
+                            @else
+                                <form action="{{ route('student.cart.add', $item->id) }}" method="POST" class="flex gap-2">
+                                    @csrf
+                                    <input type="number" name="quantity" value="1" min="1" max="{{ $item->stock_quantity }}" required
+                                        class="w-16 px-2 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-black text-center text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
+                                        title="Jumlah Barang">
+
+                                    <button type="submit" class="flex-grow text-center bg-emerald-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-900 transition-all duration-300 shadow-lg shadow-gray-200 active:scale-95 group">
+                                        <span class="inline-flex items-center">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                                            Beli Sekarang
+                                        </span>
+                                    </button>
+                                </form>
+                            @endif
+
                         @else
                             <button disabled class="w-full bg-gray-100 text-gray-400 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] cursor-not-allowed border border-gray-200">
                                 Out of Stock
@@ -238,7 +269,7 @@
                 </div>
             </div>
 
-            <!-- Kondisi Kosong (Empty State) -->
+            <!-- Kondisi Kosong -->
             @if($items->isEmpty())
                 <div class="text-center py-32">
                     <div class="w-24 h-24 bg-white border border-gray-100 shadow-sm rounded-[2rem] rotate-12 flex items-center justify-center mx-auto mb-6 text-gray-300">
@@ -253,14 +284,148 @@
         </div>
     </div>
 
-    <!-- Script Autocomplete Search -->
+    <!-- 🌟 PLUGIN KALENDER FLATPICKR 🌟 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+    <!-- 🌟 OVERRIDE CSS FLATPICKR BIAR GAK JELEK/LONJONG 🌟 -->
+    <style>
+        .flatpickr-calendar {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            border: none !important;
+            border-radius: 1.5rem !important;
+            padding: 10px !important;
+            width: 320px !important; /* Lebarin dikit biar teks gak desek-desekan */
+        }
+        
+        .flatpickr-days, .dayContainer {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .flatpickr-day {
+            height: 52px !important; /* Tingginya pas buat Angka + Teks Sisa */
+            max-width: none !important;
+            width: calc(14.28% - 4px) !important; /* 7 hari pas sebaris */
+            margin: 2px !important;
+            line-height: 1.2 !important;
+            border-radius: 12px !important; /* KOTAK MEMBULAT (Bukan Lingkaran!) */
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            border: 2px solid transparent !important;
+            font-weight: 700 !important;
+        }
+
+        /* Desain pas tanggal diklik (Dipilih / Start / End) */
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, 
+        .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange {
+            background: #4f46e5 !important; /* Indigo 600 */
+            border-color: #4f46e5 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3) !important;
+        }
+
+        /* Desain rentang tanggal di tengah-tengah (In Range) */
+        .flatpickr-day.inRange {
+            background: #e0e7ff !important; /* Indigo 100 */
+            border-color: #e0e7ff !important;
+            color: #3730a3 !important;
+            box-shadow: none !important;
+        }
+
+        /* Desain pas kursor lewat (Hover) */
+        .flatpickr-day:hover {
+            background: #f3f4f6 !important;
+            border-color: #e5e7eb !important;
+        }
+        
+        /* 🌟 TEKS SISA STOK BAWAHNYA 🌟 */
+        .stock-badge { 
+            font-size: 9px; 
+            margin-top: 4px; 
+            font-weight: 900; 
+            letter-spacing: 0.05em;
+        }
+        .stock-green { color: #10B981; } /* Hijau seger */
+        .stock-red { color: #EF4444; text-decoration: line-through; } /* Merah coret */
+        
+        /* Biar teks stok tetap kelihatan jelas pas backgroundnya biru gelap */
+        .flatpickr-day.selected .stock-green, 
+        .flatpickr-day.startRange .stock-green, 
+        .flatpickr-day.endRange .stock-green {
+            color: #c7d2fe !important; /* Indigo 200 (Terang) */
+        }
+    </style>
+
     <script>
         let timeout = null;
         document.getElementById('searchInput').addEventListener('keyup', function() {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 document.getElementById('searchForm').submit();
-            }, 700); // Tunggu 0.7 detik setelah ngetik
+            }, 700);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButtons = document.querySelectorAll('.btn-pilih-jadwal');
+            
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', async function() {
+                    const itemId = this.dataset.itemId;
+                    const inputRange = document.getElementById('date_range_' + itemId);
+                    
+                    if (inputRange._flatpickr) {
+                        inputRange._flatpickr.open();
+                        return;
+                    }
+
+                    inputRange.placeholder = "Sedang mengecek stok...";
+                    try {
+                        const response = await fetch('/api/check-stock/' + itemId);
+                        const stockData = await response.json();
+
+                        inputRange.placeholder = "Klik untuk pilih tanggal...";
+
+                        flatpickr(inputRange, {
+                            mode: "range", 
+                            minDate: "today", 
+                            dateFormat: "Y-m-d",
+                            showMonths: 1, 
+                            
+                            onDayCreate: function(dObj, dStr, fp, dayElem) {
+                                const dateString = fp.formatDate(dayElem.dateObj, "Y-m-d");
+
+                                if (stockData[dateString] !== undefined) {
+                                    const sisa = stockData[dateString];
+                                    const colorClass = sisa > 0 ? 'stock-green' : 'stock-red';
+                                    const text = sisa > 0 ? `Sisa ${sisa}` : 'Habis';
+                                    
+                                    dayElem.innerHTML += `<span class="stock-badge ${colorClass}">${text}</span>`;
+                                }
+                            },
+
+                            onChange: function(selectedDates, dateStr, instance) {
+                                if (selectedDates.length === 2) {
+                                    document.getElementById('start_date_' + itemId).value = instance.formatDate(selectedDates[0], "Y-m-d");
+                                    document.getElementById('end_date_' + itemId).value = instance.formatDate(selectedDates[1], "Y-m-d");
+                                } else if (selectedDates.length === 1) {
+                                    document.getElementById('start_date_' + itemId).value = instance.formatDate(selectedDates[0], "Y-m-d");
+                                    document.getElementById('end_date_' + itemId).value = instance.formatDate(selectedDates[0], "Y-m-d"); 
+                                }
+                            }
+                        });
+                        
+                        inputRange._flatpickr.open();
+
+                    } catch (error) {
+                        inputRange.placeholder = "Gagal memuat jadwal.";
+                        console.error("API Error:", error);
+                    }
+                });
+            });
         });
     </script>
 </x-app-layout>

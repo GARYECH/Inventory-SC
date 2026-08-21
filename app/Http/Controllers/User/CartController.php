@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\User; // 🌟 Tambahkan import User
-use App\Notifications\AdminNotification; // 🌟 Tambahkan import Notifikasi Admin
+use App\Models\User;
+use App\Notifications\AdminNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -20,16 +20,16 @@ class CartController extends Controller
         return view('user.cart', compact('cart'));
     }
 
+    // ==========================================================
+    // 🌟 FASE 1: ADD TO CART DENGAN SISTEM TRAVELOKA (CEK JADWAL DI AWAL) 🌟
+    // ==========================================================
     public function addToCart(Request $request, Item $item)
     {
         $cart = session()->get('cart', []);
         $requestQuantity = $request->quantity ?? 1;
+        $isRental = str_contains($item->transaction_type, 'Rental');
 
-        // Validasi: Jangan biarkan order melebihi total aset SC
-        if ($item->stock_quantity < $requestQuantity) {
-            return back()->with('error', 'Gagal! Stok total aset tidak mencukupi.');
-        }
-
+        // 1. CEK CAMPUR BARANG
         if (count($cart) > 0) {
             $firstItem = reset($cart);
             if ($firstItem['transaction_type'] !== $item->transaction_type) {
@@ -37,12 +37,56 @@ class CartController extends Controller
             }
         }
 
-        if (isset($cart[$item->id])) {
-            $newQuantity = $cart[$item->id]['quantity'] + $requestQuantity;
-            if ($item->stock_quantity < $newQuantity) {
-                return back()->with('error', 'Gagal! Total barang ini di keranjang melebihi total aset SC.');
+        // 2. LOGIKA PENGECEKAN STOK & JADWAL (LANGSUNG DARI KATALOG)
+        if ($isRental) {
+            // Wajib kirim tanggal dari form add to cart (katalog)
+            $request->validate([
+                'start_date' => 'required|date|after_or_equal:today',
+                'end_date' => 'required|date|after_or_equal:start_date',
+            ], [
+                'start_date.required' => 'Pilih tanggal mulai sewa terlebih dahulu!',
+                'end_date.required' => 'Pilih tanggal selesai sewa terlebih dahulu!',
+            ]);
+
+            $startDate = $request->start_date;
+            $endDate = $request->end_date;
+
+            // Hitung barang yang overlap di tanggal tersebut
+            $overlappingQty = OrderItem::where('item_id', $item->id)
+                ->whereHas('order', function ($query) use ($startDate, $endDate) {
+                    $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
+                          ->where('order_type', '!=', 'Sale') 
+                          ->where('start_date', '<=', $endDate) 
+                          ->where('end_date', '>=', $startDate); 
+                })->sum('quantity');
+
+            // Hitung barang INI yang sudah masuk keranjang di sesi yang sama
+            $qtyInCart = isset($cart[$item->id]) ? $cart[$item->id]['quantity'] : 0;
+            $totalDiminta = $overlappingQty + $qtyInCart + $requestQuantity;
+
+            // Jika melebihi kapasitas gudang di tanggal tsb, TOLAK!
+            if ($totalDiminta > $item->stock_quantity) {
+                $sisaKuota = max(0, $item->stock_quantity - $overlappingQty - $qtyInCart);
+                $formatStart = Carbon::parse($startDate)->format('d M');
+                $formatEnd = Carbon::parse($endDate)->format('d M');
+                return back()->with('error', "Gagal! Untuk tanggal {$formatStart} - {$formatEnd}, sisa stok '{$item->name}' hanya {$sisaKuota} unit.");
             }
-            $cart[$item->id]['quantity'] = $newQuantity;
+        } else {
+            // Logika untuk Sale (Merchandise Beli Putus) tanpa tanggal
+            $qtyInCart = isset($cart[$item->id]) ? $cart[$item->id]['quantity'] : 0;
+            if (($qtyInCart + $requestQuantity) > $item->stock_quantity) {
+                return back()->with('error', 'Gagal! Stok total aset tidak mencukupi.');
+            }
+            $startDate = null;
+            $endDate = null;
+        }
+
+        // 3. MASUKKAN KE KERANJANG BESERTA JADWALNYA
+        if (isset($cart[$item->id])) {
+            $cart[$item->id]['quantity'] += $requestQuantity;
+            // Timpa tanggal lama dengan tanggal baru jika diupdate
+            $cart[$item->id]['start_date'] = $startDate;
+            $cart[$item->id]['end_date'] = $endDate;
         } else {
             $cart[$item->id] = [
                 'id' => $item->id,
@@ -51,11 +95,13 @@ class CartController extends Controller
                 'quantity' => $requestQuantity,
                 'transaction_type' => $item->transaction_type,
                 'requires_mou' => $item->requires_mou,
+                'start_date' => $startDate, // 🌟 SIMPAN TANGGAL DI KERANJANG
+                'end_date' => $endDate,     // 🌟 SIMPAN TANGGAL DI KERANJANG
             ];
         }
 
         session()->put('cart', $cart);
-        return back()->with('success', 'Barang ditambahkan ke keranjang!');
+        return back()->with('success', 'Barang berhasil masuk keranjang!');
     }
 
     public function clearCart()
@@ -63,7 +109,62 @@ class CartController extends Controller
         session()->forget('cart');
         return back()->with('success', 'Keranjang dikosongkan.');
     }
+    // 🌟 FITUR UPDATE QTY DI CHECKOUT (DENGAN CEK OVERLAP JADWAL) 🌟
+    public function updateCart(Request $request, $id)
+    {
+        $cart = session()->get('cart', []);
+        
+        if (isset($cart[$id])) {
+            $item = Item::findOrFail($id);
+            $newQty = $request->quantity;
+            $isRental = str_contains($item->transaction_type, 'Rental');
 
+            if ($isRental) {
+                $startDate = $cart[$id]['start_date'];
+                $endDate = $cart[$id]['end_date'];
+
+                // Hitung barang yang overlap (tidak termasuk punya dia sendiri di keranjang saat ini)
+                $overlappingQty = OrderItem::where('item_id', $item->id)
+                    ->whereHas('order', function ($query) use ($startDate, $endDate) {
+                        $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
+                              ->where('order_type', '!=', 'Sale') 
+                              ->where('start_date', '<=', $endDate) 
+                              ->where('end_date', '>=', $startDate); 
+                    })->sum('quantity');
+
+                if (($overlappingQty + $newQty) > $item->stock_quantity) {
+                    $sisaKuota = max(0, $item->stock_quantity - $overlappingQty);
+                    return back()->with('error', "Gagal update! Sisa stok '{$item->name}' di rentang tanggal tersebut hanya {$sisaKuota} unit.");
+                }
+            } else {
+                if ($newQty > $item->stock_quantity) {
+                    return back()->with('error', "Gagal update! Sisa stok gudang hanya {$item->stock_quantity} unit.");
+                }
+            }
+
+            // Lolos Cek! Update jumlahnya
+            $cart[$id]['quantity'] = $newQty;
+            session()->put('cart', $cart);
+            return back()->with('success', 'Jumlah barang berhasil diupdate!');
+        }
+
+        return back()->with('error', 'Barang tidak ditemukan di keranjang.');
+    }
+
+    // 🌟 FITUR HAPUS 1 BARANG DARI KERANJANG 🌟
+    public function removeItem($id)
+    {
+        $cart = session()->get('cart', []);
+        if (isset($cart[$id])) {
+            unset($cart[$id]);
+            session()->put('cart', $cart);
+        }
+        return back()->with('success', 'Barang berhasil dihapus dari keranjang.');
+    }
+
+    // ==========================================================
+    // 🌟 FASE 2: CHECKOUT (FINALISASI DATA MAHASISWA SAJA) 🌟
+    // ==========================================================
     public function processCheckout(Request $request)
     {
         $cart = session()->get('cart');
@@ -72,58 +173,39 @@ class CartController extends Controller
             return back()->with('error', 'Keranjangmu kosong!');
         }
 
+        // TANGGAL SUDAH DIHAPUS DARI VALIDASI CHECKOUT (Karena sudah dicek di awal)
         $request->validate([
             'full_name' => 'required|string',
             'organization' => 'required|string',
             'position' => 'required|string',
             'phone_number' => 'required|string',
             'proker_name' => 'required|string',
-            
             'treasurer_name' => 'required|string',
             'address' => 'required|string',
-            'start_date' => 'nullable|date|after_or_equal:today',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
             'is_sop_accepted' => 'required|accepted',
         ]);
 
-        $startDate = $request->start_date;
-        $endDate = $request->end_date;
         $firstItem = reset($cart);
         $orderType = $firstItem['transaction_type'];
 
-        // ==========================================================
-        // 🌟 LOGIKA KALENDER: CEK KETERSEDIAAN DI TANGGAL TERSEBUT 🌟
-        // ==========================================================
-        if ($startDate && $endDate && str_contains($orderType, 'Rental')) {
-            foreach ($cart as $id => $details) {
-                $item = Item::find($id);
+        // 🌟 KITA CARI TANGGAL PALING AWAL DAN PALING AKHIR DARI KERANJANG 🌟
+        $globalStartDate = null;
+        $globalEndDate = null;
+        $totalPrice = 0;
 
-                // Hitung total unit yang sedang dipinjam oleh order lain PADA TANGGAL YANG BERSINGGUNGAN
-                $overlappingQty = OrderItem::where('item_id', $id)
-                    ->whereHas('order', function ($query) use ($startDate, $endDate) {
-                        $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
-                              ->where('order_type', '!=', 'Sale') // Abaikan transaksi Beli Putus
-                              ->where('start_date', '<=', $endDate)  // Rumus Overlap Tgl
-                              ->where('end_date', '>=', $startDate); // Rumus Overlap Tgl
-                    })->sum('quantity');
-
-                // Kapasitas maksimal SC
-                $stokMaksimal = $item->stock_quantity;
-
-                // Jika (yang sedang dipakai orang di tanggal tsb + yang mau kita pinjam) > Kapasitas SC
-                if (($overlappingQty + $details['quantity']) > $stokMaksimal) {
-                    $sisaKuota = $stokMaksimal - $overlappingQty;
-                    $formatStart = Carbon::parse($startDate)->format('d M');
-                    $formatEnd = Carbon::parse($endDate)->format('d M Y');
-                    return back()->with('error', "Gagal! Barang '{$item->name}' bentrok. Pada {$formatStart} - {$formatEnd}, sisa barang yang tersedia hanya {$sisaKuota} unit.");
+        foreach ($cart as $id => $item) {
+            // Set Global Date untuk header Order
+            if ($item['start_date']) {
+                if (is_null($globalStartDate) || $item['start_date'] < $globalStartDate) {
+                    $globalStartDate = $item['start_date'];
+                }
+                if (is_null($globalEndDate) || $item['end_date'] > $globalEndDate) {
+                    $globalEndDate = $item['end_date'];
                 }
             }
-        }
 
-        // 🌟 HITUNG GRAND TOTAL + DISKON 100% STUDENT COUNCIL
-        $totalPrice = 0;
-        foreach ($cart as $item) {
-            $dbItem = Item::find($item['id']);
+            // Hitung harga
+            $dbItem = Item::find($id);
             $unitPrice = $item['price'];
             if ($request->organization === 'Student Council' && str_contains($dbItem->transaction_type, 'Internal')) {
                 $unitPrice = 0; // SC Internal = Gratis!
@@ -134,18 +216,31 @@ class CartController extends Controller
         DB::beginTransaction();
 
         try {
-            // 🛡️ THE GATEKEEPER: HANYA DECREMENT STOK JIKA BELI PUTUS (SALE)
-            foreach ($cart as $item) {
+            // 🛡️ THE GATEKEEPER: CEK OVERLAP ULANG (JAGA-JAGA ADA YG ORDER DULUAN PAS DIA DI KERANJANG)
+            foreach ($cart as $id => $item) {
+                $dbItem = Item::lockForUpdate()->find($id);
+                
                 if ($orderType === 'Sale') {
-                    $dbItem = Item::lockForUpdate()->find($item['id']);
                     if (!$dbItem || $dbItem->stock_quantity < $item['quantity']) {
                         DB::rollBack();
-                        return back()->with('error', "Gagal! Stok '{$item['name']}' habis.");
+                        return back()->with('error', "Gagal! Stok '{$item['name']}' keburu habis dibeli orang.");
                     }
-                    // Beli putus = barang hilang dari gudang selamanya
                     $dbItem->decrement('stock_quantity', $item['quantity']);
+                } else {
+                    // Cek Ulang Rental Overlap
+                    $overlappingQty = OrderItem::where('item_id', $id)
+                        ->whereHas('order', function ($query) use ($item) {
+                            $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
+                                  ->where('order_type', '!=', 'Sale')
+                                  ->where('start_date', '<=', $item['end_date'])
+                                  ->where('end_date', '>=', $item['start_date']);
+                        })->sum('quantity');
+
+                    if (($overlappingQty + $item['quantity']) > $dbItem->stock_quantity) {
+                        DB::rollBack();
+                        return back()->with('error', "Maaf, barang '{$item['name']}' baru saja dibooking orang lain di tanggal pilihanmu. Sisa stok tidak cukup.");
+                    }
                 }
-                // JIKA RENTAL: Kita biarkan stoknya UTUH! Kita cuma catat transaksinya.
             }
 
             $order = Order::create([
@@ -156,14 +251,12 @@ class CartController extends Controller
                 'position' => $request->position,
                 'phone_number' => $request->phone_number,
                 'proker_name' => $request->proker_name,
-
                 'department' => '-',
-
                 'treasurer_name' => $request->treasurer_name,
                 'address' => $request->address,
                 'order_type' => $orderType,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
+                'start_date' => $globalStartDate, // Diambil otomatis dari keranjang
+                'end_date' => $globalEndDate,     // Diambil otomatis dari keranjang
                 'is_sop_accepted' => true,
                 'total_price' => $totalPrice, 
                 'status' => 'Pending',
@@ -187,9 +280,7 @@ class CartController extends Controller
 
             session()->forget('cart');
 
-            // ==========================================================
-            // 🌟 TEMBAK NOTIFIKASI KE SEMUA ADMIN (LONCENG BUNYI) 🌟
-            // ==========================================================
+            // 🌟 TEMBAK NOTIFIKASI ADMIN 🌟
             $admins = User::where('role', 'admin')->get();
             foreach ($admins as $admin) {
                 $admin->notify(new AdminNotification('Order Baru: ' . $order->order_number . ' dari ' . $order->proker_name));

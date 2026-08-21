@@ -89,4 +89,41 @@ class UserDashboardController extends Controller
 
         return view('user.item_schedule', compact('item', 'activeBookings'));
     }
+
+    // 🌟 API UNTUK KALENDER TRAVELOKA (UPDATE ANTI-TIMEZONE BUG) 🌟
+    public function checkStock($id)
+    {
+        $item = \App\Models\Item::findOrFail($id);
+        $totalStock = $item->stock_quantity;
+
+        // Ambil semua transaksi rental yang lagi aktif (belum dibalikin)
+        $activeLoans = \App\Models\OrderItem::where('item_id', $id)
+            ->whereHas('order', function ($query) {
+                $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
+                      ->where('order_type', '!=', 'Sale');
+            })->get();
+
+        $availability = [];
+        
+        // 🌟 MUNDURKAN 7 HARI: Antisipasi perbedaan zona waktu server dan HP
+        $startDate = \Carbon\Carbon::today()->subDays(7);
+        
+        // Hitung untuk 90 hari ke depan biar aman dan nggak ada yang bolong
+        for ($i = 0; $i < 90; $i++) {
+            $date = $startDate->copy()->addDays($i)->format('Y-m-d');
+            $bookedToday = 0;
+
+            foreach ($activeLoans as $loan) {
+                if ($date >= $loan->order->start_date && $date <= $loan->order->end_date) {
+                    $bookedToday += $loan->quantity;
+                }
+            }
+
+            // Sisa = Total Gudang - Yang Lagi Dipinjam Hari Itu
+            $sisa = $totalStock - $bookedToday;
+            $availability[$date] = max(0, $sisa);
+        }
+
+        return response()->json($availability);
+    }
 }

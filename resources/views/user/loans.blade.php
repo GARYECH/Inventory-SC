@@ -74,10 +74,16 @@
                                             <span class="w-1 h-1 bg-gray-300 rounded-full mx-1"></span>
                                             <span>Tipe: <span class="text-gray-900">{{ $order->order_type }}</span></span>
                                         </div>
+                                        
+                                        <!-- 🌟 LOGIKA TANGGAL SEWA 1 HARI (TIDAK DOBEL) 🌟 -->
                                         @if($order->order_type !== 'Sale' && $order->start_date)
                                             <div class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-[11px] font-black text-indigo-600 uppercase tracking-widest">
                                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                Jadwal: {{ \Carbon\Carbon::parse($order->start_date)->format('d M Y') }} - {{ \Carbon\Carbon::parse($order->end_date)->format('d M Y') }}
+                                                @if($order->start_date === $order->end_date)
+                                                    Jadwal: {{ \Carbon\Carbon::parse($order->start_date)->format('d M Y') }} (Sewa 1 Hari)
+                                                @else
+                                                    Jadwal: {{ \Carbon\Carbon::parse($order->start_date)->format('d M Y') }} - {{ \Carbon\Carbon::parse($order->end_date)->format('d M Y') }}
+                                                @endif
                                             </div>
                                         @endif
                                     </div>
@@ -140,7 +146,7 @@
                                             <p class="text-3xl font-black tracking-tight">Rp {{ number_format($order->total_price, 0, ',', '.') }}</p>
                                         </div>
                                         
-                                        <!-- ACTION BOX -->
+                                        <!-- ACTION BOX (DENGAN PETUNJUK FORMAT FILE) -->
                                         <div class="bg-white p-6 border border-gray-100 rounded-2xl shadow-sm flex-grow">
                                             
                                             <!-- ================= FASE 1: MOU ================= -->

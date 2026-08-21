@@ -214,11 +214,21 @@
                             
                             <div class="mt-4 pt-4 border-t border-gray-50">
                                 <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5">Jadwal Pinjam / Tipe</p>
-                                @if($order->start_date && $order->end_date && $order->start_date != $order->end_date)
-                                    <p class="text-[11px] font-bold text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 inline-block">{{ \Carbon\Carbon::parse($order->start_date)->format('d/m/y') }} <span class="mx-1 text-gray-400">➔</span> {{ \Carbon\Carbon::parse($order->end_date)->format('d/m/y') }}</p>
-                                @else
+                                
+                                <!-- 🌟 PERBAIKAN LOGIKA STATUS JADWAL 🌟 -->
+                                @if($order->order_type === 'Sale')
                                     <p class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 inline-block">Beli Putus (Merchandise)</p>
+                                @elseif($order->start_date)
+                                    @if($order->start_date === $order->end_date)
+                                        <p class="text-[11px] font-bold text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 inline-block">{{ \Carbon\Carbon::parse($order->start_date)->format('d/m/y') }} <span class="mx-1 text-gray-400">(1 Hari)</span></p>
+                                    @else
+                                        <p class="text-[11px] font-bold text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 inline-block">{{ \Carbon\Carbon::parse($order->start_date)->format('d/m/y') }} <span class="mx-1 text-gray-400">➔</span> {{ \Carbon\Carbon::parse($order->end_date)->format('d/m/y') }}</p>
+                                    @endif
+                                @else
+                                    <p class="text-[11px] font-bold text-red-500">Jadwal Tidak Ditemukan</p>
                                 @endif
+                                <!-- 🌟 END PERBAIKAN LOGIKA STATUS JADWAL 🌟 -->
+
                             </div>
                         </div>
 

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\User; // 🌟 Import Model User
-use App\Notifications\AdminNotification; // 🌟 Import Notifikasi Admin
+use App\Models\User;
+use App\Notifications\AdminNotification;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -19,12 +19,60 @@ class DocumentController extends Controller
 
     public function downloadMou(Order $order)
     {
+        // 1. Validasi Keamanan
         if (auth()->id() !== $order->user_id && auth()->user()->role !== 'admin') {
             abort(403, 'Unauthorized action.');
         }
 
-        $view = $order->order_type === 'Vendor Rental' ? 'admin.pdf.mou_vendor' : 'admin.pdf.mou_internal';
+        $view = '';
 
+        // 2. 🌟 LOGIKA PABRIK MoU (SWITCH-CASE CATEGORY) 🌟
+        switch ($order->order_type) {
+            case 'Peralatan':
+                $view = 'admin.pdf.mou_peralatan';
+                break;
+                
+            case 'HT UV-82':
+                $view = 'admin.pdf.mou_ht_uv82';
+                break;
+                
+            case 'HT 888s':
+                $view = 'admin.pdf.mou_ht_888s';
+                break;
+                
+            case 'HT UV-5R':
+                $view = 'admin.pdf.mou_ht_uv5r';
+                break;
+                
+            case 'ATK':
+            case 'Obat':
+                // Barang habis pakai (Consumable) tidak punya MoU!
+                abort(404, 'Barang Habis Pakai tidak memerlukan dokumen MoU.');
+                break;
+                
+            case 'Merchandise':
+            case 'Sale':
+                // Cek spesifik nama barang pertama yang ada di dalam order
+                $itemName = strtolower($order->orderItems->first()->item->name ?? '');
+                
+                if (str_contains($itemName, 'id card') || str_contains($itemName, 'idcard') || str_contains($itemName, 'lanyard')) {
+                    $view = 'admin.pdf.mou_merch_idcard';
+                } else {
+                    $view = 'admin.pdf.mou_merch_baju'; // Default Merch = Baju
+                }
+                break;
+
+            // 🌟 BACKWARD COMPATIBILITY (Mencegah Error Untuk Arsip Orderan Lama) 🌟
+            case 'Vendor Rental':
+                $view = 'admin.pdf.mou_vendor';
+                break;
+            case 'Internal Rental':
+            default:
+                $view = 'admin.pdf.mou_internal';
+                break;
+        }
+
+        // 3. Render PDF
         $pdf = Pdf::loadView($view, compact('order'));
         $pdf->setPaper('a4', 'portrait');
 

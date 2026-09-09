@@ -22,8 +22,8 @@ return new class extends Migration
             $table->integer('price')->default(0); 
             $table->string('condition_status')->default('Good');
             
-            // Atribut Pintar
-           $table->enum('transaction_type', ['Internal Rental', 'Vendor Rental', 'Sale']);
+            // 🌟 ATRIBUT PINTAR (Diubah jadi string agar fleksibel menampung 6 Kategori Baru) 🌟
+            $table->string('transaction_type');
             $table->boolean('requires_mou')->default(true);
             
             $table->timestamps();

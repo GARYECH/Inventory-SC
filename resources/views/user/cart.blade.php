@@ -59,9 +59,12 @@
                 </div>
             @else
                 
+                <!-- 🌟 UPDATE LOGIKA KATEGORI TERBARU 🌟 -->
                 @php 
                     $firstItem = reset($cart);
-                    $isRental = $firstItem['transaction_type'] !== 'Sale';
+                    $orderType = $firstItem['transaction_type'] ?? '';
+                    // Deteksi apakah ini tipe habis pakai (tanpa tanggal)
+                    $isConsumable = in_array($orderType, ['ATK', 'Obat', 'Merchandise']);
                     $totalPrice = 0;
                     $sopPath = \App\Models\Setting::where('key', 'sop_pdf_path')->value('value');
                 @endphp
@@ -75,11 +78,13 @@
                             <div class="p-8 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center relative overflow-hidden">
                                 <div class="relative z-10">
                                     <h3 class="font-black text-xl text-gray-900 tracking-tight mb-1">Rincian Barang</h3>
+                                    
+                                    <!-- 🌟 UPDATE BADGE KATEGORI 🌟 -->
                                     <span class="inline-flex px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg 
-                                        {{ $firstItem['transaction_type'] === 'Internal Rental' ? 'bg-indigo-100 text-indigo-700' : '' }}
-                                        {{ $firstItem['transaction_type'] === 'Vendor Rental' ? 'bg-amber-100 text-amber-700' : '' }}
-                                        {{ $firstItem['transaction_type'] === 'Sale' ? 'bg-emerald-100 text-emerald-700' : '' }}">
-                                        Mode: {{ $firstItem['transaction_type'] }}
+                                        {{ in_array($orderType, ['Peralatan', 'HT UV-82', 'HT 888s', 'HT UV-5R']) ? 'bg-indigo-100 text-indigo-700' : '' }}
+                                        {{ in_array($orderType, ['ATK', 'Obat']) ? 'bg-amber-100 text-amber-700' : '' }}
+                                        {{ $orderType === 'Merchandise' ? 'bg-emerald-100 text-emerald-700' : '' }}">
+                                        Kategori: {{ $orderType }}
                                     </span>
                                 </div>
                                 <form action="{{ route('student.cart.clear') }}" method="POST" class="relative z-10">
@@ -214,10 +219,18 @@
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nama Proker / Event</label>
-                                    <input type="text" name="proker_name" placeholder="e.g. Rector Cup 2026" required 
-                                        class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
+                                <!-- 🌟 TAMBAHAN INPUT KETUA ACARA 🌟 -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nama Proker / Event</label>
+                                        <input type="text" name="proker_name" placeholder="e.g. Rector Cup 2026" required 
+                                            class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nama Ketua Acara</label>
+                                        <input type="text" name="ketua_acara" placeholder="Nama lengkap ketua..." required 
+                                            class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
+                                    </div>
                                 </div>
                                 
                                 <div>
@@ -239,8 +252,15 @@
                                     </div>
                                 </div>
 
-                                <!-- 🌟 BANNER INFO: PENGGANTI FORM KALENDER 🌟 -->
-                                @if($isRental)
+                                <!-- 🌟 TAMBAHAN TEXTAREA CATATAN (NOTES) 🌟 -->
+                                <div class="mt-2">
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Catatan Peminjam (Notes)</label>
+                                    <textarea name="notes" rows="3" placeholder="Contoh: Min, HT UV-82 tolong dipastikan baterainya full charge ya, mau dipakai jaga gerbang depan..." 
+                                        class="w-full px-5 py-4 bg-yellow-50/50 border border-yellow-100 rounded-2xl focus:ring-2 focus:ring-yellow-400 font-bold text-gray-800 placeholder-gray-400 transition-all shadow-inner text-sm"></textarea>
+                                </div>
+
+                                <!-- 🌟 BANNER INFO LOGIKA TERBARU 🌟 -->
+                                @if(!$isConsumable)
                                 <div class="mt-6 p-5 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center gap-4 shadow-sm">
                                     <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center shrink-0">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -251,13 +271,13 @@
                                     </div>
                                 </div>
                                 @else
-                                <div class="mt-6 p-5 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4 shadow-sm">
-                                    <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0">
+                                <div class="mt-6 p-5 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-4 shadow-sm">
+                                    <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center shrink-0">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-black text-emerald-900 uppercase tracking-widest">Beli Putus (Merchandise)</p>
-                                        <p class="text-[10px] font-bold text-emerald-600 mt-1 leading-snug">Tidak perlu menentukan tanggal pengembalian barang.</p>
+                                        <p class="text-xs font-black text-amber-900 uppercase tracking-widest">Barang Habis Pakai / Beli Putus</p>
+                                        <p class="text-[10px] font-bold text-amber-600 mt-1 leading-snug">Item ini tidak memerlukan jadwal pengembalian. Stok akan langsung dipotong setelah disetujui.</p>
                                     </div>
                                 </div>
                                 @endif

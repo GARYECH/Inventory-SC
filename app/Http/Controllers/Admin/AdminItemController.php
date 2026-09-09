@@ -25,11 +25,13 @@ class AdminItemController extends Controller
         $search = $request->input('search');
         $type = $request->input('type');
 
+        // 🌟 UPDATE COUNTS (Menghitung 4 Kategori Baru + Kompatibel Arsip Lama)
         $counts = [
             'total' => Item::count(),
-            'internal' => Item::where('transaction_type', 'Internal Rental')->count(),
-            'external' => Item::where('transaction_type', 'Vendor Rental')->count(),
-            'merchandise' => Item::where('transaction_type', 'Sale')->count(),
+            'peralatan' => Item::whereIn('transaction_type', ['Peralatan', 'Internal Rental', 'Vendor Rental'])->count(),
+            'ht' => Item::whereIn('transaction_type', ['HT UV-82', 'HT 888s', 'HT UV-5R'])->count(),
+            'habispakai' => Item::whereIn('transaction_type', ['ATK', 'Obat'])->count(),
+            'merchandise' => Item::whereIn('transaction_type', ['Merchandise', 'Sale'])->count(),
         ];
 
         $items = Item::with('category')
@@ -40,10 +42,20 @@ class AdminItemController extends Controller
                 });
             })
             ->when($type, function ($query, $type) {
+                // 🌟 UPDATE FILTER TAB LOGIC
+                if ($type === 'Peralatan') {
+                    return $query->whereIn('transaction_type', ['Peralatan', 'Internal Rental', 'Vendor Rental']);
+                } elseif ($type === 'HT') {
+                    return $query->whereIn('transaction_type', ['HT UV-82', 'HT 888s', 'HT UV-5R']);
+                } elseif ($type === 'HabisPakai') {
+                    return $query->whereIn('transaction_type', ['ATK', 'Obat']);
+                } elseif ($type === 'Merchandise') {
+                    return $query->whereIn('transaction_type', ['Merchandise', 'Sale']);
+                }
                 return $query->where('transaction_type', $type);
             })
             ->latest()
-            ->paginate(8)
+            ->paginate(12)
             ->withQueryString();
 
         return view('admin.items.index', compact('items', 'counts'));
@@ -64,7 +76,8 @@ class AdminItemController extends Controller
             'item_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
             'stock_quantity' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
-            'transaction_type' => 'required|in:Internal Rental,Vendor Rental,Sale',
+            // 🌟 UPDATE VALIDASI 6 KATEGORI BARU 🌟
+            'transaction_type' => 'required|in:Peralatan,HT UV-82,HT 888s,HT UV-5R,ATK,Obat,Merchandise,Internal Rental,Vendor Rental,Sale',
             'requires_mou' => 'required|boolean',
         ]);
 
@@ -93,7 +106,8 @@ class AdminItemController extends Controller
             'item_photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'stock_quantity' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
-            'transaction_type' => 'required|in:Internal Rental,Vendor Rental,Sale',
+            // 🌟 UPDATE VALIDASI 6 KATEGORI BARU 🌟
+            'transaction_type' => 'required|in:Peralatan,HT UV-82,HT 888s,HT UV-5R,ATK,Obat,Merchandise,Internal Rental,Vendor Rental,Sale',
             'requires_mou' => 'required|boolean',
             'condition_status' => 'nullable|string',
         ]);
@@ -175,12 +189,13 @@ class AdminItemController extends Controller
                 'ba_total_fine' => $request->ba_total_fine,
             ]);
 
-            // 🌟 LOGIKA AUTO-RESTOCK 🌟
+            // 🌟 LOGIKA AUTO-RESTOCK (SESUAIKAN DENGAN BARANG HABIS PAKAI) 🌟
             if (in_array($newStatus, $restockStatuses) && !in_array($oldStatus, $restockStatuses)) {
                 foreach ($order->orderItems as $detail) {
                     $item = \App\Models\Item::find($detail->item_id);
                     if ($item) {
-                        if ($item->transaction_type === 'Sale' && in_array($newStatus, ['Returned', 'Resolved (Fine Paid)'])) {
+                        // Jangan nambah stok jika tipenya Beli Putus / Habis Pakai dan statusnya Selesai
+                        if (in_array($item->transaction_type, ['Sale', 'Merchandise', 'ATK', 'Obat']) && in_array($newStatus, ['Returned', 'Resolved (Fine Paid)'])) {
                             continue;
                         }
                         $item->increment('stock_quantity', $detail->quantity);
@@ -193,7 +208,7 @@ class AdminItemController extends Controller
                 foreach ($order->orderItems as $detail) {
                     $item = \App\Models\Item::lockForUpdate()->find($detail->item_id);
                     if ($item) {
-                        if ($item->transaction_type === 'Sale' && in_array($oldStatus, ['Returned', 'Resolved (Fine Paid)'])) {
+                        if (in_array($item->transaction_type, ['Sale', 'Merchandise', 'ATK', 'Obat']) && in_array($oldStatus, ['Returned', 'Resolved (Fine Paid)'])) {
                             continue; 
                         }
 
@@ -207,7 +222,6 @@ class AdminItemController extends Controller
             }
 
             // 🌟 TEMBAK NOTIFIKASINYA KE USER DI SINI 🌟
-            // Mencegah spam: Notif cuma jalan kalau admin beneran ganti status (misal Pending ke Approved)
             if ($oldStatus !== $newStatus) {
                 $order->user->notify(new OrderStatusUpdated($order));
             }
@@ -232,7 +246,7 @@ class AdminItemController extends Controller
     {
         $order = Order::with('orderItems.item')->findOrFail($id);
 
-        // 1. HAPUS FILE FISIK DI SERVER (HEMAT MEMORI cPANEL)
+        // 1. HAPUS FILE FISIK DI SERVER
         $filesToDelete = [
             $order->signed_mou,
             $order->payment_receipt,
@@ -247,10 +261,12 @@ class AdminItemController extends Controller
             }
         }
 
-        // 2. KEMBALIKAN STOK GUDANG JIKA TIPENYA "SALE"
-        if ($order->order_type === 'Sale' && !in_array($order->status, ['Rejected', 'Cancelled'])) {
+        // 2. KEMBALIKAN STOK GUDANG JIKA BARANG HABIS PAKAI / BELI PUTUS (KECUALI UDAH DI REJECT/CANCEL)
+        if (in_array($order->order_type, ['Sale', 'Merchandise', 'ATK', 'Obat']) && !in_array($order->status, ['Rejected', 'Cancelled'])) {
             foreach ($order->orderItems as $detail) {
-                $detail->item->increment('stock_quantity', $detail->quantity);
+                if($detail->item) {
+                    $detail->item->increment('stock_quantity', $detail->quantity);
+                }
             }
         }
 

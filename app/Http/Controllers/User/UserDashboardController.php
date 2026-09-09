@@ -7,27 +7,35 @@ use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class UserDashboardController extends Controller
 {
     /**
-     * 🛒 Menampilkan katalog barang (Dengan 3 Jalur Navigasi)
+     * 🛒 Menampilkan katalog barang (Dengan Tab Premium Baru)
      */
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $type = $request->input('type'); // Kosong = Menampilkan Semua Barang
+        $type = $request->input('type'); // Tab Kategori
 
+        // Hanya tampilkan barang yang 'Good'
         $query = Item::where('condition_status', 'Good')
             ->with(['orderItems.order' => function($q) {
                 $q->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
-                  ->where('end_date', '>=', now()->toDateString()) // Hanya jadwal hari ini & ke depan
+                  ->where('end_date', '>=', now()->toDateString())
                   ->orderBy('start_date', 'asc');
             }]);
 
-        // 🌟 JIKA ADA TAB YANG DIKLIK, BARU FILTER KATEGORINYA
+        // 🌟 FITUR FILTER KATEGORI BARU (Peralatan, HT, HabisPakai, Merchandise)
         if ($type) {
-            $query->where('transaction_type', $type);
+            if ($type === 'HT') {
+                $query->whereIn('transaction_type', ['HT UV-82', 'HT 888s', 'HT UV-5R']);
+            } elseif ($type === 'HabisPakai') {
+                $query->whereIn('transaction_type', ['ATK', 'Obat']);
+            } else {
+                $query->where('transaction_type', $type);
+            }
         }
 
         // 🌟 LOGIKA PENCARIAN
@@ -38,9 +46,9 @@ class UserDashboardController extends Controller
             });
         }
 
-        $items = $query->latest()->paginate(12)->withQueryString();
+        // Paginasi 12 item
+        $items = $query->latest()->paginate(12)->appends($request->query());
         
-        // Cek isi keranjang saat ini untuk memunculkan notifikasi angka
         $cartCount = count(session()->get('cart', []));
         
         return view('user.dashboard', compact('items', 'type', 'cartCount'));
@@ -51,14 +59,12 @@ class UserDashboardController extends Controller
      */
     public function loans()
     {
-        // 1. ACTIVE ORDERS: Semua kuitansi yang aktif berjalan
         $activeLoans = Order::where('user_id', auth()->id())
             ->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Cancelled', 'Rejected'])
             ->with('orderItems.item') 
             ->latest()
             ->get();
 
-        // 2. PAST HISTORY: Untuk arsip mahasiswa (Selesai / Batal / Ditolak)
         $pastLoans = Order::where('user_id', auth()->id())
             ->whereIn('status', ['Returned', 'Resolved (Fine Paid)', 'Cancelled', 'Rejected'])
             ->with('orderItems.item')
@@ -75,57 +81,54 @@ class UserDashboardController extends Controller
     {
         $item = Item::findOrFail($id);
 
-        // Ambil semua transaksi aktif untuk barang ini (Selain yang sudah dikembalikan/batal/beli putus)
+        // 🌟 UPDATE: Jangan tampilkan barang beli putus/habis pakai di jadwal
         $activeBookings = OrderItem::where('item_id', $id)
             ->whereHas('order', function ($query) {
                 $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
-                      ->where('order_type', '!=', 'Sale');
+                      ->whereNotIn('order_type', ['ATK', 'Obat', 'Merchandise']);
             })
-            ->with('order.user') // Load data order dan user
+            ->with('order.user')
             ->get()
             ->sortBy(function ($orderItem) {
-                return $orderItem->order->start_date; // Urutkan dari tanggal terdekat
+                return $orderItem->order->start_date;
             });
 
         return view('user.item_schedule', compact('item', 'activeBookings'));
     }
 
-   // 🌟 API KALENDER TRAVELOKA (FIX AKURASI RENTANG TANGGAL) 🌟
+   /**
+    * 🌟 API KALENDER TRAVELOKA (FIX AKURASI RENTANG TANGGAL) 🌟
+    */
     public function checkStock($id)
     {
-        $item = \App\Models\Item::findOrFail($id);
+        $item = Item::findOrFail($id);
         $totalStock = $item->stock_quantity;
 
-        // Ambil semua transaksi rental yang lagi aktif (belum dibalikin/batal)
-        $activeLoans = \App\Models\OrderItem::where('item_id', $id)
+        // 🌟 UPDATE: Abaikan orderan tipe ATK, Obat, Merchandise karena stoknya lgsg potong
+        $activeLoans = OrderItem::where('item_id', $id)
             ->whereHas('order', function ($query) {
                 $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
-                      ->where('order_type', '!=', 'Sale');
+                      ->whereNotIn('order_type', ['ATK', 'Obat', 'Merchandise']);
             })->get();
 
         $availability = [];
+        $startDate = Carbon::today()->subDays(7);
         
-        // Mulai dari 7 hari ke belakang untuk keamanan timezone
-        $startDate = \Carbon\Carbon::today()->subDays(7);
-        
-        // Hitung untuk 90 hari ke depan
         for ($i = 0; $i < 90; $i++) {
-            // Ubah ke format string Y-m-d murni agar tidak terganggu jam/timezone
             $date = $startDate->copy()->addDays($i)->toDateString();
             $bookedToday = 0;
 
             foreach ($activeLoans as $loan) {
-                // Pastikan format start_date dan end_date order juga berupa string Y-m-d
-                $loanStart = \Carbon\Carbon::parse($loan->order->start_date)->toDateString();
-                $loanEnd = \Carbon\Carbon::parse($loan->order->end_date)->toDateString();
+                if ($loan->order->start_date && $loan->order->end_date) {
+                    $loanStart = Carbon::parse($loan->order->start_date)->toDateString();
+                    $loanEnd = Carbon::parse($loan->order->end_date)->toDateString();
 
-                // 🌟 CEK APAKAH TANGGAL INI MASUK DALAM RENTANG PEMINJAMAN 🌟
-                if ($date >= $loanStart && $date <= $loanEnd) {
-                    $bookedToday += $loan->quantity;
+                    if ($date >= $loanStart && $date <= $loanEnd) {
+                        $bookedToday += $loan->quantity;
+                    }
                 }
             }
 
-            // Sisa = Total Gudang - Yang Lagi Dipinjam Hari Itu
             $sisa = $totalStock - $bookedToday;
             $availability[$date] = max(0, $sisa);
         }

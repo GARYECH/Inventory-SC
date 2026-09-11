@@ -97,6 +97,7 @@
                                 <div>
                                     <label class="block text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-3 ml-1">Tipe Transaksi (Routing)</label>
                                     <div class="relative">
+                                        <!-- 🌟 MENGGUNAKAN VALUE STRING 6 KATEGORI BARU YANG BERSIH 🌟 -->
                                         <select name="transaction_type" 
                                             class="w-full px-6 py-3 bg-white border-none rounded-xl focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-900 appearance-none cursor-pointer shadow-sm" required>
                                             <option value="" disabled>-- Pilih Jalur --</option>

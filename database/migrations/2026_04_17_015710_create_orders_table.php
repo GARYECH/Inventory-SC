@@ -22,7 +22,7 @@ public function up(): void
         $table->string('department');
         $table->string('treasurer_name');
         
-     $table->enum('order_type', ['Internal Rental', 'Vendor Rental', 'Sale']);
+   $table->enum('order_type', ['Peralatan', 'Handy Talkie', 'Habis Pakai', 'Merchandise']);
         
         $table->date('start_date')->nullable(); 
         $table->date('end_date')->nullable();   

@@ -59,14 +59,15 @@
                 </div>
             @else
                 
-                <!-- 🌟 UPDATE LOGIKA KATEGORI TERBARU 🌟 -->
                 @php 
                     $firstItem = reset($cart);
                     $orderType = $firstItem['transaction_type'] ?? '';
-                    // Deteksi apakah ini tipe habis pakai (tanpa tanggal)
                     $isConsumable = in_array($orderType, ['ATK', 'Obat', 'Merchandise']);
                     $totalPrice = 0;
                     $sopPath = \App\Models\Setting::where('key', 'sop_pdf_path')->value('value');
+                    
+                    // Cek apakah kategori cart saat ini mendukung gratis untuk Student Council
+                    $hasFreeForSC = in_array($orderType, ['Peralatan', 'HT UV-5R']);
                 @endphp
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -79,7 +80,6 @@
                                 <div class="relative z-10">
                                     <h3 class="font-black text-xl text-gray-900 tracking-tight mb-1">Rincian Barang</h3>
                                     
-                                    <!-- 🌟 UPDATE BADGE KATEGORI 🌟 -->
                                     <span class="inline-flex px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg 
                                         {{ in_array($orderType, ['Peralatan', 'HT UV-82', 'HT 888s', 'HT UV-5R']) ? 'bg-indigo-100 text-indigo-700' : '' }}
                                         {{ in_array($orderType, ['ATK', 'Obat']) ? 'bg-amber-100 text-amber-700' : '' }}
@@ -95,29 +95,43 @@
                                     </button>
                                 </form>
                             </div>
+
+                            <!-- 🌟 NOTIFIKASI KHUSUS JIKA KATEGORI BISA DAPAN Dapatkan DISKON SC 🌟 -->
+                            @if($hasFreeForSC)
+                                <div class="px-8 pt-6">
+                                    <div class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3">
+                                        <div class="w-8 h-8 bg-emerald-500 text-white rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-emerald-200 font-black text-xs">
+                                            SC
+                                        </div>
+                                        <p class="text-xs font-bold text-emerald-800 leading-snug">
+                                            <span class="font-black uppercase tracking-wider block text-[10px] text-emerald-600">Fasilitas Student Council</span>
+                                            Peminjaman kategori <strong class="underline">{{ $orderType }}</strong> gratis 100% jika memilih organisasi <strong class="underline">Student Council</strong> saat checkout.
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
                             
-                            <!-- 🌟 KODE RESPONSIVE KERANJANG (FLEXBOX MURNI ANTI-NABRAK) 🌟 -->
+                            <!-- 🌟 KERANJANG BARANG 🌟 -->
                             <div class="p-6 space-y-5">
                                 @foreach($cart as $id => $details)
-                                    @php $totalPrice += $details['price'] * $details['quantity']; @endphp
+                                    @php 
+                                        $totalPrice += $details['price'] * $details['quantity'];
+                                        $isItemFreeSC = in_array($details['transaction_type'], ['Peralatan', 'HT UV-5R']);
+                                    @endphp
                                     
                                     <!-- ITEM CARD -->
                                     <div class="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-indigo-100 hover:shadow-md transition-all flex flex-col gap-4">
                                         
-                                        <!-- AREA ATAS: Info Barang & Tombol Hapus -->
+                                        <!-- AREA ATAS -->
                                         <div class="flex items-start gap-4">
-                                            <!-- Kiri: Icon -->
                                             <div class="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-100 shrink-0">
                                                 <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                                             </div>
 
-                                            <!-- Tengah: Info Text -->
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex justify-between items-start">
-                                                    <!-- Nama Barang -->
                                                     <h4 class="font-black text-gray-900 text-base sm:text-lg leading-tight truncate pr-4">{{ $details['name'] }}</h4>
                                                     
-                                                    <!-- Kanan Pojok: Tombol Hapus (Icon Tong Sampah Elegan) -->
                                                     <form action="{{ route('student.cart.remove', $id) }}" method="POST" class="shrink-0">
                                                         @csrf
                                                         @method('DELETE')
@@ -127,7 +141,6 @@
                                                     </form>
                                                 </div>
 
-                                                <!-- Tanggal Pinjam -->
                                                 @if(isset($details['start_date']) && $details['start_date'])
                                                     <div class="mt-1.5 inline-flex items-center gap-1.5 px-2 py-1 bg-indigo-50 border border-indigo-100 rounded text-[10px] font-bold text-indigo-600 uppercase tracking-widest">
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -135,33 +148,35 @@
                                                     </div>
                                                 @endif
                                                 
-                                                <!-- Harga Satuan -->
-                                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">Harga: Rp {{ number_format($details['price'], 0, ',', '.') }}</p>
+                                                <!-- Harga Normal + Badge Free SC -->
+                                                <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga: Rp {{ number_format($details['price'], 0, ',', '.') }}</p>
+                                                    @if($isItemFreeSC)
+                                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-black rounded-md tracking-wider uppercase">
+                                                            Free For SC
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <!-- AREA BAWAH: Update QTY & Subtotal -->
+                                        <!-- AREA BAWAH: QTY & Subtotal -->
                                         <div class="flex flex-row items-center justify-between border-t border-gray-100 pt-4 mt-1">
                                             
-                                            <!-- Form Update QTY (LEBAR DIPERBESAR BIAR ANGKA KELIAHATAN JELAS) -->
                                             <form action="{{ route('student.cart.update', $id) }}" method="POST" class="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm h-10">
                                                 @csrf
                                                 @method('PATCH')
-                                                <!-- Label QTY -->
                                                 <div class="px-3 bg-gray-50 flex items-center justify-center h-full border-r border-gray-200">
                                                     <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">QTY</span>
                                                 </div>
-                                                <!-- Input Angka (Lebar 16 biar panah gk nutupin angka) -->
                                                 <input type="number" name="quantity" value="{{ $details['quantity'] }}" min="1" required class="w-16 h-full bg-transparent border-none text-center text-sm font-black text-gray-900 focus:ring-0 px-2">
-                                                <!-- Tombol Ubah -->
                                                 <button type="submit" class="px-4 h-full bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors border-l border-gray-200">
                                                     Update
                                                 </button>
                                             </form>
 
-                                            <!-- Subtotal Item -->
                                             <div class="text-right">
-                                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Subtotal</p>
+                                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Subtotal Est.</p>
                                                 <p class="font-black text-indigo-600 text-lg sm:text-xl leading-none">Rp {{ number_format($details['price'] * $details['quantity'], 0, ',', '.') }}</p>
                                             </div>
                                         </div>
@@ -169,10 +184,12 @@
                                     </div>
                                 @endforeach
                             </div>
-                            <!-- 🌟 END KODE RESPONSIVE KERANJANG 🌟 -->
                             
                             <div class="p-8 bg-gray-900 flex justify-between items-center rounded-b-[2.5rem]">
-                                <span class="font-black text-gray-400 uppercase tracking-[0.2em] text-[11px]">Grand Total</span>
+                                <div>
+                                    <span class="font-black text-gray-400 uppercase tracking-[0.2em] text-[11px] block">Grand Total Normal</span>
+                                    <span class="text-[9px] text-indigo-300 font-bold">*Otomatis Rp 0 di sistem jika Anda pilih Student Council</span>
+                                </div>
                                 <span class="font-black text-3xl text-white">Rp {{ number_format($totalPrice, 0, ',', '.') }}</span>
                             </div>
                         </div>
@@ -214,12 +231,11 @@
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Jabatan</label>
-                                        <input type="text" name="position" placeholder="e.g. Koordinator Inventory " required 
+                                        <input type="text" name="position" placeholder="e.g. Koordinator Inventory" required 
                                             class="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-inner text-sm">
                                     </div>
                                 </div>
 
-                                <!-- 🌟 TAMBAHAN INPUT KETUA ACARA 🌟 -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nama Proker / Event</label>
@@ -252,14 +268,12 @@
                                     </div>
                                 </div>
 
-                                <!-- 🌟 TAMBAHAN TEXTAREA CATATAN (NOTES) 🌟 -->
                                 <div class="mt-2">
                                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Catatan Peminjam (Notes)</label>
-                                    <textarea name="notes" rows="3" placeholder="Contoh: Min, HT UV-82 tolong dipastikan baterainya full charge ya, mau dipakai jaga gerbang depan..." 
+                                    <textarea name="notes" rows="3" placeholder="Contoh: Min, HT UV-5R tolong dipastikan baterainya full charge ya..." 
                                         class="w-full px-5 py-4 bg-yellow-50/50 border border-yellow-100 rounded-2xl focus:ring-2 focus:ring-yellow-400 font-bold text-gray-800 placeholder-gray-400 transition-all shadow-inner text-sm"></textarea>
                                 </div>
 
-                                <!-- 🌟 BANNER INFO LOGIKA TERBARU 🌟 -->
                                 @if(!$isConsumable)
                                 <div class="mt-6 p-5 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center gap-4 shadow-sm">
                                     <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center shrink-0">

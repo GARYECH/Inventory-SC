@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -11,45 +12,31 @@ use Illuminate\Http\Request;
 
 class UserDashboardController extends Controller
 {
-    public function index(Request $request)
-    {
-        $search = $request->input('search');
-        $type = $request->input('type');
+    public function index(
+        Request $request
+    ) {
+        $search =
+            $request->input('search');
 
-        $query = Item::where(
-            'condition_status',
-            'Good'
-        )->with([
-            'orderItems.order' => function ($q) {
+        $type =
+            $request->input('type');
 
-                $q->whereNotIn(
-                    'status',
-                    [
-                        'Returned',
-                        'Resolved (Fine Paid)',
-                        'Rejected',
-                        'Cancelled'
-                    ]
-                )
-                ->where(function ($query) {
+        $category =
+            $request->input('category');
 
-                    $query
-                        ->whereNull('end_date')
-                        ->orWhere(
-                            'end_date',
-                            '>=',
-                            today()
-                        );
+        $query =
+            Item::where(
+                'condition_status',
+                'Good'
+            )
+            ->with([
+                'category',
+                'orderItems.order',
+            ]);
 
-                })
-                ->orderBy(
-                    'start_date',
-                    'asc'
-                );
-
-            }
-        ]);
-
+        /*
+         * Fixed transaction filters.
+         */
         if ($type) {
 
             if ($type === 'HT') {
@@ -59,38 +46,65 @@ class UserDashboardController extends Controller
                     [
                         'HT UV-82',
                         'HT 888s',
-                        'HT UV-5R'
+                        'HT UV-5R',
                     ]
                 );
 
-            } elseif ($type === 'HabisPakai') {
+            } elseif (
+                $type === 'HabisPakai'
+            ) {
 
                 $query->whereIn(
                     'transaction_type',
                     [
                         'ATK',
-                        'Obat'
+                        'Obat',
                     ]
                 );
 
-            } elseif ($type === 'Peralatan') {
+            } elseif (
+                $type === 'Peralatan'
+            ) {
 
-                $query->where(
+                $query->whereIn(
                     'transaction_type',
-                    'Peralatan'
+                    [
+                        'Peralatan',
+                        'Internal Rental',
+                        'Vendor Rental',
+                    ]
                 );
 
-            } elseif ($type === 'Merchandise') {
+            } elseif (
+                $type === 'Merchandise'
+            ) {
 
                 $query->where(
                     'transaction_type',
                     'Merchandise'
                 );
-
             }
-
         }
 
+        /*
+         * Dynamic category.
+         */
+        if ($category) {
+
+            $query->whereHas(
+                'category',
+                function ($q) use ($category) {
+                    $q->where(
+                        'slug',
+                        $category
+                    );
+                }
+            );
+        }
+
+        /*
+         * Search.
+         */
         if ($search) {
 
             $query->where(
@@ -101,17 +115,31 @@ class UserDashboardController extends Controller
                         'like',
                         "%{$search}%"
                     )
+
                     ->orWhere(
                         'description',
                         'like',
                         "%{$search}%"
                     )
+
                     ->orWhere(
                         'subcategory',
                         'like',
                         "%{$search}%"
-                    );
+                    )
 
+                    ->orWhereHas(
+                        'category',
+                        function ($categoryQuery)
+                            use ($search) {
+
+                            $categoryQuery->where(
+                                'name',
+                                'like',
+                                "%{$search}%"
+                            );
+                        }
+                    );
                 }
             );
         }
@@ -121,6 +149,11 @@ class UserDashboardController extends Controller
                 ->latest()
                 ->paginate(12)
                 ->withQueryString();
+
+        $categories =
+            Category::withCount('items')
+                ->orderBy('name')
+                ->get();
 
         $cartCount =
             count(
@@ -135,7 +168,10 @@ class UserDashboardController extends Controller
             compact(
                 'items',
                 'type',
-                'cartCount'
+                'category',
+                'search',
+                'cartCount',
+                'categories'
             )
         );
     }
@@ -153,12 +189,12 @@ class UserDashboardController extends Controller
                     'Returned',
                     'Resolved (Fine Paid)',
                     'Cancelled',
-                    'Rejected'
+                    'Rejected',
                 ]
             )
             ->with([
                 'orderItems.item',
-                'mouDocuments'
+                'mouDocuments',
             ])
             ->latest()
             ->get();
@@ -174,12 +210,12 @@ class UserDashboardController extends Controller
                     'Returned',
                     'Resolved (Fine Paid)',
                     'Cancelled',
-                    'Rejected'
+                    'Rejected',
                 ]
             )
             ->with([
                 'orderItems.item',
-                'mouDocuments'
+                'mouDocuments',
             ])
             ->latest()
             ->paginate(5);
@@ -193,8 +229,9 @@ class UserDashboardController extends Controller
         );
     }
 
-    public function itemSchedule($id)
-    {
+    public function itemSchedule(
+        $id
+    ) {
         $item =
             Item::findOrFail($id);
 
@@ -213,24 +250,21 @@ class UserDashboardController extends Controller
                             'Returned',
                             'Resolved (Fine Paid)',
                             'Rejected',
-                            'Cancelled'
+                            'Cancelled',
                         ]
                     );
-
                 }
             )
             ->with([
-                'order.user'
+                'order.user',
             ])
             ->get()
             ->sortBy(
                 function ($orderItem) {
 
-                    return
-                        $orderItem
-                            ->order
-                            ->start_date;
-
+                    return optional(
+                        $orderItem->order
+                    )->start_date;
                 }
             );
 
@@ -243,8 +277,9 @@ class UserDashboardController extends Controller
         );
     }
 
-    public function checkStock($id)
-    {
+    public function checkStock(
+        $id
+    ) {
         $item =
             Item::findOrFail($id);
 
@@ -266,10 +301,9 @@ class UserDashboardController extends Controller
                             'Returned',
                             'Resolved (Fine Paid)',
                             'Rejected',
-                            'Cancelled'
+                            'Cancelled',
                         ]
                     );
-
                 }
             )
             ->with('order')
@@ -298,29 +332,32 @@ class UserDashboardController extends Controller
                 $activeLoans as $loan
             ) {
 
+                $order =
+                    $loan->order;
+
                 if (
-                    !$loan->order ||
-                    !$loan->order->start_date ||
-                    !$loan->order->end_date
+                    !$order ||
+                    !$order->start_date ||
+                    !$order->end_date
                 ) {
                     continue;
                 }
 
                 $loanStart =
                     Carbon::parse(
-                        $loan->order->start_date
+                        $order->start_date
                     )->toDateString();
 
                 $loanEnd =
                     Carbon::parse(
-                        $loan->order->end_date
+                        $order->end_date
                     )->toDateString();
 
                 if (
                     $date->toDateString() >=
-                    $loanStart &&
+                        $loanStart &&
                     $date->toDateString() <=
-                    $loanEnd
+                        $loanEnd
                 ) {
                     $bookedToday +=
                         $loan->quantity;
@@ -329,12 +366,11 @@ class UserDashboardController extends Controller
 
             $availability[
                 $date->toDateString()
-            ] =
-                max(
-                    0,
-                    $totalStock -
-                    $bookedToday
-                );
+            ] = max(
+                0,
+                $totalStock -
+                $bookedToday
+            );
         }
 
         return response()->json(

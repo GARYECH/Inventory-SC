@@ -31,25 +31,32 @@ class Order extends Model
 
     public function items()
     {
-        return $this->belongsToMany(Item::class, 'order_items')
-            ->withPivot(
-                'quantity',
-                'size',
-                'design_link',
-                'size_additional_price',
-                'subtotal_price'
-            )
-            ->withTimestamps();
+        return $this->belongsToMany(
+            Item::class,
+            'order_items'
+        )
+        ->withPivot(
+            'quantity',
+            'size',
+            'design_link',
+            'size_additional_price',
+            'subtotal_price'
+        )
+        ->withTimestamps();
     }
 
     public function mouDocuments()
     {
-        return $this->hasMany(OrderMouDocument::class);
+        return $this->hasMany(
+            OrderMouDocument::class
+        );
     }
 
     public function getTotalPriceAttribute()
     {
-        return $this->orderItems->sum('subtotal_price');
+        return $this->orderItems->sum(
+            'subtotal_price'
+        );
     }
 
     public function requiresMou()

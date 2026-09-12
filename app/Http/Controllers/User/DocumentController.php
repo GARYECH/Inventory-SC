@@ -13,99 +13,93 @@ use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
-    public function downloadMou(
-        Order $order,
-        ?string $type = null
-    ) {
-        $this->authorizeOrder($order);
+   public function downloadMou(
+    Order $order,
+    ?string $type = null
+) {
+    $this->authorizeOrder($order);
 
-        $order->load(
-            'orderItems.item',
-            'mouDocuments'
-        );
+    $order->load([
+        'orderItems.item',
+        'mouDocuments',
+    ]);
 
-        if (!$type) {
+    /*
+     * Kalau type tidak diberikan:
+     * hanya boleh otomatis apabila
+     * order memiliki satu MOU.
+     */
+    if (!$type) {
 
-            $document =
-                $order->mouDocuments->first();
-
-            if (!$document) {
-                abort(
-                    404,
-                    'Transaksi ini tidak memiliki MoU.'
-                );
-            }
-
-            $type =
-                $document->mou_type;
-        }
-
-        $document =
-            $order->mouDocuments
-                ->firstWhere(
-                    'mou_type',
-                    $type
-                );
-
-        if (!$document) {
+        if (
+            $order->mouDocuments->count() !== 1
+        ) {
             abort(
                 404,
-                'MoU tersebut tidak diperlukan untuk transaksi ini.'
+                'Transaksi ini memiliki lebih dari satu MoU. Silakan pilih jenis MoU.'
             );
         }
 
-        $view =
-            match ($type) {
+        $type =
+            $order->mouDocuments
+                ->first()
+                ->mou_type;
+    }
 
-                'peralatan' =>
-                    'admin.pdf.mou_peralatan',
-
-                'ht' =>
-                    'admin.pdf.mou_ht_uv82',
-
-                'internal' =>
-                    'admin.pdf.mou_internal',
-
-                'vendor' =>
-                    'admin.pdf.mou_vendor',
-
-                'baju' =>
-                    'admin.pdf.mou_merch_baju',
-
-                'id_card' =>
-                    'admin.pdf.mou_merch_idcard',
-
-                default =>
-                    abort(
-                        404,
-                        'Template MoU tidak ditemukan.'
-                    ),
-
-            };
-
-        $pdf =
-            Pdf::loadView(
-                $view,
-                compact('order')
+    $document =
+        $order->mouDocuments
+            ->firstWhere(
+                'mou_type',
+                $type
             );
 
-        $pdf->setPaper(
-            'a4',
-            'portrait'
-        );
-
-        $filename =
-            'MoU_' .
-            $this->formatMouName($type) .
-            '_' .
-            $order->order_number .
-            '.pdf';
-
-        return $pdf->stream(
-            $filename
+    if (!$document) {
+        abort(
+            404,
+            'MoU tersebut tidak diperlukan untuk transaksi ini.'
         );
     }
 
+    $view = match ($type) {
+
+        'peralatan' =>
+            'admin.pdf.mou_peralatan',
+
+        'ht' =>
+            'admin.pdf.mou_HT',
+
+        'baju' =>
+            'admin.pdf.mou_merch_baju',
+
+        'id_card' =>
+            'admin.pdf.mou_merch_idcard',
+
+        default =>
+            abort(
+                404,
+                'Template MoU tidak ditemukan.'
+            ),
+    };
+
+    $pdf =
+        \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            $view,
+            compact('order')
+        );
+
+    $pdf->setPaper(
+        'a4',
+        'portrait'
+    );
+
+    return $pdf->stream(
+        'MoU_' .
+        $this->formatMouName($type) .
+        '_' .
+        $order->order_number .
+        '.pdf'
+    );
+}
     public function uploadSignedMou(
         Request $request,
         Order $order,
@@ -307,35 +301,17 @@ class DocumentController extends Controller
         }
     }
 
-    private function formatMouName(
-        string $type
-    ): string {
-
-        return match ($type) {
-
-            'peralatan' =>
-                'Peralatan',
-
-            'ht' =>
-                'Handy_Talkie',
-
-            'internal' =>
-                'Internal_Rental',
-
-            'vendor' =>
-                'Vendor_Rental',
-
-            'baju' =>
-                'Baju',
-
-            'id_card' =>
-                'ID_Card',
-
-            default =>
-                'MOU',
-
-        };
-    }
+private function formatMouName(
+    string $type
+): string {
+    return match ($type) {
+        'peralatan' => 'Peralatan',
+        'ht' => 'Handy_Talkie',
+        'baju' => 'Baju',
+        'id_card' => 'ID_Card',
+        default => 'MOU',
+    };
+}
 
     private function notifyAdmins(
         string $message

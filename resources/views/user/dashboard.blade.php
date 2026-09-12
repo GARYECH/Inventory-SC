@@ -2,6 +2,7 @@
 
     <div class="min-h-screen bg-[#f8f9fa] pb-12">
 
+
         <!-- ========================================================= -->
         <!-- HEADER -->
         <!-- ========================================================= -->
@@ -11,6 +12,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
 
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
 
                     <!-- BRAND -->
                     <div class="flex items-center gap-3">
@@ -32,6 +34,7 @@
                             </svg>
 
                         </div>
+
 
                         <div>
 
@@ -55,7 +58,7 @@
                             action="{{ route('student.dashboard') }}"
                             method="GET"
                             id="searchForm"
-                            class="relative flex-1 sm:w-72 sm:flex-none"
+                            class="relative min-w-0 flex-1 sm:w-72 sm:flex-none"
                         >
 
                             @if(request('type'))
@@ -65,6 +68,16 @@
                                     value="{{ request('type') }}"
                                 >
                             @endif
+
+
+                            @if(request('category'))
+                                <input
+                                    type="hidden"
+                                    name="category"
+                                    value="{{ request('category') }}"
+                                >
+                            @endif
+
 
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
 
@@ -84,12 +97,14 @@
 
                             </div>
 
+
                             <input
                                 type="text"
                                 name="search"
                                 id="searchInput"
                                 value="{{ request('search') }}"
                                 placeholder="Search gear, cameras..."
+                                autocomplete="off"
                                 class="w-full rounded-2xl border border-transparent bg-gray-100/70 py-3.5 pl-11 pr-4 text-sm font-semibold text-gray-700 outline-none transition-all focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
                             >
 
@@ -117,6 +132,7 @@
 
                             Checkout
 
+
                             @if(isset($cartCount) && $cartCount > 0)
 
                                 <span class="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-indigo-500 px-1 text-[8px] font-black">
@@ -136,6 +152,7 @@
         </div>
 
 
+
         <!-- ========================================================= -->
         <!-- CONTENT -->
         <!-- ========================================================= -->
@@ -144,12 +161,12 @@
 
 
             <!-- ===================================================== -->
-            <!-- FLASH MESSAGE -->
+            <!-- FLASH SUCCESS -->
             <!-- ===================================================== -->
 
             @if(session('success'))
 
-                <div class="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4">
+                <div class="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 shadow-sm">
 
                     <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500">
 
@@ -178,9 +195,14 @@
             @endif
 
 
+
+            <!-- ===================================================== -->
+            <!-- FLASH ERROR -->
+            <!-- ===================================================== -->
+
             @if(session('error'))
 
-                <div class="mb-6 flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50 px-5 py-4">
+                <div class="mb-6 flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50 px-5 py-4 shadow-sm">
 
                     <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500">
 
@@ -194,7 +216,7 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 1.707 1.732 1.707z"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c-.98 0-1.54-1.06-1.05-1.91L13.05 4.91c-.47-.82-1.63-.82-2.1 0L3.89 16.09c-.49.85.07 1.91 1.05 1.91z"
                             />
                         </svg>
 
@@ -209,16 +231,38 @@
             @endif
 
 
+
             <!-- ===================================================== -->
-            <!-- CATEGORY -->
+            <!-- TRANSACTION TYPE FILTER -->
             <!-- ===================================================== -->
 
-            <div class="mb-8">
+            <div class="mb-5">
 
-                <div class="flex gap-3 overflow-x-auto pb-2 catalog-scrollbar">
+                <div class="mb-2 flex items-center justify-between">
 
+                    <div>
+
+                        <p class="text-[8px] font-black uppercase tracking-[0.18em] text-gray-400">
+                            Jenis Transaksi
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="catalog-scrollbar flex gap-3 overflow-x-auto pb-2">
+
+
+                    <!-- ALL -->
                     <a
-                        href="{{ route('student.dashboard') }}"
+                        href="{{ route(
+                            'student.dashboard',
+                            request()->except([
+                                'type',
+                                'page'
+                            ])
+                        ) }}"
                         class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                         {{ !request('type')
                             ? 'border-gray-950 bg-gray-950 text-white shadow-lg'
@@ -240,13 +284,23 @@
                             />
                         </svg>
 
-                        Semua Katalog
+                        Semua
 
                     </a>
 
 
+
+                    <!-- PERALATAN -->
                     <a
-                        href="{{ route('student.dashboard', ['type' => 'Peralatan']) }}"
+                        href="{{ route(
+                            'student.dashboard',
+                            array_merge(
+                                request()->except('page'),
+                                [
+                                    'type' => 'Peralatan'
+                                ]
+                            )
+                        ) }}"
                         class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                         {{ request('type') === 'Peralatan'
                             ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
@@ -261,8 +315,18 @@
                     </a>
 
 
+
+                    <!-- HT -->
                     <a
-                        href="{{ route('student.dashboard', ['type' => 'HT']) }}"
+                        href="{{ route(
+                            'student.dashboard',
+                            array_merge(
+                                request()->except('page'),
+                                [
+                                    'type' => 'HT'
+                                ]
+                            )
+                        ) }}"
                         class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                         {{ request('type') === 'HT'
                             ? 'border-amber-200 bg-amber-50 text-amber-700'
@@ -277,8 +341,18 @@
                     </a>
 
 
+
+                    <!-- HABIS PAKAI -->
                     <a
-                        href="{{ route('student.dashboard', ['type' => 'HabisPakai']) }}"
+                        href="{{ route(
+                            'student.dashboard',
+                            array_merge(
+                                request()->except('page'),
+                                [
+                                    'type' => 'HabisPakai'
+                                ]
+                            )
+                        ) }}"
                         class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                         {{ request('type') === 'HabisPakai'
                             ? 'border-rose-200 bg-rose-50 text-rose-700'
@@ -293,8 +367,18 @@
                     </a>
 
 
+
+                    <!-- MERCHANDISE -->
                     <a
-                        href="{{ route('student.dashboard', ['type' => 'Merchandise']) }}"
+                        href="{{ route(
+                            'student.dashboard',
+                            array_merge(
+                                request()->except('page'),
+                                [
+                                    'type' => 'Merchandise'
+                                ]
+                            )
+                        ) }}"
                         class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                         {{ request('type') === 'Merchandise'
                             ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
@@ -313,6 +397,112 @@
             </div>
 
 
+
+            <!-- ===================================================== -->
+            <!-- DYNAMIC CATEGORY FILTER -->
+            <!-- ===================================================== -->
+
+            @if(isset($categories) && $categories->count() > 0)
+
+                <div class="mb-8">
+
+                    <div class="mb-2 flex items-center justify-between">
+
+                        <div>
+
+                            <p class="text-[8px] font-black uppercase tracking-[0.18em] text-gray-400">
+                                Kategori Barang
+                            </p>
+
+                            <p class="mt-0.5 text-[9px] font-semibold text-gray-400">
+                                Pilih kategori untuk mempersempit katalog
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="catalog-scrollbar flex gap-3 overflow-x-auto pb-2">
+
+
+                        <!-- ALL CATEGORIES -->
+                        <a
+                            href="{{ route(
+                                'student.dashboard',
+                                request()->except([
+                                    'category',
+                                    'page'
+                                ])
+                            ) }}"
+                            class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                            {{ !request('category')
+                                ? 'border-gray-950 bg-gray-950 text-white shadow-lg'
+                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900'
+                            }}"
+                        >
+
+                            Semua Kategori
+
+                        </a>
+
+
+                        @foreach($categories as $category)
+
+                            <a
+                                href="{{ route(
+                                    'student.dashboard',
+                                    array_merge(
+                                        request()->except('page'),
+                                        [
+                                            'category' => $category->slug
+                                        ]
+                                    )
+                                ) }}"
+                                class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                                {{ request('category') === $category->slug
+                                    ? 'border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm'
+                                    : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
+                                }}"
+                            >
+
+                                <span
+                                    class="h-2 w-2 rounded-full
+                                    {{ request('category') === $category->slug
+                                        ? 'bg-indigo-500'
+                                        : 'bg-gray-300'
+                                    }}"
+                                ></span>
+
+                                {{ $category->name }}
+
+
+                                @if(isset($category->items_count))
+
+                                    <span
+                                        class="rounded-md bg-black/5 px-1.5 py-0.5 text-[8px] font-black
+                                        {{ request('category') === $category->slug
+                                            ? 'text-indigo-600'
+                                            : 'text-gray-400'
+                                        }}"
+                                    >
+                                        {{ $category->items_count }}
+                                    </span>
+
+                                @endif
+
+                            </a>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+            @endif
+
+
+
             <!-- ===================================================== -->
             <!-- ITEM GRID -->
             <!-- ===================================================== -->
@@ -326,63 +516,116 @@
 
                         @php
 
-                            $type = $item->transaction_type;
+                            $type =
+                                $item->transaction_type;
+
 
                             /*
-                             * RENTAL ITEMS
+                             * RENTAL
                              */
-                            $isRental = in_array($type, [
-                                'Peralatan',
-                                'HT UV-82',
-                                'HT 888s',
-                                'HT UV-5R',
-                                'Internal Rental',
-                                'Vendor Rental'
-                            ]);
+                            $isRental =
+                                in_array(
+                                    $type,
+                                    [
+                                        'Peralatan',
+                                        'HT UV-82',
+                                        'HT 888s',
+                                        'HT UV-5R',
+                                        'Internal Rental',
+                                        'Vendor Rental'
+                                    ]
+                                );
+
 
                             /*
-                             * CONSUMABLE ITEMS
+                             * CONSUMABLE
                              */
-                            $isConsumable = in_array($type, [
-                                'ATK',
-                                'Obat'
-                            ]);
+                            $isConsumable =
+                                in_array(
+                                    $type,
+                                    [
+                                        'ATK',
+                                        'Obat'
+                                    ]
+                                );
+
 
                             /*
                              * MERCHANDISE
                              */
-                            $isMerchandise = $type === 'Merchandise';
+                            $isMerchandise =
+                                $type ===
+                                'Merchandise';
 
 
                             /*
                              * BADGE
                              */
-                            $badgeText = $type;
-                            $badgeClass = 'bg-gray-900 text-white';
+                            $badgeText =
+                                $type;
 
-                            if ($type === 'Peralatan') {
+                            $badgeClass =
+                                'bg-gray-900 text-white';
 
-                                $badgeText = 'Peralatan SC';
-                                $badgeClass = 'bg-indigo-600 text-white';
 
-                            } elseif (in_array($type, [
-                                'HT UV-82',
-                                'HT 888s',
-                                'HT UV-5R'
-                            ])) {
+                            if (
+                                $type ===
+                                'Peralatan'
+                            ) {
 
-                                $badgeText = 'Handy Talkie';
-                                $badgeClass = 'bg-amber-500 text-white';
+                                $badgeText =
+                                    'Peralatan SC';
 
-                            } elseif ($isConsumable) {
+                                $badgeClass =
+                                    'bg-indigo-600 text-white';
 
-                                $badgeText = 'Habis Pakai';
-                                $badgeClass = 'bg-rose-500 text-white';
+                            }
 
-                            } elseif ($isMerchandise) {
 
-                                $badgeText = 'Merchandise';
-                                $badgeClass = 'bg-emerald-500 text-white';
+                            elseif (
+                                in_array(
+                                    $type,
+                                    [
+                                        'HT UV-82',
+                                        'HT 888s',
+                                        'HT UV-5R'
+                                    ]
+                                )
+                            ) {
+
+                                $badgeText =
+                                    'Handy Talkie';
+
+                                $badgeClass =
+                                    'bg-amber-500 text-white';
+
+                            }
+
+
+                            elseif (
+                                $isConsumable
+                            ) {
+
+                                $badgeText =
+                                    $type === 'Obat'
+                                        ? 'Habis Pakai · Obat'
+                                        : 'Habis Pakai · ATK';
+
+                                $badgeClass =
+                                    'bg-rose-500 text-white';
+
+                            }
+
+
+                            elseif (
+                                $isMerchandise
+                            ) {
+
+                                $badgeText =
+                                    'Merchandise';
+
+                                $badgeClass =
+                                    'bg-emerald-500 text-white';
 
                             }
 
@@ -390,59 +633,81 @@
                             /*
                              * ACTIVE RENTAL BOOKINGS
                              */
-                            $activeSchedules = collect();
+                            $activeSchedules =
+                                collect();
+
 
                             if ($isRental) {
 
-                                $activeSchedules = $item->orderItems
-                                    ->filter(function ($detail) {
+                                $activeSchedules =
+                                    $item->orderItems
+                                        ->filter(
+                                            function ($detail) {
 
-                                        if (!$detail->order) {
-                                            return false;
-                                        }
+                                                if (
+                                                    !$detail->order
+                                                ) {
+                                                    return false;
+                                                }
 
-                                        return !in_array(
-                                            $detail->order->status,
-                                            [
-                                                'Returned',
-                                                'Resolved (Fine Paid)',
-                                                'Rejected',
-                                                'Cancelled'
-                                            ]
+                                                return !in_array(
+                                                    $detail->order->status,
+                                                    [
+                                                        'Returned',
+                                                        'Resolved (Fine Paid)',
+                                                        'Rejected',
+                                                        'Cancelled'
+                                                    ]
+                                                );
+
+                                            }
+                                        )
+                                        ->sortBy(
+                                            function ($detail) {
+
+                                                return $detail
+                                                    ->order
+                                                    ->start_date
+                                                    ? $detail
+                                                        ->order
+                                                        ->start_date
+                                                        ->timestamp
+                                                    : PHP_INT_MAX;
+
+                                            }
                                         );
-
-                                    })
-                                    ->sortBy(function ($detail) {
-
-                                        return $detail->order->start_date
-                                            ? $detail->order->start_date->timestamp
-                                            : PHP_INT_MAX;
-
-                                    });
 
                             }
 
+
                             $displaySchedules =
-                                $activeSchedules->take(2);
+                                $activeSchedules
+                                    ->take(2);
+
 
                             $remainingCount =
                                 max(
                                     0,
-                                    $activeSchedules->count()
-                                    - $displaySchedules->count()
+                                    $activeSchedules
+                                        ->count()
+                                    -
+                                    $displaySchedules
+                                        ->count()
                                 );
 
                         @endphp
 
 
+
                         <!-- ================================================= -->
-                        <!-- CARD -->
+                        <!-- PRODUCT CARD -->
                         <!-- ================================================= -->
 
                         <div
                             class="product-card group flex min-w-0 flex-col overflow-visible rounded-[1.75rem] border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                             data-item-id="{{ $item->id }}"
                         >
+
 
                             <!-- ================================================= -->
                             <!-- IMAGE -->
@@ -451,6 +716,7 @@
                             <div class="relative p-2">
 
                                 <div class="relative overflow-hidden rounded-[1.4rem] bg-gray-100">
+
 
                                     @if($item->item_photo)
 
@@ -491,14 +757,18 @@
                                     @endif
 
 
-                                    <!-- BADGE -->
+
+                                    <!-- CATEGORY -->
                                     <div class="absolute left-3 top-3">
 
-                                        <span class="rounded-lg px-2.5 py-1.5 text-[8px] font-black uppercase tracking-widest shadow-lg {{ $badgeClass }}">
+                                        <span
+                                            class="rounded-lg px-2.5 py-1.5 text-[8px] font-black uppercase tracking-widest shadow-lg {{ $badgeClass }}"
+                                        >
                                             {{ $badgeText }}
                                         </span>
 
                                     </div>
+
 
 
                                     <!-- CONDITION -->
@@ -531,11 +801,13 @@
                             </div>
 
 
+
                             <!-- ================================================= -->
                             <!-- INFORMATION -->
                             <!-- ================================================= -->
 
                             <div class="flex flex-1 flex-col px-5 pb-4 pt-2">
+
 
                                 <div>
 
@@ -560,17 +832,32 @@
                                 </div>
 
 
+
                                 <!-- PRICE + STOCK -->
                                 <div class="mt-5 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
 
                                     <div>
 
                                         <p class="text-[8px] font-black uppercase tracking-widest text-gray-400">
-                                            {{ ($isConsumable || $isMerchandise) ? 'Harga' : 'Biaya Sewa' }}
+
+                                            {{
+                                                ($isConsumable || $isMerchandise)
+                                                    ? 'Harga'
+                                                    : 'Biaya Sewa'
+                                            }}
+
                                         </p>
 
                                         <p class="mt-1 text-lg font-black text-indigo-600">
-                                            Rp {{ number_format($item->price, 0, ',', '.') }}
+
+                                            Rp
+                                            {{ number_format(
+                                                $item->price,
+                                                0,
+                                                ',',
+                                                '.'
+                                            ) }}
+
                                         </p>
 
                                     </div>
@@ -582,12 +869,21 @@
                                             Stok
                                         </p>
 
-                                        <p class="mt-1 text-lg font-black {{ $item->stock_quantity > 0 ? 'text-gray-950' : 'text-red-500' }}">
+                                        <p
+                                            class="mt-1 text-lg font-black
+                                            {{
+                                                $item->stock_quantity > 0
+                                                    ? 'text-gray-950'
+                                                    : 'text-red-500'
+                                            }}"
+                                        >
+
                                             {{ $item->stock_quantity }}
 
                                             <span class="text-[9px] font-bold text-gray-400">
                                                 Unit
                                             </span>
+
                                         </p>
 
                                     </div>
@@ -595,11 +891,15 @@
                                 </div>
 
 
+
                                 <!-- ================================================= -->
                                 <!-- ACTIVE BOOKINGS -->
                                 <!-- ================================================= -->
 
-                                @if($isRental && $activeSchedules->count() > 0)
+                                @if(
+                                    $isRental &&
+                                    $activeSchedules->count() > 0
+                                )
 
                                     <div class="mt-4 rounded-2xl border border-orange-100 bg-orange-50/70 p-3">
 
@@ -628,7 +928,10 @@
 
                                         <div class="space-y-1.5">
 
-                                            @foreach($displaySchedules as $detail)
+                                            @foreach(
+                                                $displaySchedules
+                                                as $detail
+                                            )
 
                                                 <div class="rounded-xl border border-orange-100 bg-white px-2.5 py-2">
 
@@ -638,20 +941,35 @@
 
                                                             <p class="truncate text-[9px] font-black text-orange-700">
 
-                                                                {{ optional($detail->order->start_date)->format('d M Y') }}
+                                                                {{ optional(
+                                                                    $detail->order->start_date
+                                                                )->format('d M Y') }}
 
-                                                                @if($detail->order->end_date)
-                                                                    — {{ optional($detail->order->end_date)->format('d M Y') }}
+                                                                @if(
+                                                                    $detail->order->end_date
+                                                                )
+
+                                                                    —
+                                                                    {{ optional(
+                                                                        $detail->order->end_date
+                                                                    )->format('d M Y') }}
+
                                                                 @endif
 
                                                             </p>
+
 
                                                             <p class="mt-1 text-[8px] font-bold text-orange-400">
 
                                                                 {{ $detail->order->start_time ?? '--:--' }}
 
-                                                                @if($detail->order->end_time)
-                                                                    → {{ $detail->order->end_time }}
+                                                                @if(
+                                                                    $detail->order->end_time
+                                                                )
+
+                                                                    →
+                                                                    {{ $detail->order->end_time }}
+
                                                                 @endif
 
                                                             </p>
@@ -660,7 +978,10 @@
 
 
                                                         <span class="shrink-0 rounded-lg bg-orange-100 px-2 py-1 text-[8px] font-black text-orange-600">
-                                                            {{ $detail->quantity }} Unit
+
+                                                            {{ $detail->quantity }}
+                                                            Unit
+
                                                         </span>
 
                                                     </div>
@@ -675,7 +996,11 @@
                                         @if($remainingCount > 0)
 
                                             <p class="mt-2 text-center text-[8px] font-black uppercase tracking-widest text-orange-400">
-                                                + {{ $remainingCount }} jadwal lainnya
+
+                                                +
+                                                {{ $remainingCount }}
+                                                jadwal lainnya
+
                                             </p>
 
                                         @endif
@@ -687,18 +1012,27 @@
                             </div>
 
 
+
                             <!-- ================================================= -->
-                            <!-- ACTION -->
+                            <!-- ACTION AREA -->
                             <!-- ================================================= -->
 
                             <div class="border-t border-gray-100 p-4">
 
-                                @if($item->stock_quantity > 0)
 
+                                @if(
+                                    $item->stock_quantity > 0
+                                )
+
+
+                                    <!-- VIEW BOOKING -->
                                     @if($isRental)
 
                                         <a
-                                            href="{{ route('student.item.schedule', $item->id) }}"
+                                            href="{{ route(
+                                                'student.item.schedule',
+                                                $item->id
+                                            ) }}"
                                             class="mb-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white"
                                         >
 
@@ -712,7 +1046,7 @@
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
-                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002-2h14"
+                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
                                                 />
                                             </svg>
 
@@ -721,6 +1055,7 @@
                                         </a>
 
                                     @endif
+
 
 
                                     <!-- OPEN SCHEDULE -->
@@ -744,9 +1079,14 @@
                                             />
                                         </svg>
 
-                                        {{ $isRental ? 'Pilih Jadwal Sewa' : 'Pilih Jadwal Transaksi' }}
+                                        {{
+                                            $isRental
+                                                ? 'Pilih Jadwal Sewa'
+                                                : 'Pilih Jadwal Transaksi'
+                                        }}
 
                                     </button>
+
 
 
                                     <!-- ================================================= -->
@@ -754,24 +1094,38 @@
                                     <!-- ================================================= -->
 
                                     <form
-                                        action="{{ route('student.cart.add', $item->id) }}"
+                                        action="{{ route(
+                                            'student.cart.add',
+                                            $item->id
+                                        ) }}"
                                         method="POST"
                                         class="schedule-form mt-3 hidden rounded-2xl border border-indigo-100 bg-indigo-50/50 p-3"
                                         data-item-id="{{ $item->id }}"
                                         data-is-rental="{{ $isRental ? '1' : '0' }}"
+                                        data-subcategory="{{ $item->subcategory ?? '' }}"
                                     >
 
                                         @csrf
 
 
+                                        <!-- ================================================= -->
                                         <!-- DATE -->
+                                        <!-- ================================================= -->
+
                                         <div>
 
-                                            <div class="mb-2 flex items-center justify-between">
+                                            <div class="mb-2 flex items-center justify-between gap-2">
 
                                                 <label class="text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
-                                                    {{ $isRental ? 'Tanggal Sewa' : 'Tanggal Transaksi' }}
+
+                                                    {{
+                                                        $isRental
+                                                            ? 'Tanggal Sewa'
+                                                            : 'Tanggal Transaksi'
+                                                    }}
+
                                                 </label>
+
 
                                                 <span class="text-[8px] font-bold text-gray-400">
                                                     Mulai hari ini
@@ -804,7 +1158,11 @@
                                                 <input
                                                     type="text"
                                                     class="schedule-date-input w-full cursor-pointer rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-9 text-[11px] font-black text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
-                                                    placeholder="{{ $isRental ? 'Pilih tanggal mulai - selesai' : 'Pilih tanggal transaksi' }}"
+                                                    placeholder="{{
+                                                        $isRental
+                                                            ? 'Pilih tanggal mulai - selesai'
+                                                            : 'Pilih tanggal transaksi'
+                                                    }}"
                                                     readonly
                                                     autocomplete="off"
                                                 >
@@ -838,6 +1196,7 @@
                                                 required
                                             >
 
+
                                             <input
                                                 type="hidden"
                                                 name="end_date"
@@ -848,14 +1207,25 @@
                                         </div>
 
 
+
+                                        <!-- ================================================= -->
                                         <!-- TIME -->
+                                        <!-- ================================================= -->
+
                                         <div class="mt-3">
 
-                                            <div class="mb-2 flex items-center justify-between">
+                                            <div class="mb-2 flex items-center justify-between gap-2">
 
                                                 <label class="text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
-                                                    {{ $isRental ? 'Waktu' : 'Jam Transaksi' }}
+
+                                                    {{
+                                                        $isRental
+                                                            ? 'Waktu'
+                                                            : 'Jam Transaksi'
+                                                    }}
+
                                                 </label>
+
 
                                                 <span class="text-[8px] font-black text-indigo-500">
                                                     17:00 — 19:00
@@ -864,7 +1234,14 @@
                                             </div>
 
 
-                                            <div class="{{ $isRental ? 'grid grid-cols-2' : 'grid grid-cols-1' }} gap-2">
+                                            <div
+                                                class="{{
+                                                    $isRental
+                                                        ? 'grid grid-cols-2'
+                                                        : 'grid grid-cols-1'
+                                                }} gap-2"
+                                            >
+
 
                                                 <!-- START -->
                                                 <div>
@@ -876,18 +1253,39 @@
                                                     >
 
                                                         <option value="">
-                                                            {{ $isRental ? 'Jam Pengambilan' : 'Pilih Jam' }}
+
+                                                            {{
+                                                                $isRental
+                                                                    ? 'Jam Pengambilan'
+                                                                    : 'Pilih Jam'
+                                                            }}
+
                                                         </option>
 
-                                                        <option value="17:00">17:00</option>
-                                                        <option value="17:30">17:30</option>
-                                                        <option value="18:00">18:00</option>
-                                                        <option value="18:30">18:30</option>
-                                                        <option value="19:00">19:00</option>
+                                                        <option value="17:00">
+                                                            17:00
+                                                        </option>
+
+                                                        <option value="17:30">
+                                                            17:30
+                                                        </option>
+
+                                                        <option value="18:00">
+                                                            18:00
+                                                        </option>
+
+                                                        <option value="18:30">
+                                                            18:30
+                                                        </option>
+
+                                                        <option value="19:00">
+                                                            19:00
+                                                        </option>
 
                                                     </select>
 
                                                 </div>
+
 
 
                                                 <!-- END -->
@@ -905,11 +1303,25 @@
                                                                 Jam Pengembalian
                                                             </option>
 
-                                                            <option value="17:00">17:00</option>
-                                                            <option value="17:30">17:30</option>
-                                                            <option value="18:00">18:00</option>
-                                                            <option value="18:30">18:30</option>
-                                                            <option value="19:00">19:00</option>
+                                                            <option value="17:00">
+                                                                17:00
+                                                            </option>
+
+                                                            <option value="17:30">
+                                                                17:30
+                                                            </option>
+
+                                                            <option value="18:00">
+                                                                18:00
+                                                            </option>
+
+                                                            <option value="18:30">
+                                                                18:30
+                                                            </option>
+
+                                                            <option value="19:00">
+                                                                19:00
+                                                            </option>
 
                                                         </select>
 
@@ -927,7 +1339,154 @@
                                         </div>
 
 
+
+                                        <!-- ================================================= -->
+                                        <!-- MERCHANDISE -->
+                                        <!-- ================================================= -->
+
+                                        @if(
+                                            $isMerchandise &&
+                                            $item->subcategory === 'Baju'
+                                        )
+
+                                            <!-- SIZE -->
+                                            <div class="mt-4">
+
+                                                <div class="mb-2 flex items-center justify-between">
+
+                                                    <label class="text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
+                                                        Ukuran Baju
+                                                    </label>
+
+                                                    <span class="text-[8px] font-bold text-gray-400">
+                                                        Size
+                                                    </span>
+
+                                                </div>
+
+
+                                                <select
+                                                    name="size"
+                                                    class="shirt-size w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-black text-gray-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
+                                                    required
+                                                >
+
+                                                    <option value="">
+                                                        Pilih Ukuran
+                                                    </option>
+
+                                                    <option value="S">
+                                                        S
+                                                    </option>
+
+                                                    <option value="M">
+                                                        M
+                                                    </option>
+
+                                                    <option value="L">
+                                                        L
+                                                    </option>
+
+                                                    <option value="XL">
+                                                        XL
+                                                    </option>
+
+                                                    <option value="2XL">
+                                                        2XL (+Rp5.000)
+                                                    </option>
+
+                                                    <option value="3XL">
+                                                        3XL (+Rp10.000)
+                                                    </option>
+
+                                                    <option value="4XL">
+                                                        4XL (+Rp15.000)
+                                                    </option>
+
+                                                    <option value="5XL">
+                                                        5XL (+Rp20.000)
+                                                    </option>
+
+                                                </select>
+
+                                            </div>
+
+
+                                            <!-- DESIGN DRIVE -->
+                                            <div class="mt-3">
+
+                                                <label class="mb-2 block text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
+                                                    Link Drive Desain
+                                                </label>
+
+
+                                                <input
+                                                    type="url"
+                                                    name="design_link"
+                                                    class="design-link w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-bold text-gray-900 outline-none placeholder:text-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
+                                                    placeholder="https://drive.google.com/..."
+                                                    required
+                                                >
+
+
+                                                <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-400">
+                                                    Pastikan file dapat diakses oleh Admin SC.
+                                                </p>
+
+                                            </div>
+
+
+                                            <!-- EXTRA SIZE -->
+                                            <div class="shirt-extra-price mt-3 hidden rounded-xl border border-amber-100 bg-amber-50 px-3 py-2">
+
+                                                <p class="text-[8px] font-black uppercase tracking-widest text-amber-600">
+                                                    Tambahan Ukuran
+                                                </p>
+
+                                                <p class="mt-0.5 text-[10px] font-black text-amber-700">
+                                                    +Rp0
+                                                </p>
+
+                                            </div>
+
+
+                                        @elseif(
+                                            $isMerchandise &&
+                                            $item->subcategory === 'ID Card'
+                                        )
+
+
+                                            <!-- ID CARD DRIVE -->
+                                            <div class="mt-4">
+
+                                                <label class="mb-2 block text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
+                                                    Link Drive Desain
+                                                </label>
+
+
+                                                <input
+                                                    type="url"
+                                                    name="design_link"
+                                                    class="design-link w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-bold text-gray-900 outline-none placeholder:text-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
+                                                    placeholder="https://drive.google.com/..."
+                                                    required
+                                                >
+
+
+                                                <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-400">
+                                                    Pastikan file dapat diakses oleh Admin SC.
+                                                </p>
+
+                                            </div>
+
+                                        @endif
+
+
+
+                                        <!-- ================================================= -->
                                         <!-- SUMMARY -->
+                                        <!-- ================================================= -->
+
                                         <div class="schedule-summary mt-3 hidden rounded-xl bg-white px-3 py-2.5 shadow-sm">
 
                                             <p class="text-[8px] font-black uppercase tracking-widest text-gray-400">
@@ -940,7 +1499,11 @@
                                         </div>
 
 
+
+                                        <!-- ================================================= -->
                                         <!-- QUANTITY -->
+                                        <!-- ================================================= -->
+
                                         <div class="mt-3 flex gap-2">
 
                                             <div class="w-20 shrink-0">
@@ -991,6 +1554,7 @@
 
                                 @else
 
+                                    <!-- OUT OF STOCK -->
                                     <button
                                         type="button"
                                         disabled
@@ -1012,22 +1576,33 @@
                 </div>
 
 
+
+                <!-- ===================================================== -->
                 <!-- PAGINATION -->
+                <!-- ===================================================== -->
+
                 @if($items->hasPages())
 
                     <div class="mt-10 flex justify-center">
 
                         <div class="rounded-2xl border border-gray-100 bg-white px-2 py-1 shadow-sm">
+
                             {{ $items->links() }}
+
                         </div>
 
                     </div>
 
                 @endif
 
+
             @else
 
-                <!-- EMPTY -->
+
+                <!-- ===================================================== -->
+                <!-- EMPTY STATE -->
+                <!-- ===================================================== -->
+
                 <div class="py-28 text-center">
 
                     <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[1.75rem] border border-gray-100 bg-white shadow-sm">
@@ -1048,17 +1623,20 @@
 
                     </div>
 
+
                     <h3 class="text-sm font-black uppercase tracking-[0.18em] text-gray-500">
                         Tidak ada barang ditemukan
                     </h3>
+
 
                     <p class="mt-2 text-xs text-gray-400">
                         Coba ubah pencarian atau pilih kategori lain.
                     </p>
 
+
                     <a
                         href="{{ route('student.dashboard') }}"
-                        class="mt-5 inline-flex rounded-xl bg-gray-950 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white hover:bg-indigo-600"
+                        class="mt-5 inline-flex rounded-xl bg-gray-950 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white transition hover:bg-indigo-600"
                     >
                         Reset Pencarian
                     </a>
@@ -1070,6 +1648,7 @@
         </div>
 
     </div>
+
 
 
     <!-- ============================================================= -->
@@ -1084,6 +1663,11 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 
+
+    <!-- ============================================================= -->
+    <!-- CSS -->
+    <!-- ============================================================= -->
+
     <style>
 
         .catalog-scrollbar {
@@ -1091,19 +1675,17 @@
             -ms-overflow-style: none;
         }
 
+
         .catalog-scrollbar::-webkit-scrollbar {
             display: none;
         }
 
 
-        /*
-         * Calendar
-         */
-
         .flatpickr-calendar {
             border: 1px solid #e5e7eb !important;
             border-radius: 16px !important;
             overflow: hidden !important;
+
             box-shadow:
                 0 18px 45px rgba(15, 23, 42, 0.14),
                 0 5px 15px rgba(15, 23, 42, 0.08) !important;
@@ -1150,9 +1732,10 @@
         }
 
 
-        /*
-         * Stock text inside calendar
-         */
+        .flatpickr-day.today {
+            border-color: #a5b4fc !important;
+        }
+
 
         .stock-badge {
             display: block;
@@ -1176,13 +1759,18 @@
         @media (max-width: 640px) {
 
             .flatpickr-calendar {
-                max-width: calc(100vw - 30px) !important;
+                max-width: calc(100vw - 24px) !important;
             }
 
         }
 
     </style>
 
+
+
+    <!-- ============================================================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ============================================================= -->
 
     <script>
 
@@ -1193,20 +1781,32 @@
 
         let searchTimeout = null;
 
+
         const searchInput =
-            document.getElementById('searchInput');
+            document.getElementById(
+                'searchInput'
+            );
+
 
         const searchForm =
-            document.getElementById('searchForm');
+            document.getElementById(
+                'searchForm'
+            );
 
 
-        if (searchInput && searchForm) {
+        if (
+            searchInput &&
+            searchForm
+        ) {
 
             searchInput.addEventListener(
                 'keyup',
                 function () {
 
-                    clearTimeout(searchTimeout);
+                    clearTimeout(
+                        searchTimeout
+                    );
+
 
                     searchTimeout =
                         setTimeout(
@@ -1224,8 +1824,9 @@
         }
 
 
+
         /* ============================================================
-         * SCHEDULE FORMS
+         * DOM READY
          * ============================================================
          */
 
@@ -1233,109 +1834,129 @@
             'DOMContentLoaded',
             function () {
 
-                const toggleButtons =
-                    document.querySelectorAll(
-                        '.schedule-toggle'
-                    );
+                initializeScheduleButtons();
+
+            }
+        );
 
 
-                toggleButtons.forEach(
-                    function (button) {
 
-                        button.addEventListener(
-                            'click',
-                            function () {
+        /* ============================================================
+         * TOGGLE BUTTONS
+         * ============================================================
+         */
 
-                                const itemId =
-                                    button.dataset.itemId;
+        function initializeScheduleButtons() {
 
-                                const card =
-                                    document.querySelector(
-                                        '.product-card[data-item-id="' +
-                                        itemId +
-                                        '"]'
-                                    );
+            const buttons =
+                document.querySelectorAll(
+                    '.schedule-toggle'
+                );
 
 
-                                if (!card) {
-                                    return;
-                                }
+            buttons.forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        'click',
+                        function () {
+
+                            const itemId =
+                                button.dataset.itemId;
 
 
-                                const form =
-                                    card.querySelector(
-                                        '.schedule-form'
-                                    );
+                            const card =
+                                document.querySelector(
+                                    '.product-card[data-item-id="' +
+                                    itemId +
+                                    '"]'
+                                );
 
 
-                                if (!form) {
-                                    return;
-                                }
+                            if (!card) {
+                                return;
+                            }
 
 
-                                const isHidden =
-                                    form.classList.contains(
-                                        'hidden'
-                                    );
+                            const form =
+                                card.querySelector(
+                                    '.schedule-form'
+                                );
 
 
-                                /*
-                                 * Close other forms
-                                 */
-
-                                document
-                                    .querySelectorAll(
-                                        '.schedule-form'
-                                    )
-                                    .forEach(
-                                        function (otherForm) {
-
-                                            if (
-                                                otherForm !== form
-                                            ) {
-
-                                                otherForm.classList.add(
-                                                    'hidden'
-                                                );
-
-                                            }
-
-                                        }
-                                    );
+                            if (!form) {
+                                return;
+                            }
 
 
-                                /*
-                                 * Toggle current
-                                 */
-
-                                form.classList.toggle(
+                            const wasHidden =
+                                form.classList.contains(
                                     'hidden'
                                 );
 
 
-                                /*
-                                 * Create calendar once
-                                 */
+                            /*
+                             * Close all other forms.
+                             */
 
-                                if (
-                                    isHidden &&
-                                    !form.dataset.initialized
-                                ) {
+                            document
+                                .querySelectorAll(
+                                    '.schedule-form'
+                                )
+                                .forEach(
+                                    function (
+                                        otherForm
+                                    ) {
 
-                                    initializeSchedule(
-                                        form
-                                    );
+                                        if (
+                                            otherForm !==
+                                            form
+                                        ) {
 
-                                }
+                                            otherForm.classList.add(
+                                                'hidden'
+                                            );
+
+                                        }
+
+                                    }
+                                );
+
+
+                            /*
+                             * Toggle current.
+                             */
+
+                            form.classList.toggle(
+                                'hidden'
+                            );
+
+
+                            /*
+                             * Initialize calendar
+                             * only once.
+                             */
+
+                            if (
+                                wasHidden &&
+                                form.dataset.initialized !==
+                                'true'
+                            ) {
+
+                                initializeSchedule(
+                                    form
+                                );
 
                             }
-                        );
 
-                    }
-                );
+                        }
+                    );
 
-            }
-        );
+                }
+            );
+
+        }
+
 
 
         /* ============================================================
@@ -1350,8 +1971,13 @@
             const itemId =
                 form.dataset.itemId;
 
+
             const isRental =
                 form.dataset.isRental === '1';
+
+
+            const subcategory =
+                form.dataset.subcategory || '';
 
 
             const dateInput =
@@ -1359,30 +1985,36 @@
                     '.schedule-date-input'
                 );
 
+
             const startDate =
                 form.querySelector(
                     '.start-date'
                 );
+
 
             const endDate =
                 form.querySelector(
                     '.end-date'
                 );
 
+
             const startTime =
                 form.querySelector(
                     '.start-time'
                 );
+
 
             const endTime =
                 form.querySelector(
                     '.end-time'
                 );
 
+
             const summary =
                 form.querySelector(
                     '.schedule-summary'
                 );
+
 
             const summaryText =
                 form.querySelector(
@@ -1390,63 +2022,25 @@
                 );
 
 
+            const shirtSize =
+                form.querySelector(
+                    '.shirt-size'
+                );
+
+
+            const extraPriceBox =
+                form.querySelector(
+                    '.shirt-extra-price'
+                );
+
+
             let stockData = {};
 
 
             /*
-             * Load stock for rentals
-             */
-
-            if (isRental) {
-
-                fetch(
-                    '/api/check-stock/' +
-                    itemId
-                )
-                    .then(
-                        function (response) {
-
-                            if (!response.ok) {
-
-                                throw new Error(
-                                    'Stock API failed.'
-                                );
-
-                            }
-
-                            return response.json();
-
-                        }
-                    )
-                    .then(
-                        function (data) {
-
-                            stockData =
-                                data || {};
-
-
-                            if (picker) {
-                                picker.redraw();
-                            }
-
-                        }
-                    )
-                    .catch(
-                        function (error) {
-
-                            console.error(
-                                'Stock API Error:',
-                                error
-                            );
-
-                        }
-                    );
-
-            }
-
-
-            /*
-             * Date picker
+             * ========================================================
+             * DATE PICKER
+             * ========================================================
              */
 
             const picker =
@@ -1459,19 +2053,22 @@
                                 ? 'range'
                                 : 'single',
 
+
                         minDate:
                             'today',
+
 
                         dateFormat:
                             'Y-m-d',
 
+
                         disableMobile:
                             true,
 
-                        showMonths:
-                            window.innerWidth >= 768
-                                ? 1
-                                : 1,
+
+                        clickOpens:
+                            true,
+
 
                         appendTo:
                             document.body,
@@ -1485,8 +2082,12 @@
                                 dayElem
                             ) {
 
-                                if (!isRental) {
+                                if (
+                                    !isRental
+                                ) {
+
                                     return;
+
                                 }
 
 
@@ -1502,7 +2103,9 @@
                                         dateString
                                     ] === undefined
                                 ) {
+
                                     return;
+
                                 }
 
 
@@ -1528,7 +2131,8 @@
 
                                 badge.textContent =
                                     remaining > 0
-                                        ? 'Sisa ' + remaining
+                                        ? 'Sisa ' +
+                                            remaining
                                         : 'Habis';
 
 
@@ -1547,7 +2151,8 @@
                             ) {
 
                                 if (
-                                    selectedDates.length === 0
+                                    selectedDates.length ===
+                                    0
                                 ) {
 
                                     startDate.value =
@@ -1570,10 +2175,13 @@
                                     );
 
 
-                                if (isRental) {
+                                if (
+                                    isRental
+                                ) {
 
                                     if (
-                                        selectedDates.length >= 2
+                                        selectedDates.length >=
+                                        2
                                     ) {
 
                                         endDate.value =
@@ -1609,15 +2217,75 @@
 
 
             /*
-             * Mark initialized
+             * Mark initialized.
              */
 
             form.dataset.initialized =
                 'true';
 
 
+
             /*
-             * Summary function
+             * ========================================================
+             * LOAD STOCK
+             * ========================================================
+             */
+
+            if (
+                isRental
+            ) {
+
+                fetch(
+                    '/api/check-stock/' +
+                    itemId
+                )
+                    .then(
+                        function (response) {
+
+                            if (
+                                !response.ok
+                            ) {
+
+                                throw new Error(
+                                    'Stock API failed.'
+                                );
+
+                            }
+
+                            return response.json();
+
+                        }
+                    )
+                    .then(
+                        function (data) {
+
+                            stockData =
+                                data || {};
+
+
+                            picker.redraw();
+
+                        }
+                    )
+                    .catch(
+                        function (error) {
+
+                            console.error(
+                                'Stock API Error:',
+                                error
+                            );
+
+                        }
+                    );
+
+            }
+
+
+
+            /*
+             * ========================================================
+             * SCHEDULE SUMMARY
+             * ========================================================
              */
 
             function updateSummary() {
@@ -1644,7 +2312,13 @@
                     startTime.value;
 
 
-                if (!isRental) {
+                /*
+                 * Non-rental
+                 */
+
+                if (
+                    !isRental
+                ) {
 
                     summary.classList.remove(
                         'hidden'
@@ -1657,6 +2331,10 @@
 
                 }
 
+
+                /*
+                 * Rental, incomplete return.
+                 */
 
                 if (
                     !endDate.value ||
@@ -1688,6 +2366,7 @@
                     'hidden'
                 );
 
+
                 summaryText.textContent =
                     startText +
                     ' → ' +
@@ -1696,17 +2375,91 @@
             }
 
 
+
             /*
-             * Time listeners
+             * ========================================================
+             * SHIRT SIZE EXTRA PRICE
+             * ========================================================
              */
 
-            startTime.addEventListener(
-                'change',
-                updateSummary
-            );
+            if (
+                shirtSize &&
+                extraPriceBox
+            ) {
+
+                shirtSize.addEventListener(
+                    'change',
+                    function () {
+
+                        const extra =
+                            getSizeExtraPrice(
+                                shirtSize.value
+                            );
 
 
-            if (endTime) {
+                        if (
+                            extra > 0
+                        ) {
+
+                            extraPriceBox.classList.remove(
+                                'hidden'
+                            );
+
+
+                            const priceText =
+                                extraPriceBox.querySelector(
+                                    'p:last-child'
+                                );
+
+
+                            if (
+                                priceText
+                            ) {
+
+                                priceText.textContent =
+                                    '+Rp' +
+                                    extra.toLocaleString(
+                                        'id-ID'
+                                    );
+
+                            }
+
+                        } else {
+
+                            extraPriceBox.classList.add(
+                                'hidden'
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+
+            /*
+             * ========================================================
+             * TIME LISTENERS
+             * ========================================================
+             */
+
+            if (
+                startTime
+            ) {
+
+                startTime.addEventListener(
+                    'change',
+                    updateSummary
+                );
+
+            }
+
+
+            if (
+                endTime
+            ) {
 
                 endTime.addEventListener(
                     'change',
@@ -1716,23 +2469,48 @@
             }
 
 
+
             /*
-             * Submit validation
+             * ========================================================
+             * FORM VALIDATION
+             * ========================================================
              */
 
             form.addEventListener(
                 'submit',
                 function (event) {
 
+                    /*
+                     * DATE
+                     */
+
                     if (
-                        !startDate.value ||
+                        !startDate.value
+                    ) {
+
+                        event.preventDefault();
+
+                        alert(
+                            'Silakan pilih tanggal transaksi terlebih dahulu.'
+                        );
+
+                        return;
+
+                    }
+
+
+                    /*
+                     * START TIME
+                     */
+
+                    if (
                         !startTime.value
                     ) {
 
                         event.preventDefault();
 
                         alert(
-                            'Silakan pilih tanggal dan jam transaksi terlebih dahulu.'
+                            'Silakan pilih jam transaksi terlebih dahulu.'
                         );
 
                         return;
@@ -1740,55 +2518,103 @@
                     }
 
 
-                    if (!isRental) {
-                        return;
-                    }
-
+                    /*
+                     * Baju
+                     */
 
                     if (
-                        !endDate.value ||
-                        !endTime.value
+                        subcategory ===
+                        'Baju'
                     ) {
 
-                        event.preventDefault();
+                        if (
+                            !shirtSize ||
+                            !shirtSize.value
+                        ) {
 
-                        alert(
-                            'Silakan pilih tanggal dan jam pengembalian terlebih dahulu.'
-                        );
+                            event.preventDefault();
 
-                        return;
+                            alert(
+                                'Silakan pilih ukuran baju terlebih dahulu.'
+                            );
+
+                            return;
+
+                        }
 
                     }
 
 
-                    const startDateTime =
-                        new Date(
-                            startDate.value +
-                            'T' +
-                            startTime.value +
-                            ':00'
-                        );
-
-
-                    const endDateTime =
-                        new Date(
-                            endDate.value +
-                            'T' +
-                            endTime.value +
-                            ':00'
-                        );
-
+                    /*
+                     * Rental.
+                     */
 
                     if (
-                        endDateTime <=
-                        startDateTime
+                        isRental
                     ) {
 
-                        event.preventDefault();
+                        if (
+                            !endDate.value
+                        ) {
 
-                        alert(
-                            'Waktu pengembalian harus setelah waktu pengambilan.'
-                        );
+                            event.preventDefault();
+
+                            alert(
+                                'Silakan pilih tanggal pengembalian terlebih dahulu.'
+                            );
+
+                            return;
+
+                        }
+
+
+                        if (
+                            !endTime.value
+                        ) {
+
+                            event.preventDefault();
+
+                            alert(
+                                'Silakan pilih jam pengembalian terlebih dahulu.'
+                            );
+
+                            return;
+
+                        }
+
+
+                        const startDateTime =
+                            new Date(
+                                startDate.value +
+                                'T' +
+                                startTime.value +
+                                ':00'
+                            );
+
+
+                        const endDateTime =
+                            new Date(
+                                endDate.value +
+                                'T' +
+                                endTime.value +
+                                ':00'
+                            );
+
+
+                        if (
+                            endDateTime <=
+                            startDateTime
+                        ) {
+
+                            event.preventDefault();
+
+                            alert(
+                                'Waktu pengembalian harus setelah waktu pengambilan.'
+                            );
+
+                            return;
+
+                        }
 
                     }
 
@@ -1798,8 +2624,42 @@
         }
 
 
+
         /* ============================================================
-         * FORMAT DATE
+         * SIZE EXTRA PRICE
+         * ============================================================
+         */
+
+        function getSizeExtraPrice(
+            size
+        ) {
+
+            const prices = {
+
+                '2XL':
+                    5000,
+
+                '3XL':
+                    10000,
+
+                '4XL':
+                    15000,
+
+                '5XL':
+                    20000
+
+            };
+
+
+            return prices[size] ||
+                0;
+
+        }
+
+
+
+        /* ============================================================
+         * DATE FORMAT
          * ============================================================
          */
 
@@ -1807,8 +2667,12 @@
             value
         ) {
 
-            if (!value) {
+            if (
+                !value
+            ) {
+
                 return '';
+
             }
 
 

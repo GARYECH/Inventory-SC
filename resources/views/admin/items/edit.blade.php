@@ -317,8 +317,7 @@
                                 |--------------------------------------------------------------------------
                                 | Legacy fallback
                                 |--------------------------------------------------------------------------
-                                | Ini hanya membantu kalau migration normalization
-                                | belum mengubah data lama.
+                                | Ini hanya membantu kalau data lama belum dinormalisasi.
                                 */
 
                                 if (
@@ -816,14 +815,6 @@
 
 
                                     <option
-                                        value="Minor Damage"
-                                        {{ old('condition_status', $item->condition_status) === 'Minor Damage' ? 'selected' : '' }}
-                                    >
-                                        Minor Damage
-                                    </option>
-
-
-                                    <option
                                         value="Damaged"
                                         {{ old('condition_status', $item->condition_status) === 'Damaged' ? 'selected' : '' }}
                                     >
@@ -923,184 +914,218 @@
     <!-- ============================================================= -->
     <!-- JAVASCRIPT -->
     <!-- ============================================================= -->
-<script>
-document.addEventListener(
-    'DOMContentLoaded',
-    function () {
 
-        const transactionType =
-            document.getElementById(
-                'transaction_type'
-            );
-
-        const transactionDetailSection =
-            document.getElementById(
-                'transactionDetailSection'
-            );
-
-        const transactionDetail =
-            document.getElementById(
-                'transaction_detail'
-            );
-
-        const merchandiseSection =
-            document.getElementById(
-                'merchandiseSection'
-            );
-
-        const subcategory =
-            document.getElementById(
-                'subcategory'
-            );
-
-        const requiresMou =
-            document.getElementById(
-                'requires_mou'
-            );
-
-        const currentDetail =
-            @json(
-                old(
-                    'transaction_detail',
-                    $item->transaction_detail
-                )
-            );
-
-        const currentSubcategory =
-            @json(
-                old(
-                    'subcategory',
-                    $item->subcategory
-                )
-            );
-
-        function addOption(
-            value
-        ) {
-            const option =
-                document.createElement(
-                    'option'
-                );
-
-            option.value =
-                value;
-
-            option.textContent =
-                value;
-
-            transactionDetail.appendChild(
-                option
-            );
-        }
-
-        function updateTransactionFields() {
-
-            const type =
-                transactionType.value;
-
-            transactionDetail.innerHTML =
-                '<option value="">-- Pilih Detail --</option>';
-
-            transactionDetailSection
-                .classList
-                .add('hidden');
-
-            merchandiseSection
-                .classList
-                .add('hidden');
-
-            if (
-                type ===
-                'Peralatan'
-            ) {
-                transactionDetailSection
-                    .classList
-                    .remove('hidden');
-
-                addOption(
-                    'Internal Rental'
-                );
-
-                addOption(
-                    'Vendor Rental'
-                );
-
-                transactionDetail.value =
-                    currentDetail;
-
-                return;
-            }
-
-            if (
-                type ===
-                'Handy Talkie'
-            ) {
-                transactionDetailSection
-                    .classList
-                    .remove('hidden');
-
-                addOption(
-                    'HT UV-82'
-                );
-
-                addOption(
-                    'HT 888s'
-                );
-
-                addOption(
-                    'HT UV-5R'
-                );
-
-                transactionDetail.value =
-                    currentDetail;
-
-                return;
-            }
-
-            if (
-                type ===
-                'Merchandise'
-            ) {
-                merchandiseSection
-                    .classList
-                    .remove('hidden');
-
-                subcategory.value =
-                    currentSubcategory;
-
-                return;
-            }
-
-            if (
-                type ===
-                'Habis Pakai'
-            ) {
-                requiresMou.value =
-                    '0';
-            }
-        }
-
-        transactionType.addEventListener(
-            'change',
+    <script>
+        document.addEventListener(
+            'DOMContentLoaded',
             function () {
-                /*
-                | User sengaja ganti Transaction Type,
-                | jadi detail/subcategory lama tidak
-                | dipertahankan.
-                */
 
-                transactionDetail.innerHTML =
-                    '<option value="">-- Pilih Detail --</option>';
+                const transactionType =
+                    document.getElementById(
+                        'transaction_type'
+                    );
 
-                subcategory.value =
-                    '';
+                const transactionDetailSection =
+                    document.getElementById(
+                        'transactionDetailSection'
+                    );
 
-                updateTransactionFields();
+                const transactionDetail =
+                    document.getElementById(
+                        'transaction_detail'
+                    );
+
+                const merchandiseSection =
+                    document.getElementById(
+                        'merchandiseSection'
+                    );
+
+                const subcategory =
+                    document.getElementById(
+                        'subcategory'
+                    );
+
+                const requiresMou =
+                    document.getElementById(
+                        'requires_mou'
+                    );
+
+                const currentDetail =
+                    @json(
+                        old(
+                            'transaction_detail',
+                            $item->transaction_detail
+                        )
+                    );
+
+                const currentSubcategory =
+                    @json(
+                        old(
+                            'subcategory',
+                            $item->subcategory
+                        )
+                    );
+
+                function addOption(
+                    value
+                ) {
+                    const option =
+                        document.createElement(
+                            'option'
+                        );
+
+                    option.value =
+                        value;
+
+                    option.textContent =
+                        value;
+
+                    transactionDetail.appendChild(
+                        option
+                    );
+                }
+
+                function updateTransactionFields(
+                    preserveValues = true
+                ) {
+
+                    const type =
+                        transactionType.value;
+
+                    const selectedDetail =
+                        preserveValues
+                            ? currentDetail
+                            : '';
+
+                    const selectedSubcategory =
+                        preserveValues
+                            ? currentSubcategory
+                            : '';
+
+                    transactionDetail.innerHTML =
+                        '<option value="">-- Pilih Detail --</option>';
+
+                    transactionDetailSection
+                        .classList
+                        .add('hidden');
+
+                    merchandiseSection
+                        .classList
+                        .add('hidden');
+
+                    if (
+                        type ===
+                        'Peralatan'
+                    ) {
+
+                        transactionDetailSection
+                            .classList
+                            .remove('hidden');
+
+                        addOption(
+                            'Internal Rental'
+                        );
+
+                        addOption(
+                            'Vendor Rental'
+                        );
+
+                        transactionDetail.value =
+                            selectedDetail;
+
+                        return;
+                    }
+
+                    if (
+                        type ===
+                        'Handy Talkie'
+                    ) {
+
+                        transactionDetailSection
+                            .classList
+                            .remove('hidden');
+
+                        addOption(
+                            'HT UV-82'
+                        );
+
+                        addOption(
+                            'HT 888s'
+                        );
+
+                        addOption(
+                            'HT UV-5R'
+                        );
+
+                        transactionDetail.value =
+                            selectedDetail;
+
+                        return;
+                    }
+
+                    if (
+                        type ===
+                        'Merchandise'
+                    ) {
+
+                        merchandiseSection
+                            .classList
+                            .remove('hidden');
+
+                        subcategory.value =
+                            selectedSubcategory;
+
+                        return;
+                    }
+
+                    if (
+                        type ===
+                        'Habis Pakai'
+                    ) {
+
+                        requiresMou.value =
+                            '0';
+
+                        transactionDetail.value =
+                            '';
+
+                        subcategory.value =
+                            '';
+
+                    }
+                }
+
+                transactionType.addEventListener(
+                    'change',
+                    function () {
+
+                        /*
+                        | User sengaja mengganti
+                        | Transaction Type.
+                        | Detail lama tidak boleh
+                        | dibawa ke type baru.
+                        */
+
+                        transactionDetail.innerHTML =
+                            '<option value="">-- Pilih Detail --</option>';
+
+                        transactionDetail.value =
+                            '';
+
+                        subcategory.value =
+                            '';
+
+                        updateTransactionFields(
+                            false
+                        );
+                    }
+                );
+
+                updateTransactionFields(
+                    true
+                );
             }
         );
+    </script>
 
-        updateTransactionFields();
-    }
-);
-</script>
 </x-app-layout>

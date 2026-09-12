@@ -333,7 +333,7 @@
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                         stroke-width="2"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2v12a2 2 0 002 2z"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2v12a2 2 0 00-2-2z"
                                     />
 
                                 </svg>
@@ -723,7 +723,7 @@
                                                 stroke-linecap="round"
                                                 stroke-linejoin="round"
                                                 stroke-width="2"
-                                                d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000 20z"
+                                                d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
                                             />
 
                                         </svg>
@@ -752,7 +752,7 @@
                                                     ATK + Habis Pakai
                                                 </span>
                                                 =
-                                                Kertas
+                                                Kertas A4
 
                                             </p>
 
@@ -947,282 +947,287 @@
     <!-- JAVASCRIPT -->
     <!-- ============================================================= -->
 
-   <script>
-document.addEventListener(
-    'DOMContentLoaded',
-    function () {
-
-        const transactionType =
-            document.getElementById(
-                'transaction_type'
-            );
-
-        const transactionDetailSection =
-            document.getElementById(
-                'transactionDetailSection'
-            );
-
-        const transactionDetail =
-            document.getElementById(
-                'transaction_detail'
-            );
-
-        const merchandiseSection =
-            document.getElementById(
-                'merchandiseSection'
-            );
-
-        const subcategory =
-            document.getElementById(
-                'subcategory'
-            );
-
-        const requiresMou =
-            document.getElementById(
-                'requires_mou'
-            );
-
-        const photoInput =
-            document.getElementById(
-                'item_photo'
-            );
-
-        const preview =
-            document.getElementById(
-                'preview'
-            );
-
-        const placeholder =
-            document.getElementById(
-                'placeholder'
-            );
-
-        const oldTransactionDetail =
-            @json(
-                old(
-                    'transaction_detail'
-                )
-            );
-
-        const oldSubcategory =
-            @json(
-                old(
-                    'subcategory'
-                )
-            );
-
-        const oldRequiresMou =
-            @json(
-                old(
-                    'requires_mou'
-                )
-            );
-
-        function addOption(
-            value
-        ) {
-            const option =
-                document.createElement(
-                    'option'
-                );
-
-            option.value =
-                value;
-
-            option.textContent =
-                value;
-
-            transactionDetail.appendChild(
-                option
-            );
-        }
-
-        function updateTransactionFields(
-            preserveValues = true
-        ) {
-            const type =
-                transactionType.value;
-
-            const currentDetail =
-                preserveValues
-                    ? (
-                        transactionDetail.value
-                        ||
-                        oldTransactionDetail
-                    )
-                    : '';
-
-            const currentSubcategory =
-                preserveValues
-                    ? (
-                        subcategory.value
-                        ||
-                        oldSubcategory
-                    )
-                    : '';
-
-            transactionDetail.innerHTML =
-                '<option value="">-- Pilih Detail --</option>';
-
-            transactionDetailSection
-                .classList
-                .add('hidden');
-
-            merchandiseSection
-                .classList
-                .add('hidden');
-
-            if (
-                type ===
-                'Peralatan'
-            ) {
-                transactionDetailSection
-                    .classList
-                    .remove('hidden');
-
-                addOption(
-                    'Internal Rental'
-                );
-
-                addOption(
-                    'Vendor Rental'
-                );
-
-                transactionDetail.value =
-                    currentDetail;
-
-                return;
-            }
-
-            if (
-                type ===
-                'Handy Talkie'
-            ) {
-                transactionDetailSection
-                    .classList
-                    .remove('hidden');
-
-                addOption(
-                    'HT UV-82'
-                );
-
-                addOption(
-                    'HT 888s'
-                );
-
-                addOption(
-                    'HT UV-5R'
-                );
-
-                transactionDetail.value =
-                    currentDetail;
-
-                return;
-            }
-
-            if (
-                type ===
-                'Merchandise'
-            ) {
-                merchandiseSection
-                    .classList
-                    .remove('hidden');
-
-                subcategory.value =
-                    currentSubcategory;
-
-                return;
-            }
-
-            if (
-                type ===
-                'Habis Pakai'
-            ) {
-                requiresMou.value =
-                    '0';
-            }
-        }
-
-        transactionType.addEventListener(
-            'change',
+    <script>
+        document.addEventListener(
+            'DOMContentLoaded',
             function () {
-                updateTransactionFields(
-                    false
-                );
-            }
-        );
 
-        if (
-            requiresMou &&
-            oldRequiresMou !== null
-        ) {
-            requiresMou.value =
-                oldRequiresMou
-                    ? '1'
-                    : '0';
-        }
+                const transactionType =
+                    document.getElementById(
+                        'transaction_type'
+                    );
 
-        if (
-            photoInput &&
-            preview &&
-            placeholder
-        ) {
-            photoInput.addEventListener(
-                'change',
-                function () {
+                const transactionDetailSection =
+                    document.getElementById(
+                        'transactionDetailSection'
+                    );
 
-                    const file =
-                        this.files[0];
+                const transactionDetail =
+                    document.getElementById(
+                        'transaction_detail'
+                    );
 
-                    if (!file) {
-                        preview
-                            .classList
-                            .add('hidden');
+                const merchandiseSection =
+                    document.getElementById(
+                        'merchandiseSection'
+                    );
 
-                        placeholder
+                const subcategory =
+                    document.getElementById(
+                        'subcategory'
+                    );
+
+                const requiresMou =
+                    document.getElementById(
+                        'requires_mou'
+                    );
+
+                const photoInput =
+                    document.getElementById(
+                        'item_photo'
+                    );
+
+                const preview =
+                    document.getElementById(
+                        'preview'
+                    );
+
+                const placeholder =
+                    document.getElementById(
+                        'placeholder'
+                    );
+
+                const oldTransactionDetail =
+                    @json(
+                        old(
+                            'transaction_detail'
+                        )
+                    );
+
+                const oldSubcategory =
+                    @json(
+                        old(
+                            'subcategory'
+                        )
+                    );
+
+                const oldRequiresMou =
+                    @json(
+                        old(
+                            'requires_mou',
+                            null
+                        )
+                    );
+
+                function addOption(
+                    value
+                ) {
+                    const option =
+                        document.createElement(
+                            'option'
+                        );
+
+                    option.value =
+                        value;
+
+                    option.textContent =
+                        value;
+
+                    transactionDetail.appendChild(
+                        option
+                    );
+                }
+
+                function updateTransactionFields(
+                    preserveValues = true
+                ) {
+                    const type =
+                        transactionType.value;
+
+                    const currentDetail =
+                        preserveValues
+                            ? (
+                                transactionDetail.value
+                                ||
+                                oldTransactionDetail
+                            )
+                            : '';
+
+                    const currentSubcategory =
+                        preserveValues
+                            ? (
+                                subcategory.value
+                                ||
+                                oldSubcategory
+                            )
+                            : '';
+
+                    transactionDetail.innerHTML =
+                        '<option value="">-- Pilih Detail --</option>';
+
+                    transactionDetailSection
+                        .classList
+                        .add('hidden');
+
+                    merchandiseSection
+                        .classList
+                        .add('hidden');
+
+                    if (
+                        type ===
+                        'Peralatan'
+                    ) {
+                        transactionDetailSection
                             .classList
                             .remove('hidden');
 
-                        preview.src =
-                            '';
+                        addOption(
+                            'Internal Rental'
+                        );
+
+                        addOption(
+                            'Vendor Rental'
+                        );
+
+                        transactionDetail.value =
+                            currentDetail;
 
                         return;
                     }
 
-                    const reader =
-                        new FileReader();
+                    if (
+                        type ===
+                        'Handy Talkie'
+                    ) {
+                        transactionDetailSection
+                            .classList
+                            .remove('hidden');
 
-                    reader.onload =
-                        function (event) {
+                        addOption(
+                            'HT UV-82'
+                        );
 
-                            preview.src =
-                                event.target.result;
+                        addOption(
+                            'HT 888s'
+                        );
 
-                            preview
-                                .classList
-                                .remove(
-                                    'hidden'
-                                );
+                        addOption(
+                            'HT UV-5R'
+                        );
 
-                            placeholder
-                                .classList
-                                .add(
-                                    'hidden'
-                                );
-                        };
+                        transactionDetail.value =
+                            currentDetail;
 
-                    reader.readAsDataURL(
-                        file
+                        return;
+                    }
+
+                    if (
+                        type ===
+                        'Merchandise'
+                    ) {
+                        merchandiseSection
+                            .classList
+                            .remove('hidden');
+
+                        subcategory.value =
+                            currentSubcategory;
+
+                        return;
+                    }
+
+                    if (
+                        type ===
+                        'Habis Pakai'
+                    ) {
+                        requiresMou.value =
+                            '0';
+                    }
+                }
+
+                transactionType.addEventListener(
+                    'change',
+                    function () {
+                        updateTransactionFields(
+                            false
+                        );
+                    }
+                );
+
+                if (
+                    requiresMou &&
+                    oldRequiresMou !== null
+                ) {
+                    requiresMou.value =
+                        String(
+                            oldRequiresMou
+                        ) === '1'
+                            ? '1'
+                            : '0';
+                }
+
+                if (
+                    photoInput &&
+                    preview &&
+                    placeholder
+                ) {
+                    photoInput.addEventListener(
+                        'change',
+                        function () {
+
+                            const file =
+                                this.files[0];
+
+                            if (!file) {
+                                preview
+                                    .classList
+                                    .add('hidden');
+
+                                placeholder
+                                    .classList
+                                    .remove('hidden');
+
+                                preview.src =
+                                    '';
+
+                                return;
+                            }
+
+                            const reader =
+                                new FileReader();
+
+                            reader.onload =
+                                function (
+                                    event
+                                ) {
+
+                                    preview.src =
+                                        event.target.result;
+
+                                    preview
+                                        .classList
+                                        .remove(
+                                            'hidden'
+                                        );
+
+                                    placeholder
+                                        .classList
+                                        .add(
+                                            'hidden'
+                                        );
+                                };
+
+                            reader.readAsDataURL(
+                                file
+                            );
+                        }
                     );
                 }
-            );
-        }
 
-        updateTransactionFields(
-            true
+                updateTransactionFields(
+                    true
+                );
+            }
         );
-    }
-);
-</script>
+    </script>
 
 </x-app-layout>

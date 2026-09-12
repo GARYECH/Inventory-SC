@@ -36,15 +36,8 @@ return new class extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | NORMALIZE LEGACY HANDY TALKIE VALUES
+        | NORMALIZE LEGACY HANDY TALKIE
         |--------------------------------------------------------------------------
-        |
-        | Legacy values:
-        | - HT
-        | - HT UV-82
-        | - HT 888s
-        | - HT UV-5R
-        |
         */
 
         DB::table('items')
@@ -109,6 +102,114 @@ return new class extends Migration
         |--------------------------------------------------------------------------
         | LEGACY GENERIC HT
         |--------------------------------------------------------------------------
+        |
+        | Coba tentukan detail dari nama barang.
+        |
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'HT'
+            )
+            ->where(
+                'name',
+                'like',
+                '%UV-82%'
+            )
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
+
+                'transaction_detail' =>
+                    'HT UV-82',
+            ]);
+
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'HT'
+            )
+            ->where(
+                'name',
+                'like',
+                '%UV82%'
+            )
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
+
+                'transaction_detail' =>
+                    'HT UV-82',
+            ]);
+
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'HT'
+            )
+            ->where(
+                'name',
+                'like',
+                '%888%'
+            )
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
+
+                'transaction_detail' =>
+                    'HT 888s',
+            ]);
+
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'HT'
+            )
+            ->where(
+                'name',
+                'like',
+                '%UV-5R%'
+            )
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
+
+                'transaction_detail' =>
+                    'HT UV-5R',
+            ]);
+
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'HT'
+            )
+            ->where(
+                'name',
+                'like',
+                '%UV5R%'
+            )
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
+
+                'transaction_detail' =>
+                    'HT UV-5R',
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GENERIC HT YANG TIDAK BISA DIIDENTIFIKASI
+        |--------------------------------------------------------------------------
+        |
+        | Tidak boleh dibiarkan dengan Transaction Type lama.
+        | Dipakai default UV-82 untuk menjaga data masuk ke struktur baru.
+        |
         */
 
         DB::table('items')
@@ -119,12 +220,15 @@ return new class extends Migration
             ->update([
                 'transaction_type' =>
                     'Handy Talkie',
+
+                'transaction_detail' =>
+                    'HT UV-82',
             ]);
 
 
         /*
         |--------------------------------------------------------------------------
-        | LEGACY EQUIPMENT RENTAL
+        | NORMALIZE EQUIPMENT RENTAL
         |--------------------------------------------------------------------------
         */
 
@@ -158,14 +262,39 @@ return new class extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | LEGACY ATK
+        | PERALATAN TANPA DETAIL
         |--------------------------------------------------------------------------
         |
-        | ATK lama dianggap Habis Pakai terlebih dahulu.
+        | Karena Peralatan wajib punya detail,
+        | data lama yang kosong diberi default Internal Rental.
         |
-        | Barang reusable seperti Stapler bisa diedit kembali
-        | melalui Admin -> Edit Item -> Peralatan.
-        |
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Peralatan'
+            )
+            ->where(function ($query) {
+                $query
+                    ->whereNull(
+                        'transaction_detail'
+                    )
+                    ->orWhere(
+                        'transaction_detail',
+                        ''
+                    );
+            })
+            ->update([
+                'transaction_detail' =>
+                    'Internal Rental',
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE LEGACY ATK
+        |--------------------------------------------------------------------------
         */
 
         DB::table('items')
@@ -180,6 +309,9 @@ return new class extends Migration
                 'transaction_detail' =>
                     null,
 
+                'subcategory' =>
+                    null,
+
                 'requires_mou' =>
                     false,
             ]);
@@ -187,7 +319,7 @@ return new class extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | LEGACY OBAT
+        | NORMALIZE LEGACY OBAT
         |--------------------------------------------------------------------------
         */
 
@@ -203,6 +335,9 @@ return new class extends Migration
                 'transaction_detail' =>
                     null,
 
+                'subcategory' =>
+                    null,
+
                 'requires_mou' =>
                     false,
             ]);
@@ -210,7 +345,30 @@ return new class extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | LEGACY SALE
+        | CLEAN HABIS PAKAI
+        |--------------------------------------------------------------------------
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Habis Pakai'
+            )
+            ->update([
+                'transaction_detail' =>
+                    null,
+
+                'subcategory' =>
+                    null,
+
+                'requires_mou' =>
+                    false,
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE LEGACY SALE
         |--------------------------------------------------------------------------
         */
 
@@ -230,23 +388,9 @@ return new class extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | CLEAN EXISTING FINAL VALUES
+        | CLEAN MERCHANDISE
         |--------------------------------------------------------------------------
         */
-
-        DB::table('items')
-            ->where(
-                'transaction_type',
-                'Habis Pakai'
-            )
-            ->update([
-                'transaction_detail' =>
-                    null,
-
-                'requires_mou' =>
-                    false,
-            ]);
-
 
         DB::table('items')
             ->where(
@@ -261,41 +405,192 @@ return new class extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | PERALATAN CLEANUP
+        | MERCHANDISE SUBCATEGORY BY NAME
         |--------------------------------------------------------------------------
         */
 
         DB::table('items')
             ->where(
                 'transaction_type',
-                'Peralatan'
+                'Merchandise'
             )
-            ->whereNull(
-                'transaction_detail'
+            ->where(function ($query) {
+                $query
+                    ->whereNull(
+                        'subcategory'
+                    )
+                    ->orWhere(
+                        'subcategory',
+                        ''
+                    );
+            })
+            ->where(
+                'name',
+                'like',
+                '%ID Card%'
             )
             ->update([
+                'subcategory' =>
+                    'ID Card',
+            ]);
+
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Merchandise'
+            )
+            ->where(function ($query) {
+                $query
+                    ->whereNull(
+                        'subcategory'
+                    )
+                    ->orWhere(
+                        'subcategory',
+                        ''
+                    );
+            })
+            ->where(function ($query) {
+                $query
+                    ->where(
+                        'name',
+                        'like',
+                        '%Baju%'
+                    )
+                    ->orWhere(
+                        'name',
+                        'like',
+                        '%Shirt%'
+                    )
+                    ->orWhere(
+                        'name',
+                        'like',
+                        '%Kaos%'
+                    )
+                    ->orWhere(
+                        'name',
+                        'like',
+                        '%T-Shirt%'
+                    );
+            })
+            ->update([
+                'subcategory' =>
+                    'Baju',
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | REMAINING MERCHANDISE
+        |--------------------------------------------------------------------------
+        |
+        | Merchandise lama yang tidak bisa diidentifikasi
+        | masuk ke Lainnya.
+        |
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Merchandise'
+            )
+            ->where(function ($query) {
+                $query
+                    ->whereNull(
+                        'subcategory'
+                    )
+                    ->orWhere(
+                        'subcategory',
+                        ''
+                    );
+            })
+            ->update([
+                'subcategory' =>
+                    'Lainnya',
+
+                'requires_mou' =>
+                    false,
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MERCHANDISE LAINNYA TIDAK BUTUH MOU
+        |--------------------------------------------------------------------------
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Merchandise'
+            )
+            ->where(
+                'subcategory',
+                'Lainnya'
+            )
+            ->update([
+                'requires_mou' =>
+                    false,
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FINAL CLEANUP
+        |--------------------------------------------------------------------------
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Handy Talkie'
+            )
+            ->where(function ($query) {
+                $query
+                    ->whereNull(
+                        'transaction_detail'
+                    )
+                    ->orWhere(
+                        'transaction_detail',
+                        ''
+                    );
+            })
+            ->update([
                 'transaction_detail' =>
-                    null,
+                    'HT UV-82',
+            ]);
+
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Peralatan'
+            )
+            ->where(function ($query) {
+                $query
+                    ->whereNull(
+                        'transaction_detail'
+                    )
+                    ->orWhere(
+                        'transaction_detail',
+                        ''
+                    );
+            })
+            ->update([
+                'transaction_detail' =>
+                    'Internal Rental',
             ]);
     }
 
 
     public function down(): void
     {
-        if (
-            Schema::hasColumn(
-                'items',
-                'transaction_detail'
-            )
-        ) {
-            Schema::table(
-                'items',
-                function (Blueprint $table) {
-                    $table->dropColumn(
-                        'transaction_detail'
-                    );
-                }
-            );
-        }
+        /*
+        | Jangan mengembalikan transaction_type lama,
+        | karena data setelah normalisasi sudah menjadi
+        | bagian dari struktur transaksi baru.
+        |
+        | Migration ini sengaja tidak melakukan rollback data.
+        */
     }
 };

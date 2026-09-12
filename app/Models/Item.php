@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -69,7 +70,7 @@ class Item extends Model
             return (int) $this->stock_quantity;
         }
 
-        $date = Carbon\Carbon::parse($date)->toDateString();
+        $date = Carbon::parse($date)->toDateString();
 
         $booked = $this->orderItems()
             ->whereHas('order', function ($query) use ($date) {

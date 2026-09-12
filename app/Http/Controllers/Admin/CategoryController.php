@@ -5,38 +5,115 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str; // 🌟 WAJIB DITAMBAH: Untuk membuat slug otomatis
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | INDEX
+    |--------------------------------------------------------------------------
+    */
+
     public function index()
     {
-        $categories = Category::withCount('items')->latest()->get();
-        return view('admin.categories.index', compact('categories'));
+        $categories =
+            Category::withCount(
+                'items'
+            )
+            ->latest()
+            ->get();
+
+        return view(
+            'admin.categories.index',
+            compact(
+                'categories'
+            )
+        );
     }
 
-    public function store(Request $request)
-    {
+
+    /*
+    |--------------------------------------------------------------------------
+    | STORE
+    |--------------------------------------------------------------------------
+    */
+
+    public function store(
+        Request $request
+    ) {
+
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name'
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:categories,name',
+            ],
         ]);
 
-        // 🌟 UPDATE: Masukkan name dan buat slug secara otomatis
+
+        $name =
+            trim(
+                $request->name
+            );
+
+
         Category::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name) 
+            'name' =>
+                $name,
+
+            'slug' =>
+                Str::slug(
+                    $name
+                ),
         ]);
 
-        return back()->with('success', 'Kategori baru berhasil ditambahkan ke sistem!');
+
+        return back()->with(
+            'success',
+            'Kategori baru berhasil ditambahkan ke sistem!'
+        );
     }
 
-    public function destroy(Category $category)
-    {
-        if ($category->items()->count() > 0) {
-            return back()->with('error', 'Gagal! Kategori masih digunakan oleh beberapa aset.');
+
+    /*
+    |--------------------------------------------------------------------------
+    | DESTROY
+    |--------------------------------------------------------------------------
+    */
+
+    public function destroy(
+        Category $category
+    ) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROTECT INVENTORY
+        |--------------------------------------------------------------------------
+        |
+        | Category yang masih digunakan oleh item
+        | tidak boleh dihapus.
+        |
+        */
+
+        if (
+            $category->items()->exists()
+        ) {
+
+            return back()->with(
+                'error',
+                'Kategori tidak dapat dihapus karena masih digunakan oleh barang.'
+            );
         }
 
+
         $category->delete();
-        return back()->with('success', 'Kategori berhasil dihapus dari sistem.');
+
+
+        return back()->with(
+            'success',
+            'Kategori berhasil dihapus dari sistem.'
+        );
     }
 }

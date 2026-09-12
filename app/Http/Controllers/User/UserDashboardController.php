@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\InventoryAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -16,9 +17,6 @@ class UserDashboardController extends Controller
     |--------------------------------------------------------------------------
     | FINAL TRANSACTION TYPES
     |--------------------------------------------------------------------------
-    |
-    | Semua bagian sistem menggunakan 4 value ini.
-    |
     */
 
     private const TRANSACTION_TYPES = [
@@ -27,6 +25,22 @@ class UserDashboardController extends Controller
         'Habis Pakai',
         'Merchandise',
     ];
+
+    private InventoryAvailabilityService $availabilityService;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CONSTRUCTOR
+    |--------------------------------------------------------------------------
+    */
+
+    public function __construct(
+        InventoryAvailabilityService $availabilityService
+    ) {
+        $this->availabilityService =
+            $availabilityService;
+    }
 
 
     /*
@@ -38,53 +52,43 @@ class UserDashboardController extends Controller
     public function index(
         Request $request
     ) {
-
         $search =
-            $request->input('search');
-
+            trim(
+                (string) $request->input(
+                    'search',
+                    ''
+                )
+            );
 
         $type =
-            $request->input('type');
-
+            $request->input(
+                'type'
+            );
 
         $category =
-            $request->input('category');
+            $request->input(
+                'category'
+            );
 
 
         /*
         |--------------------------------------------------------------------------
         | OLD URL COMPATIBILITY
         |--------------------------------------------------------------------------
-        |
-        | Kalau ada URL lama:
-        |
-        | ?type=HT
-        | ?type=HabisPakai
-        |
-        | tetap diarahkan ke nama baru.
-        |
         */
 
-        if (
-            $type ===
-            'HT'
-        ) {
+        $type = match ($type) {
 
-            $type =
-                'Handy Talkie';
+            'HT' =>
+                'Handy Talkie',
 
-        }
+            'HabisPakai' =>
+                'Habis Pakai',
 
+            default =>
+                $type,
 
-        if (
-            $type ===
-            'HabisPakai'
-        ) {
-
-            $type =
-                'Habis Pakai';
-
-        }
+        };
 
 
         /*
@@ -109,17 +113,6 @@ class UserDashboardController extends Controller
         |--------------------------------------------------------------------------
         | TRANSACTION TYPE FILTER
         |--------------------------------------------------------------------------
-        |
-        | INI BAGIAN YANG MEMPERBAIKI BUG SCREENSHOT.
-        |
-        | Kalau user klik:
-        |
-        | Handy Talkie
-        |
-        | maka query menjadi:
-        |
-        | transaction_type = Handy Talkie
-        |
         */
 
         if (
@@ -134,7 +127,6 @@ class UserDashboardController extends Controller
                 'transaction_type',
                 $type
             );
-
         }
 
 
@@ -142,12 +134,11 @@ class UserDashboardController extends Controller
         |--------------------------------------------------------------------------
         | CATEGORY FILTER
         |--------------------------------------------------------------------------
-        |
-        | Category adalah filter terpisah dari Transaction Type.
-        |
         */
 
-        if ($category) {
+        if (
+            !empty($category)
+        ) {
 
             $query->whereHas(
                 'category',
@@ -159,10 +150,8 @@ class UserDashboardController extends Controller
                         'slug',
                         $category
                     );
-
                 }
             );
-
         }
 
 
@@ -170,18 +159,11 @@ class UserDashboardController extends Controller
         |--------------------------------------------------------------------------
         | SEARCH
         |--------------------------------------------------------------------------
-        |
-        | Search bisa mencari:
-        |
-        | - Nama barang
-        | - Description
-        | - Transaction Detail
-        | - Subcategory
-        | - Category
-        |
         */
 
-        if ($search) {
+        if (
+            $search !== ''
+        ) {
 
             $query->where(
                 function ($q) use ($search) {
@@ -195,6 +177,12 @@ class UserDashboardController extends Controller
 
                         ->orWhere(
                             'description',
+                            'like',
+                            "%{$search}%"
+                        )
+
+                        ->orWhere(
+                            'transaction_type',
                             'like',
                             "%{$search}%"
                         )
@@ -222,13 +210,10 @@ class UserDashboardController extends Controller
                                     'like',
                                     "%{$search}%"
                                 );
-
                             }
                         );
-
                 }
             );
-
         }
 
 
@@ -273,7 +258,6 @@ class UserDashboardController extends Controller
                 []
             );
 
-
         $cartCount =
             count($cart);
 
@@ -306,10 +290,18 @@ class UserDashboardController extends Controller
 
     public function loans()
     {
+        $closedStatuses = [
+            'Returned',
+            'Returned (Damaged)',
+            'Resolved (Fine Paid)',
+            'Cancelled',
+            'Rejected',
+        ];
+
 
         /*
         |--------------------------------------------------------------------------
-        | ACTIVE LOANS
+        | ACTIVE TRANSACTIONS
         |--------------------------------------------------------------------------
         */
 
@@ -320,13 +312,7 @@ class UserDashboardController extends Controller
             )
             ->whereNotIn(
                 'status',
-                [
-                    'Returned',
-                    'Returned (Damaged)',
-                    'Resolved (Fine Paid)',
-                    'Cancelled',
-                    'Rejected',
-                ]
+                $closedStatuses
             )
             ->with([
                 'orderItems.item.category',
@@ -338,7 +324,7 @@ class UserDashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | PAST LOANS
+        | PAST TRANSACTIONS
         |--------------------------------------------------------------------------
         */
 
@@ -349,13 +335,7 @@ class UserDashboardController extends Controller
             )
             ->whereIn(
                 'status',
-                [
-                    'Returned',
-                    'Returned (Damaged)',
-                    'Resolved (Fine Paid)',
-                    'Cancelled',
-                    'Rejected',
-                ]
+                $closedStatuses
             )
             ->with([
                 'orderItems.item.category',
@@ -386,53 +366,56 @@ class UserDashboardController extends Controller
     ) {
 
         $item =
-            Item::with([
-                'category',
-            ])
+            Item::with(
+                'category'
+            )
             ->findOrFail(
                 $id
             );
 
 
-        $activeBookings =
-            OrderItem::where(
-                'item_id',
-                $id
-            )
-            ->whereHas(
-                'order',
-                function (
-                    $query
-                ) {
+        /*
+        |--------------------------------------------------------------------------
+        | NON-RETURNABLE ITEM
+        |--------------------------------------------------------------------------
+        |
+        | Habis Pakai dan Merchandise tidak mempunyai
+        | jadwal pengembalian.
+        |
+        */
 
-                    $query->whereNotIn(
-                        'status',
-                        [
-                            'Returned',
-                            'Returned (Damaged)',
-                            'Resolved (Fine Paid)',
-                            'Rejected',
-                            'Cancelled',
-                        ]
-                    );
+        if (
+            !$item->requires_return
+        ) {
 
-                }
-            )
-            ->with([
-                'order.user',
-            ])
-            ->get()
-            ->sortBy(
-                function (
-                    $orderItem
-                ) {
+            $activeBookings =
+                collect();
 
-                    return optional(
-                        $orderItem->order
-                    )->start_date;
-
-                }
+            return view(
+                'user.item_schedule',
+                compact(
+                    'item',
+                    'activeBookings'
+                )
             );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ACTIVE BOOKINGS
+        |--------------------------------------------------------------------------
+        |
+        | Semua booking diambil dari service yang sama
+        | dengan CartController.
+        |
+        */
+
+        $activeBookings =
+            $this->availabilityService
+                ->getSchedule(
+                    $item->id
+                );
 
 
         return view(
@@ -450,9 +433,13 @@ class UserDashboardController extends Controller
     | CHECK STOCK
     |--------------------------------------------------------------------------
     |
-    | Dipanggil oleh dashboard melalui:
+    | Endpoint:
     |
     | /api/check-stock/{id}
+    |
+    | Untuk returnable:
+    |
+    | tanggal => sisa stok minimum pada hari tersebut
     |
     */
 
@@ -471,8 +458,8 @@ class UserDashboardController extends Controller
         | NON-RETURNABLE
         |--------------------------------------------------------------------------
         |
-        | Habis Pakai dan Merchandise tidak menggunakan
-        | calendar stock availability.
+        | Untuk Habis Pakai / Merchandise,
+        | stock adalah stock fisik.
         |
         */
 
@@ -481,145 +468,195 @@ class UserDashboardController extends Controller
         ) {
 
             return response()->json(
-                []
-            );
+                [
+                    'stock' =>
+                        $item->stock_quantity,
 
+                    'availability' =>
+                        [],
+
+                    'bookings' =>
+                        [],
+                ]
+            );
         }
 
 
-        $totalStock =
-            $item->stock_quantity;
+        /*
+        |--------------------------------------------------------------------------
+        | DAILY AVAILABILITY
+        |--------------------------------------------------------------------------
+        */
+
+        $availability =
+            $this->availabilityService
+                ->getDailyAvailability(
+                    $item->id,
+                    (int) $item->stock_quantity,
+                    90
+                );
 
 
         /*
         |--------------------------------------------------------------------------
-        | ACTIVE LOANS
+        | ACTIVE BOOKINGS
         |--------------------------------------------------------------------------
         */
 
-        $activeLoans =
-            OrderItem::where(
-                'item_id',
-                $id
-            )
-            ->whereHas(
-                'order',
-                function (
-                    $query
-                ) {
-
-                    $query->whereNotIn(
-                        'status',
-                        [
-                            'Returned',
-                            'Returned (Damaged)',
-                            'Resolved (Fine Paid)',
-                            'Rejected',
-                            'Cancelled',
-                        ]
-                    );
-
-                }
-            )
-            ->with(
-                'order'
-            )
-            ->get();
+        $activeBookings =
+            $this->availabilityService
+                ->getSchedule(
+                    $item->id
+                );
 
 
         /*
         |--------------------------------------------------------------------------
-        | BUILD 90-DAY STOCK CALENDAR
+        | BOOKING DATA FOR FRONTEND
         |--------------------------------------------------------------------------
         */
 
-        $availability = [];
+        $bookings = [];
 
 
-        $startDate =
-            Carbon::today()
-                ->subDays(7);
-
-
-        for (
-            $i = 0;
-            $i < 90;
-            $i++
+        foreach (
+            $activeBookings as $orderItem
         ) {
 
-            $date =
-                $startDate
-                    ->copy()
-                    ->addDays($i);
+            $order =
+                $orderItem->order;
 
 
-            $bookedToday =
-                0;
-
-
-            foreach (
-                $activeLoans
-                as $loan
-            ) {
-
-                $order =
-                    $loan->order;
-
-
-                if (
-                    !$order ||
-                    !$order->start_date ||
-                    !$order->end_date
-                ) {
-
-                    continue;
-
-                }
-
-
-                $loanStart =
-                    Carbon::parse(
-                        $order->start_date
-                    )
-                    ->toDateString();
-
-
-                $loanEnd =
-                    Carbon::parse(
-                        $order->end_date
-                    )
-                    ->toDateString();
-
-
-                if (
-                    $date->toDateString() >=
-                        $loanStart &&
-                    $date->toDateString() <=
-                        $loanEnd
-                ) {
-
-                    $bookedToday +=
-                        $loan->quantity;
-
-                }
-
+            if (!$order) {
+                continue;
             }
 
 
-            $availability[
-                $date->toDateString()
-            ] =
-                max(
-                    0,
-                    $totalStock -
-                    $bookedToday
-                );
+            $startDate = null;
 
+            if (
+                $order->start_date
+            ) {
+
+                $startDate =
+                    Carbon::parse(
+                        $order->start_date
+                    )->toDateString();
+            }
+
+
+            $endDate = null;
+
+            if (
+                $order->end_date
+            ) {
+
+                $endDate =
+                    Carbon::parse(
+                        $order->end_date
+                    )->toDateString();
+            }
+
+
+            $startTime = null;
+
+            if (
+                $order->start_time
+            ) {
+
+                $startTime =
+                    $this->formatTime(
+                        $order->start_time
+                    );
+            }
+
+
+            $endTime = null;
+
+            if (
+                $order->end_time
+            ) {
+
+                $endTime =
+                    $this->formatTime(
+                        $order->end_time
+                    );
+            }
+
+
+            $bookings[] = [
+
+                'quantity' =>
+                    (int) $orderItem->quantity,
+
+                'start_date' =>
+                    $startDate,
+
+                'start_time' =>
+                    $startTime,
+
+                'end_date' =>
+                    $endDate,
+
+                'end_time' =>
+                    $endTime,
+
+            ];
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURN
+        |--------------------------------------------------------------------------
+        |
+        | availability tetap berupa:
+        |
+        | {
+        |     "2026-09-12": 10,
+        |     "2026-09-13": 5
+        | }
+        |
+        | Supaya frontend lama tetap compatible.
+        |
+        */
 
         return response()->json(
             $availability
         );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FORMAT TIME
+    |--------------------------------------------------------------------------
+    */
+
+    private function formatTime(
+        mixed $time
+    ): ?string {
+
+        if (
+            empty($time)
+        ) {
+            return null;
+        }
+
+
+        try {
+
+            return Carbon::parse(
+                $time
+            )->format(
+                'H:i'
+            );
+
+        } catch (
+            \Throwable $e
+        ) {
+
+            return null;
+        }
     }
 }

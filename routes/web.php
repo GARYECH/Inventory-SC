@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminItemController;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\User\UserDashboardController;
+use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\CartController;
 use App\Http\Controllers\User\DocumentController;
-use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\User\UserDashboardController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -29,60 +29,74 @@ Route::get(
 
 /*
 |--------------------------------------------------------------------------
-| API
+| Public API
 |--------------------------------------------------------------------------
+|
+| Endpoint ini tetap membutuhkan login supaya
+| data inventory tidak terbuka bebas.
+|
 */
 
 Route::get(
     '/api/check-stock/{id}',
     [UserDashboardController::class, 'checkStock']
+)->middleware('auth');
+
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/',
+    function () {
+        return view('welcome');
+    }
 );
 
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes
+| ROLE-BASED DASHBOARD
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get(
+    '/dashboard',
+    function () {
 
+        if (
+            auth()->user()->role ===
+            'admin'
+        ) {
 
-/*
-|--------------------------------------------------------------------------
-| Role-Based Dashboard Redirect
-|--------------------------------------------------------------------------
-*/
+            return redirect()->route(
+                'admin.dashboard'
+            );
+        }
 
-Route::get('/dashboard', function () {
-
-    if (auth()->user()->role === 'admin') {
 
         return redirect()->route(
-            'admin.dashboard'
+            'student.dashboard'
         );
     }
-
-    return redirect()->route(
-        'student.dashboard'
-    );
-
-})->middleware([
+)
+->middleware([
     'auth',
     'verified',
-])->name('dashboard');
+])
+->name('dashboard');
 
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated Routes
+| AUTHENTICATED
 |--------------------------------------------------------------------------
 */
 
 Route::middleware('auth')->group(function () {
-
 
     /*
     |--------------------------------------------------------------------------
@@ -112,22 +126,24 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/notifications', function () {
+    Route::get(
+        '/notifications',
+        function () {
 
-        auth()->user()
-            ->unreadNotifications
-            ->markAsRead();
+            auth()->user()
+                ->unreadNotifications
+                ->markAsRead();
 
-        auth()->user()
-            ->unsetRelation(
-                'unreadNotifications'
+            auth()->user()
+                ->unsetRelation(
+                    'unreadNotifications'
+                );
+
+            return view(
+                'notifications.index'
             );
-
-        return view(
-            'notifications.index'
-        );
-
-    })->name('notifications.index');
+        }
+    )->name('notifications.index');
 
 
     Route::post(
@@ -148,11 +164,16 @@ Route::middleware('auth')->group(function () {
 
     Route::delete(
         '/notifications/{id}',
-        function ($id) {
+        function (
+            $id
+        ) {
 
             auth()->user()
                 ->notifications()
-                ->where('id', $id)
+                ->where(
+                    'id',
+                    $id
+                )
                 ->delete();
 
             return back()->with(
@@ -171,7 +192,14 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('admin')
         ->name('admin.')
+        ->middleware('admin')
         ->group(function () {
+
+            /*
+            |--------------------------------------------------------------------------
+            | DASHBOARD
+            |--------------------------------------------------------------------------
+            */
 
             Route::get(
                 '/dashboard',
@@ -301,10 +329,9 @@ Route::middleware('auth')->group(function () {
         ->name('student.')
         ->group(function () {
 
-
             /*
             |--------------------------------------------------------------------------
-            | CATALOG
+            | DASHBOARD
             |--------------------------------------------------------------------------
             */
 
@@ -349,24 +376,20 @@ Route::middleware('auth')->group(function () {
                 [DocumentController::class, 'uploadSignedMou']
             )->name('orders.upload-mou');
 
-
             Route::post(
                 '/orders/{order}/upload-payment',
                 [DocumentController::class, 'uploadPaymentReceipt']
             )->name('orders.upload-payment');
-
 
             Route::post(
                 '/orders/{order}/upload-kwitansi',
                 [DocumentController::class, 'uploadSignedKwitansi']
             )->name('orders.upload-kwitansi');
 
-
             Route::post(
                 '/orders/{order}/return-link',
                 [DocumentController::class, 'submitReturnLink']
             )->name('orders.return-link');
-
 
             Route::post(
                 '/orders/{order}/upload-ba',
@@ -427,35 +450,20 @@ Route::middleware('auth')->group(function () {
                 ->name('document.')
                 ->group(function () {
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | MOU DOWNLOAD
-                    |--------------------------------------------------------------------------
-                    |
-                    | documentId optional.
-                    |
-                    | Dengan documentId:
-                    | /student/document/mou/{order}/{documentId}
-                    |
-                    */
-
                     Route::get(
                         '/mou/{order}/{documentId?}',
                         [DocumentController::class, 'downloadMou']
                     )->name('mou');
-
 
                     Route::get(
                         '/invoice/{order}',
                         [DocumentController::class, 'downloadInvoice']
                     )->name('invoice');
 
-
                     Route::get(
                         '/kwitansi/{order}',
                         [DocumentController::class, 'downloadKwitansi']
                     )->name('kwitansi');
-
 
                     Route::get(
                         '/berita-acara/{order}',
@@ -471,7 +479,7 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authentication Routes
+| AUTHENTICATION
 |--------------------------------------------------------------------------
 */
 

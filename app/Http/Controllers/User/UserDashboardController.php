@@ -6,19 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Services\InventoryAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class UserDashboardController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | FINAL TRANSACTION TYPES
-    |--------------------------------------------------------------------------
-    */
-
     private const TRANSACTION_TYPES = [
         'Peralatan',
         'Handy Talkie',
@@ -26,14 +19,15 @@ class UserDashboardController extends Controller
         'Merchandise',
     ];
 
+    private const CLOSED_STATUSES = [
+        'Returned',
+        'Returned (Damaged)',
+        'Resolved (Fine Paid)',
+        'Cancelled',
+        'Rejected',
+    ];
+
     private InventoryAvailabilityService $availabilityService;
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CONSTRUCTOR
-    |--------------------------------------------------------------------------
-    */
 
     public function __construct(
         InventoryAvailabilityService $availabilityService
@@ -42,78 +36,34 @@ class UserDashboardController extends Controller
             $availabilityService;
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | STUDENT DASHBOARD
-    |--------------------------------------------------------------------------
-    */
-
     public function index(
         Request $request
     ) {
-        $search =
-            trim(
-                (string) $request->input(
-                    'search',
-                    ''
-                )
-            );
+        $search = trim(
+            (string) $request->input(
+                'search',
+                ''
+            )
+        );
 
-        $type =
-            $request->input(
-                'type'
-            );
-
-        $category =
-            $request->input(
-                'category'
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | OLD URL COMPATIBILITY
-        |--------------------------------------------------------------------------
-        */
+        $type = $request->input('type');
+        $category = $request->input('category');
 
         $type = match ($type) {
-
-            'HT' =>
-                'Handy Talkie',
-
-            'HabisPakai' =>
-                'Habis Pakai',
-
-            default =>
-                $type,
-
+            'HT' => 'Handy Talkie',
+            'HabisPakai' => 'Habis Pakai',
+            default => $type,
         };
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | ITEM QUERY
-        |--------------------------------------------------------------------------
-        */
-
-        $query =
-            Item::query()
-                ->where(
-                    'condition_status',
-                    'Good'
-                )
-                ->with([
-                    'category',
-                    'orderItems.order',
-                ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TRANSACTION TYPE FILTER
-        |--------------------------------------------------------------------------
-        */
+        $query = Item::query()
+            ->where(
+                'condition_status',
+                'Good'
+            )
+            ->with([
+                'category',
+                'orderItems.order',
+            ]);
 
         if (
             in_array(
@@ -122,30 +72,16 @@ class UserDashboardController extends Controller
                 true
             )
         ) {
-
             $query->where(
                 'transaction_type',
                 $type
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CATEGORY FILTER
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            !empty($category)
-        ) {
-
+        if (!empty($category)) {
             $query->whereHas(
                 'category',
-                function (
-                    $categoryQuery
-                ) use ($category) {
-
+                function ($categoryQuery) use ($category) {
                     $categoryQuery->where(
                         'slug',
                         $category
@@ -154,57 +90,38 @@ class UserDashboardController extends Controller
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | SEARCH
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $search !== ''
-        ) {
-
+        if ($search !== '') {
             $query->where(
                 function ($q) use ($search) {
-
                     $q
                         ->where(
                             'name',
                             'like',
                             "%{$search}%"
                         )
-
                         ->orWhere(
                             'description',
                             'like',
                             "%{$search}%"
                         )
-
                         ->orWhere(
                             'transaction_type',
                             'like',
                             "%{$search}%"
                         )
-
                         ->orWhere(
                             'transaction_detail',
                             'like',
                             "%{$search}%"
                         )
-
                         ->orWhere(
                             'subcategory',
                             'like',
                             "%{$search}%"
                         )
-
                         ->orWhereHas(
                             'category',
-                            function (
-                                $categoryQuery
-                            ) use ($search) {
-
+                            function ($categoryQuery) use ($search) {
                                 $categoryQuery->where(
                                     'name',
                                     'like',
@@ -216,57 +133,23 @@ class UserDashboardController extends Controller
             );
         }
 
+        $items = $query
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
 
-        /*
-        |--------------------------------------------------------------------------
-        | PAGINATION
-        |--------------------------------------------------------------------------
-        */
-
-        $items =
-            $query
-                ->latest()
-                ->paginate(12)
-                ->withQueryString();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CATEGORY LIST
-        |--------------------------------------------------------------------------
-        */
-
-        $categories =
-            Category::withCount(
-                'items'
-            )
-            ->orderBy(
-                'name'
-            )
+        $categories = Category::withCount(
+            'items'
+        )
+            ->orderBy('name')
             ->get();
 
+        $cart = session()->get(
+            'cart',
+            []
+        );
 
-        /*
-        |--------------------------------------------------------------------------
-        | CART COUNT
-        |--------------------------------------------------------------------------
-        */
-
-        $cart =
-            session()->get(
-                'cart',
-                []
-            );
-
-        $cartCount =
-            count($cart);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VIEW
-        |--------------------------------------------------------------------------
-        */
+        $cartCount = count($cart);
 
         return view(
             'user.dashboard',
@@ -281,38 +164,15 @@ class UserDashboardController extends Controller
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | TRANSACTION HISTORY
-    |--------------------------------------------------------------------------
-    */
-
     public function loans()
     {
-        $closedStatuses = [
-            'Returned',
-            'Returned (Damaged)',
-            'Resolved (Fine Paid)',
-            'Cancelled',
-            'Rejected',
-        ];
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ACTIVE TRANSACTIONS
-        |--------------------------------------------------------------------------
-        */
-
-        $activeLoans =
-            Order::where(
-                'user_id',
-                auth()->id()
-            )
+        $activeLoans = Order::where(
+            'user_id',
+            auth()->id()
+        )
             ->whereNotIn(
                 'status',
-                $closedStatuses
+                self::CLOSED_STATUSES
             )
             ->with([
                 'orderItems.item.category',
@@ -321,29 +181,21 @@ class UserDashboardController extends Controller
             ->latest()
             ->get();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | PAST TRANSACTIONS
-        |--------------------------------------------------------------------------
-        */
-
-        $pastLoans =
-            Order::where(
-                'user_id',
-                auth()->id()
-            )
+        $pastLoans = Order::where(
+            'user_id',
+            auth()->id()
+        )
             ->whereIn(
                 'status',
-                $closedStatuses
+                self::CLOSED_STATUSES
             )
             ->with([
                 'orderItems.item.category',
                 'mouDocuments',
             ])
             ->latest()
-            ->paginate(5);
-
+            ->paginate(5)
+            ->withQueryString();
 
         return view(
             'user.loans',
@@ -354,42 +206,15 @@ class UserDashboardController extends Controller
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | ITEM SCHEDULE
-    |--------------------------------------------------------------------------
-    */
-
     public function itemSchedule(
         $id
     ) {
+        $item = Item::with(
+            'category'
+        )->findOrFail($id);
 
-        $item =
-            Item::with(
-                'category'
-            )
-            ->findOrFail(
-                $id
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | NON-RETURNABLE ITEM
-        |--------------------------------------------------------------------------
-        |
-        | Habis Pakai dan Merchandise tidak mempunyai
-        | jadwal pengembalian.
-        |
-        */
-
-        if (
-            !$item->requires_return
-        ) {
-
-            $activeBookings =
-                collect();
+        if (!$item->requires_return) {
+            $activeBookings = collect();
 
             return view(
                 'user.item_schedule',
@@ -400,23 +225,11 @@ class UserDashboardController extends Controller
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | ACTIVE BOOKINGS
-        |--------------------------------------------------------------------------
-        |
-        | Semua booking diambil dari service yang sama
-        | dengan CartController.
-        |
-        */
-
         $activeBookings =
             $this->availabilityService
                 ->getSchedule(
                     $item->id
                 );
-
 
         return view(
             'user.item_schedule',
@@ -427,66 +240,21 @@ class UserDashboardController extends Controller
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | CHECK STOCK
-    |--------------------------------------------------------------------------
-    |
-    | Endpoint:
-    |
-    | /api/check-stock/{id}
-    |
-    | Untuk returnable:
-    |
-    | tanggal => sisa stok minimum pada hari tersebut
-    |
-    */
-
     public function checkStock(
         $id
     ) {
+        $item = Item::findOrFail($id);
 
-        $item =
-            Item::findOrFail(
-                $id
-            );
+        if (!$item->requires_return) {
+            return response()->json([
+                'stock' =>
+                    (int) $item->stock_quantity,
 
+                'availability' => [],
 
-        /*
-        |--------------------------------------------------------------------------
-        | NON-RETURNABLE
-        |--------------------------------------------------------------------------
-        |
-        | Untuk Habis Pakai / Merchandise,
-        | stock adalah stock fisik.
-        |
-        */
-
-        if (
-            !$item->requires_return
-        ) {
-
-            return response()->json(
-                [
-                    'stock' =>
-                        $item->stock_quantity,
-
-                    'availability' =>
-                        [],
-
-                    'bookings' =>
-                        [],
-                ]
-            );
+                'bookings' => [],
+            ]);
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | DAILY AVAILABILITY
-        |--------------------------------------------------------------------------
-        */
 
         $availability =
             $this->availabilityService
@@ -496,167 +264,14 @@ class UserDashboardController extends Controller
                     90
                 );
 
-
         /*
         |--------------------------------------------------------------------------
-        | ACTIVE BOOKINGS
+        | Frontend lama hanya membutuhkan availability map.
         |--------------------------------------------------------------------------
-        */
-
-        $activeBookings =
-            $this->availabilityService
-                ->getSchedule(
-                    $item->id
-                );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | BOOKING DATA FOR FRONTEND
-        |--------------------------------------------------------------------------
-        */
-
-        $bookings = [];
-
-
-        foreach (
-            $activeBookings as $orderItem
-        ) {
-
-            $order =
-                $orderItem->order;
-
-
-            if (!$order) {
-                continue;
-            }
-
-
-            $startDate = null;
-
-            if (
-                $order->start_date
-            ) {
-
-                $startDate =
-                    Carbon::parse(
-                        $order->start_date
-                    )->toDateString();
-            }
-
-
-            $endDate = null;
-
-            if (
-                $order->end_date
-            ) {
-
-                $endDate =
-                    Carbon::parse(
-                        $order->end_date
-                    )->toDateString();
-            }
-
-
-            $startTime = null;
-
-            if (
-                $order->start_time
-            ) {
-
-                $startTime =
-                    $this->formatTime(
-                        $order->start_time
-                    );
-            }
-
-
-            $endTime = null;
-
-            if (
-                $order->end_time
-            ) {
-
-                $endTime =
-                    $this->formatTime(
-                        $order->end_time
-                    );
-            }
-
-
-            $bookings[] = [
-
-                'quantity' =>
-                    (int) $orderItem->quantity,
-
-                'start_date' =>
-                    $startDate,
-
-                'start_time' =>
-                    $startTime,
-
-                'end_date' =>
-                    $endDate,
-
-                'end_time' =>
-                    $endTime,
-
-            ];
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RETURN
-        |--------------------------------------------------------------------------
-        |
-        | availability tetap berupa:
-        |
-        | {
-        |     "2026-09-12": 10,
-        |     "2026-09-13": 5
-        | }
-        |
-        | Supaya frontend lama tetap compatible.
-        |
         */
 
         return response()->json(
             $availability
         );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORMAT TIME
-    |--------------------------------------------------------------------------
-    */
-
-    private function formatTime(
-        mixed $time
-    ): ?string {
-
-        if (
-            empty($time)
-        ) {
-            return null;
-        }
-
-
-        try {
-
-            return Carbon::parse(
-                $time
-            )->format(
-                'H:i'
-            );
-
-        } catch (
-            \Throwable $e
-        ) {
-
-            return null;
-        }
     }
 }

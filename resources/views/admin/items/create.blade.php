@@ -947,363 +947,282 @@
     <!-- JAVASCRIPT -->
     <!-- ============================================================= -->
 
-    <script>
-
-        document.addEventListener(
-            'DOMContentLoaded',
-            function () {
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | ELEMENTS
-                |--------------------------------------------------------------------------
-                */
-
-                const transactionType =
-                    document.getElementById(
-                        'transaction_type'
-                    );
-
-
-                const transactionDetailSection =
-                    document.getElementById(
-                        'transactionDetailSection'
-                    );
-
-
-                const transactionDetail =
-                    document.getElementById(
-                        'transaction_detail'
-                    );
-
-
-                const merchandiseSection =
-                    document.getElementById(
-                        'merchandiseSection'
-                    );
-
-
-                const subcategory =
-                    document.getElementById(
-                        'subcategory'
-                    );
-
-
-                const requiresMou =
-                    document.getElementById(
-                        'requires_mou'
-                    );
-
-
-                const photoInput =
-                    document.getElementById(
-                        'item_photo'
-                    );
-
-
-                const preview =
-                    document.getElementById(
-                        'preview'
-                    );
-
-
-                const placeholder =
-                    document.getElementById(
-                        'placeholder'
-                    );
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | UPDATE TRANSACTION FIELDS
-                |--------------------------------------------------------------------------
-                */
-
-                function updateTransactionFields()
-                {
-
-                    const type =
-                        transactionType.value;
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | RESET
-                    |--------------------------------------------------------------------------
-                    */
-
-                    transactionDetail.innerHTML =
-                        '<option value="">-- Pilih Detail --</option>';
-
-
-                    transactionDetailSection.classList.add(
-                        'hidden'
-                    );
-
-
-                    merchandiseSection.classList.add(
-                        'hidden'
-                    );
-
-
-                    subcategory.value =
-                        '';
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PERALATAN
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        type ===
-                        'Peralatan'
-                    ) {
-
-                        transactionDetailSection.classList.remove(
-                            'hidden'
-                        );
-
-
-                        addOption(
-                            'Internal Rental'
-                        );
-
-
-                        addOption(
-                            'Vendor Rental'
-                        );
-
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | HANDY TALKIE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        type ===
-                        'Handy Talkie'
-                    ) {
-
-                        transactionDetailSection.classList.remove(
-                            'hidden'
-                        );
-
-
-                        addOption(
-                            'HT UV-82'
-                        );
-
-
-                        addOption(
-                            'HT 888s'
-                        );
-
-
-                        addOption(
-                            'HT UV-5R'
-                        );
-
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | MERCHANDISE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        type ===
-                        'Merchandise'
-                    ) {
-
-                        merchandiseSection.classList.remove(
-                            'hidden'
-                        );
-
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | HABIS PAKAI
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        type ===
-                        'Habis Pakai'
-                    ) {
-
-                        /*
-                         * Habis Pakai tidak membutuhkan MoU.
-                         */
-                        requiresMou.value =
-                            '0';
-
-                    }
-
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | ADD DETAIL OPTION
-                |--------------------------------------------------------------------------
-                */
-
-                function addOption(
-                    value
-                ) {
-
-                    const option =
-                        document.createElement(
-                            'option'
-                        );
-
-
-                    option.value =
-                        value;
-
-
-                    option.textContent =
-                        value;
-
-
-                    transactionDetail.appendChild(
-                        option
-                    );
-
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | TRANSACTION TYPE CHANGE
-                |--------------------------------------------------------------------------
-                */
-
-                transactionType.addEventListener(
-                    'change',
-                    function () {
-
-                        updateTransactionFields();
-
-                    }
+   <script>
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const transactionType =
+            document.getElementById(
+                'transaction_type'
+            );
+
+        const transactionDetailSection =
+            document.getElementById(
+                'transactionDetailSection'
+            );
+
+        const transactionDetail =
+            document.getElementById(
+                'transaction_detail'
+            );
+
+        const merchandiseSection =
+            document.getElementById(
+                'merchandiseSection'
+            );
+
+        const subcategory =
+            document.getElementById(
+                'subcategory'
+            );
+
+        const requiresMou =
+            document.getElementById(
+                'requires_mou'
+            );
+
+        const photoInput =
+            document.getElementById(
+                'item_photo'
+            );
+
+        const preview =
+            document.getElementById(
+                'preview'
+            );
+
+        const placeholder =
+            document.getElementById(
+                'placeholder'
+            );
+
+        const oldTransactionDetail =
+            @json(
+                old(
+                    'transaction_detail'
+                )
+            );
+
+        const oldSubcategory =
+            @json(
+                old(
+                    'subcategory'
+                )
+            );
+
+        const oldRequiresMou =
+            @json(
+                old(
+                    'requires_mou'
+                )
+            );
+
+        function addOption(
+            value
+        ) {
+            const option =
+                document.createElement(
+                    'option'
                 );
 
+            option.value =
+                value;
 
-                /*
-                |--------------------------------------------------------------------------
-                | PHOTO PREVIEW
-                |--------------------------------------------------------------------------
-                */
+            option.textContent =
+                value;
 
-                if (
-                    photoInput &&
-                    preview &&
-                    placeholder
-                ) {
+            transactionDetail.appendChild(
+                option
+            );
+        }
 
-                    photoInput.addEventListener(
-                        'change',
-                        function () {
+        function updateTransactionFields(
+            preserveValues = true
+        ) {
+            const type =
+                transactionType.value;
 
-                            const file =
-                                this.files[0];
+            const currentDetail =
+                preserveValues
+                    ? (
+                        transactionDetail.value
+                        ||
+                        oldTransactionDetail
+                    )
+                    : '';
 
+            const currentSubcategory =
+                preserveValues
+                    ? (
+                        subcategory.value
+                        ||
+                        oldSubcategory
+                    )
+                    : '';
 
-                            if (!file) {
+            transactionDetail.innerHTML =
+                '<option value="">-- Pilih Detail --</option>';
 
-                                preview.classList.add(
-                                    'hidden'
-                                );
+            transactionDetailSection
+                .classList
+                .add('hidden');
 
+            merchandiseSection
+                .classList
+                .add('hidden');
 
-                                placeholder.classList.remove(
-                                    'hidden'
-                                );
+            if (
+                type ===
+                'Peralatan'
+            ) {
+                transactionDetailSection
+                    .classList
+                    .remove('hidden');
 
+                addOption(
+                    'Internal Rental'
+                );
 
-                                preview.src =
-                                    '';
+                addOption(
+                    'Vendor Rental'
+                );
 
+                transactionDetail.value =
+                    currentDetail;
 
-                                return;
+                return;
+            }
 
-                            }
+            if (
+                type ===
+                'Handy Talkie'
+            ) {
+                transactionDetailSection
+                    .classList
+                    .remove('hidden');
 
+                addOption(
+                    'HT UV-82'
+                );
 
-                            const reader =
-                                new FileReader();
+                addOption(
+                    'HT 888s'
+                );
 
+                addOption(
+                    'HT UV-5R'
+                );
 
-                            reader.onload =
-                                function (
-                                    event
-                                ) {
+                transactionDetail.value =
+                    currentDetail;
 
-                                    preview.src =
-                                        event.target.result;
+                return;
+            }
 
+            if (
+                type ===
+                'Merchandise'
+            ) {
+                merchandiseSection
+                    .classList
+                    .remove('hidden');
 
-                                    preview.classList.remove(
-                                        'hidden'
-                                    );
+                subcategory.value =
+                    currentSubcategory;
 
+                return;
+            }
 
-                                    placeholder.classList.add(
-                                        'hidden'
-                                    );
+            if (
+                type ===
+                'Habis Pakai'
+            ) {
+                requiresMou.value =
+                    '0';
+            }
+        }
 
-                                };
-
-
-                            reader.readAsDataURL(
-                                file
-                            );
-
-                        }
-                    );
-
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | RESTORE OLD INPUT
-                |--------------------------------------------------------------------------
-                */
-
-                updateTransactionFields();
-
-
-                const oldTransactionDetail =
-                    @json(
-                        old(
-                            'transaction_detail'
-                        )
-                    );
-
-
-                if (
-                    oldTransactionDetail
-                ) {
-
-                    transactionDetail.value =
-                        oldTransactionDetail;
-
-                }
-
+        transactionType.addEventListener(
+            'change',
+            function () {
+                updateTransactionFields(
+                    false
+                );
             }
         );
 
-    </script>
+        if (
+            requiresMou &&
+            oldRequiresMou !== null
+        ) {
+            requiresMou.value =
+                oldRequiresMou
+                    ? '1'
+                    : '0';
+        }
+
+        if (
+            photoInput &&
+            preview &&
+            placeholder
+        ) {
+            photoInput.addEventListener(
+                'change',
+                function () {
+
+                    const file =
+                        this.files[0];
+
+                    if (!file) {
+                        preview
+                            .classList
+                            .add('hidden');
+
+                        placeholder
+                            .classList
+                            .remove('hidden');
+
+                        preview.src =
+                            '';
+
+                        return;
+                    }
+
+                    const reader =
+                        new FileReader();
+
+                    reader.onload =
+                        function (event) {
+
+                            preview.src =
+                                event.target.result;
+
+                            preview
+                                .classList
+                                .remove(
+                                    'hidden'
+                                );
+
+                            placeholder
+                                .classList
+                                .add(
+                                    'hidden'
+                                );
+                        };
+
+                    reader.readAsDataURL(
+                        file
+                    );
+                }
+            );
+        }
+
+        updateTransactionFields(
+            true
+        );
+    }
+);
+</script>
 
 </x-app-layout>

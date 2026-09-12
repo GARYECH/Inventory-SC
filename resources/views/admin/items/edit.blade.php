@@ -923,344 +923,184 @@
     <!-- ============================================================= -->
     <!-- JAVASCRIPT -->
     <!-- ============================================================= -->
-
-    <script>
-
-        document.addEventListener(
-            'DOMContentLoaded',
-            function () {
-
-
-                const transactionType =
-                    document.getElementById(
-                        'transaction_type'
-                    );
-
-
-                const transactionDetailSection =
-                    document.getElementById(
-                        'transactionDetailSection'
-                    );
-
-
-                const transactionDetail =
-                    document.getElementById(
-                        'transaction_detail'
-                    );
-
-
-                const merchandiseSection =
-                    document.getElementById(
-                        'merchandiseSection'
-                    );
-
-
-                const subcategory =
-                    document.getElementById(
-                        'subcategory'
-                    );
-
-
-                const requiresMou =
-                    document.getElementById(
-                        'requires_mou'
-                    );
-
-
-                const photoInput =
-                    document.getElementById(
-                        'item_photo'
-                    );
-
-
-                const preview =
-                    document.getElementById(
-                        'preview'
-                    );
-
-
-                const placeholder =
-                    document.getElementById(
-                        'placeholder'
-                    );
-
-
-                const existingDetail =
-                    @json(
-                        $currentDetail
-                    );
-
-
-                function addOption(
-                    value
-                ) {
-
-                    const option =
-                        document.createElement(
-                            'option'
-                        );
-
-
-                    option.value =
-                        value;
-
-
-                    option.textContent =
-                        value;
-
-
-                    if (
-                        existingDetail ===
-                        value
-                    ) {
-
-                        option.selected =
-                            true;
-
-                    }
-
-
-                    transactionDetail.appendChild(
-                        option
-                    );
-
-                }
-
-
-                function updateTransactionFields()
-                {
-
-                    const type =
-                        transactionType.value;
-
-
-                    transactionDetail.innerHTML =
-                        '<option value="">-- Pilih Detail --</option>';
-
-
-                    transactionDetailSection.classList.add(
-                        'hidden'
-                    );
-
-
-                    merchandiseSection.classList.add(
-                        'hidden'
-                    );
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PERALATAN
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        type ===
-                        'Peralatan'
-                    ) {
-
-                        transactionDetailSection.classList.remove(
-                            'hidden'
-                        );
-
-
-                        addOption(
-                            'Internal Rental'
-                        );
-
-
-                        addOption(
-                            'Vendor Rental'
-                        );
-
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | HANDY TALKIE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        type ===
-                        'Handy Talkie'
-                    ) {
-
-                        transactionDetailSection.classList.remove(
-                            'hidden'
-                        );
-
-
-                        addOption(
-                            'HT UV-82'
-                        );
-
-
-                        addOption(
-                            'HT 888s'
-                        );
-
-
-                        addOption(
-                            'HT UV-5R'
-                        );
-
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | HABIS PAKAI
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        type ===
-                        'Habis Pakai'
-                    ) {
-
-                        requiresMou.value =
-                            '0';
-
-
-                        transactionDetail.value =
-                            '';
-
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | MERCHANDISE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        type ===
-                        'Merchandise'
-                    ) {
-
-                        merchandiseSection.classList.remove(
-                            'hidden'
-                        );
-
-
-                        transactionDetail.value =
-                            '';
-
-                    }
-
-                }
-
-
-                transactionType.addEventListener(
-                    'change',
-                    function () {
-
-                        updateTransactionFields();
-
-                    }
+<script>
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const transactionType =
+            document.getElementById(
+                'transaction_type'
+            );
+
+        const transactionDetailSection =
+            document.getElementById(
+                'transactionDetailSection'
+            );
+
+        const transactionDetail =
+            document.getElementById(
+                'transaction_detail'
+            );
+
+        const merchandiseSection =
+            document.getElementById(
+                'merchandiseSection'
+            );
+
+        const subcategory =
+            document.getElementById(
+                'subcategory'
+            );
+
+        const requiresMou =
+            document.getElementById(
+                'requires_mou'
+            );
+
+        const currentDetail =
+            @json(
+                old(
+                    'transaction_detail',
+                    $item->transaction_detail
+                )
+            );
+
+        const currentSubcategory =
+            @json(
+                old(
+                    'subcategory',
+                    $item->subcategory
+                )
+            );
+
+        function addOption(
+            value
+        ) {
+            const option =
+                document.createElement(
+                    'option'
                 );
 
+            option.value =
+                value;
 
+            option.textContent =
+                value;
+
+            transactionDetail.appendChild(
+                option
+            );
+        }
+
+        function updateTransactionFields() {
+
+            const type =
+                transactionType.value;
+
+            transactionDetail.innerHTML =
+                '<option value="">-- Pilih Detail --</option>';
+
+            transactionDetailSection
+                .classList
+                .add('hidden');
+
+            merchandiseSection
+                .classList
+                .add('hidden');
+
+            if (
+                type ===
+                'Peralatan'
+            ) {
+                transactionDetailSection
+                    .classList
+                    .remove('hidden');
+
+                addOption(
+                    'Internal Rental'
+                );
+
+                addOption(
+                    'Vendor Rental'
+                );
+
+                transactionDetail.value =
+                    currentDetail;
+
+                return;
+            }
+
+            if (
+                type ===
+                'Handy Talkie'
+            ) {
+                transactionDetailSection
+                    .classList
+                    .remove('hidden');
+
+                addOption(
+                    'HT UV-82'
+                );
+
+                addOption(
+                    'HT 888s'
+                );
+
+                addOption(
+                    'HT UV-5R'
+                );
+
+                transactionDetail.value =
+                    currentDetail;
+
+                return;
+            }
+
+            if (
+                type ===
+                'Merchandise'
+            ) {
+                merchandiseSection
+                    .classList
+                    .remove('hidden');
+
+                subcategory.value =
+                    currentSubcategory;
+
+                return;
+            }
+
+            if (
+                type ===
+                'Habis Pakai'
+            ) {
+                requiresMou.value =
+                    '0';
+            }
+        }
+
+        transactionType.addEventListener(
+            'change',
+            function () {
                 /*
-                |--------------------------------------------------------------------------
-                | PHOTO PREVIEW
-                |--------------------------------------------------------------------------
+                | User sengaja ganti Transaction Type,
+                | jadi detail/subcategory lama tidak
+                | dipertahankan.
                 */
 
-                if (
-                    photoInput &&
-                    preview &&
-                    placeholder
-                ) {
+                transactionDetail.innerHTML =
+                    '<option value="">-- Pilih Detail --</option>';
 
-                    photoInput.addEventListener(
-                        'change',
-                        function () {
-
-                            const file =
-                                this.files[0];
-
-
-                            if (!file) {
-
-                                return;
-
-                            }
-
-
-                            const reader =
-                                new FileReader();
-
-
-                            reader.onload =
-                                function (
-                                    event
-                                ) {
-
-                                    preview.src =
-                                        event.target.result;
-
-
-                                    preview.classList.remove(
-                                        'hidden'
-                                    );
-
-
-                                    placeholder.classList.add(
-                                        'hidden'
-                                    );
-
-                                };
-
-
-                            reader.readAsDataURL(
-                                file
-                            );
-
-                        }
-                    );
-
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | INITIAL STATE
-                |--------------------------------------------------------------------------
-                */
+                subcategory.value =
+                    '';
 
                 updateTransactionFields();
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | OLD INPUT OVERRIDE
-                |--------------------------------------------------------------------------
-                */
-
-                const oldDetail =
-                    @json(
-                        old(
-                            'transaction_detail'
-                        )
-                    );
-
-
-                if (
-                    oldDetail
-                ) {
-
-                    transactionDetail.value =
-                        oldDetail;
-
-                }
-
             }
         );
 
-    </script>
-
+        updateTransactionFields();
+    }
+);
+</script>
 </x-app-layout>

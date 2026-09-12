@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
 
     <title>
         MoU Handy Talkie - {{ $order->order_number }}
@@ -77,24 +77,35 @@
 
             <tbody>
 
-                @foreach($order->orderItems as $index => $detail)
+                @php
+                    $number = 1;
+                @endphp
 
-                    @if(in_array(
-                        $detail->item->transaction_type,
-                        [
-                            'HT UV-82',
-                            'HT 888s',
-                            'HT UV-5R'
-                        ]
-                    ))
+                @foreach(
+                    $order->orderItems
+                    as $detail
+                )
+
+                    @php
+                        $item = $detail->item;
+                    @endphp
+
+                    @if(
+                        $item &&
+                        $item->transaction_type === 'Handy Talkie'
+                    )
 
                         <tr>
                             <td>
-                                {{ $index + 1 }}
+                                {{ $number++ }}
                             </td>
 
                             <td>
-                                {{ $detail->item->name }}
+                                {{
+                                    $item->transaction_detail
+                                    ??
+                                    $item->name
+                                }}
                             </td>
 
                             <td>
@@ -117,7 +128,11 @@
         <p>
             Tanggal Pengambilan:
             <strong>
-                {{ optional($order->start_date)->format('d M Y') }}
+                {{
+                    $order->start_date
+                    ? $order->start_date->format('d M Y')
+                    : '-'
+                }}
             </strong>
 
             pukul
@@ -130,7 +145,11 @@
         <p>
             Tanggal Pengembalian:
             <strong>
-                {{ optional($order->end_date)->format('d M Y') }}
+                {{
+                    $order->end_date
+                    ? $order->end_date->format('d M Y')
+                    : '-'
+                }}
             </strong>
 
             pukul

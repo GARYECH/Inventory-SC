@@ -9,7 +9,9 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $guarded = [
+        'id',
+    ];
 
     protected $casts = [
         'start_date' => 'date',
@@ -21,12 +23,16 @@ class Order extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(
+            User::class
+        );
     }
 
     public function orderItems()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(
+            OrderItem::class
+        );
     }
 
     public function items()
@@ -52,14 +58,13 @@ class Order extends Model
         );
     }
 
-    public function getTotalPriceAttribute()
+    public function getTotalPriceAttribute(): int
     {
-        return $this->orderItems->sum(
-            'subtotal_price'
-        );
+        return (int) $this->orderItems()
+            ->sum('subtotal_price');
     }
 
-    public function requiresMou()
+    public function requiresMou(): bool
     {
         return $this->mouDocuments()->exists();
     }

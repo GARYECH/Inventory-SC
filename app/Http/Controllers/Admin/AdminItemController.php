@@ -15,15 +15,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AdminItemController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | FINAL TRANSACTION TYPES
-    |--------------------------------------------------------------------------
-    |
-    | Hanya 4 Transaction Type yang boleh disimpan di database.
-    |
-    */
-
     private const TRANSACTION_TYPES = [
         'Peralatan',
         'Handy Talkie',
@@ -31,57 +22,63 @@ class AdminItemController extends Controller
         'Merchandise',
     ];
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | TRANSACTION DETAILS
-    |--------------------------------------------------------------------------
-    */
-
     private const HT_DETAILS = [
         'HT UV-82',
         'HT 888s',
         'HT UV-5R',
     ];
 
-
     private const EQUIPMENT_DETAILS = [
         'Internal Rental',
         'Vendor Rental',
     ];
 
+    private const ORDER_STATUSES = [
+        'Pending',
+        'Waiting for MoU',
+        'Pending Review MoU',
+        'Waiting for Payment',
+        'Pending Review Payment',
+        'Waiting for Kwitansi',
+        'Pending Review Kwitansi',
+        'Handed Over',
+        'Pending Return Review',
+        'Returned',
+        'Returned (Damaged)',
+        'Pending Review BA',
+        'Resolved (Fine Paid)',
+        'Rejected',
+        'Cancelled',
+    ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | INDEX
-    |--------------------------------------------------------------------------
-    */
+    private const RESTORE_STOCK_STATUSES = [
+        'Rejected',
+        'Cancelled',
+    ];
 
-    public function index(Request $request)
-    {
+    private const TERMINAL_STATUSES = [
+        'Returned',
+        'Returned (Damaged)',
+        'Resolved (Fine Paid)',
+        'Rejected',
+        'Cancelled',
+    ];
+
+    public function index(
+        Request $request
+    ) {
         $search =
-            $request->input('search');
+            trim(
+                (string) $request->input(
+                    'search',
+                    ''
+                )
+            );
 
         $type =
             $request->input('type');
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | BACKWARD COMPATIBILITY
-        |--------------------------------------------------------------------------
-        |
-        | Kalau masih ada URL lama seperti:
-        |
-        | ?type=HT
-        | ?type=HabisPakai
-        |
-        | sistem tetap mengarah ke value baru.
-        |
-        */
-
         $type = match ($type) {
-
             'HT' =>
                 'Handy Talkie',
 
@@ -90,18 +87,9 @@ class AdminItemController extends Controller
 
             default =>
                 $type,
-
         };
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | COUNTS
-        |--------------------------------------------------------------------------
-        */
-
         $counts = [
-
             'total' =>
                 Item::count(),
 
@@ -128,96 +116,73 @@ class AdminItemController extends Controller
                     'transaction_type',
                     'Merchandise'
                 )->count(),
-
         ];
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | ITEMS
-        |--------------------------------------------------------------------------
-        */
-
         $items =
-            Item::with([
-                'category',
-            ])
-            ->when(
-                $search,
-                function (
-                    $query,
-                    $search
-                ) {
-
-                    $query->where(
-                        function ($q) use ($search) {
-
-                            $q
-                                ->where(
-                                    'name',
-                                    'like',
-                                    "%{$search}%"
-                                )
-
-                                ->orWhere(
-                                    'description',
-                                    'like',
-                                    "%{$search}%"
-                                )
-
-                                ->orWhere(
-                                    'transaction_detail',
-                                    'like',
-                                    "%{$search}%"
-                                )
-
-                                ->orWhere(
-                                    'subcategory',
-                                    'like',
-                                    "%{$search}%"
-                                )
-
-                                ->orWhereHas(
-                                    'category',
-                                    function (
-                                        $categoryQuery
-                                    ) use ($search) {
-
-                                        $categoryQuery->where(
-                                            'name',
-                                            'like',
-                                            "%{$search}%"
-                                        );
-
-                                    }
-                                );
-
-                        }
-                    );
-
-                }
-            )
-            ->when(
-                in_array(
-                    $type,
-                    self::TRANSACTION_TYPES,
-                    true
-                ),
-                function (
-                    $query
-                ) use ($type) {
-
-                    $query->where(
-                        'transaction_type',
-                        $type
-                    );
-
-                }
-            )
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
-
+            Item::with('category')
+                ->when(
+                    $search !== '',
+                    function ($query) use ($search) {
+                        $query->where(
+                            function ($q) use ($search) {
+                                $q
+                                    ->where(
+                                        'name',
+                                        'like',
+                                        "%{$search}%"
+                                    )
+                                    ->orWhere(
+                                        'description',
+                                        'like',
+                                        "%{$search}%"
+                                    )
+                                    ->orWhere(
+                                        'transaction_type',
+                                        'like',
+                                        "%{$search}%"
+                                    )
+                                    ->orWhere(
+                                        'transaction_detail',
+                                        'like',
+                                        "%{$search}%"
+                                    )
+                                    ->orWhere(
+                                        'subcategory',
+                                        'like',
+                                        "%{$search}%"
+                                    )
+                                    ->orWhereHas(
+                                        'category',
+                                        function (
+                                            $categoryQuery
+                                        ) use ($search) {
+                                            $categoryQuery->where(
+                                                'name',
+                                                'like',
+                                                "%{$search}%"
+                                            );
+                                        }
+                                    );
+                            }
+                        );
+                    }
+                )
+                ->when(
+                    in_array(
+                        $type,
+                        self::TRANSACTION_TYPES,
+                        true
+                    ),
+                    function ($query) use ($type) {
+                        $query->where(
+                            'transaction_type',
+                            $type
+                        );
+                    }
+                )
+                ->latest()
+                ->paginate(12)
+                ->withQueryString();
 
         return view(
             'admin.items.index',
@@ -228,20 +193,12 @@ class AdminItemController extends Controller
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE
-    |--------------------------------------------------------------------------
-    */
-
     public function create()
     {
         $categories =
             Category::orderBy(
                 'name'
             )->get();
-
 
         return view(
             'admin.items.create',
@@ -251,20 +208,11 @@ class AdminItemController extends Controller
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | STORE
-    |--------------------------------------------------------------------------
-    */
-
     public function store(
         Request $request
     ) {
-
         $validated =
             $request->validate([
-
                 'name' => [
                     'required',
                     'string',
@@ -300,27 +248,17 @@ class AdminItemController extends Controller
                     'min:0',
                 ],
 
-                /*
-                 * EXACTLY 4 VALUES
-                 */
                 'transaction_type' => [
                     'required',
                     'in:Peralatan,Handy Talkie,Habis Pakai,Merchandise',
                 ],
 
-                /*
-                 * Detail hanya divalidasi lebih lanjut
-                 * setelah melihat transaction_type.
-                 */
                 'transaction_detail' => [
                     'nullable',
                     'string',
                     'max:255',
                 ],
 
-                /*
-                 * Merchandise only.
-                 */
                 'subcategory' => [
                     'nullable',
                     'string',
@@ -331,26 +269,11 @@ class AdminItemController extends Controller
                     'required',
                     'boolean',
                 ],
-
             ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATE TRANSACTION STRUCTURE
-        |--------------------------------------------------------------------------
-        */
 
         $this->validateTransactionStructure(
             $request
         );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | PHOTO
-        |--------------------------------------------------------------------------
-        */
 
         $validated['item_photo'] =
             $request
@@ -360,38 +283,16 @@ class AdminItemController extends Controller
                     'public'
                 );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | DEFAULT CONDITION
-        |--------------------------------------------------------------------------
-        */
-
         $validated['condition_status'] =
             'Good';
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE
-        |--------------------------------------------------------------------------
-        */
 
         $this->normalizeTransactionFields(
             $validated
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE
-        |--------------------------------------------------------------------------
-        */
-
         Item::create(
             $validated
         );
-
 
         return redirect()
             ->route(
@@ -403,22 +304,13 @@ class AdminItemController extends Controller
             );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT
-    |--------------------------------------------------------------------------
-    */
-
     public function edit(
         Item $item
     ) {
-
         $categories =
             Category::orderBy(
                 'name'
             )->get();
-
 
         return view(
             'admin.items.edit',
@@ -429,21 +321,12 @@ class AdminItemController extends Controller
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE
-    |--------------------------------------------------------------------------
-    */
-
     public function update(
         Request $request,
         Item $item
     ) {
-
         $validated =
             $request->validate([
-
                 'name' => [
                     'required',
                     'string',
@@ -479,9 +362,6 @@ class AdminItemController extends Controller
                     'min:0',
                 ],
 
-                /*
-                 * EXACTLY 4 VALUES
-                 */
                 'transaction_type' => [
                     'required',
                     'in:Peralatan,Handy Talkie,Habis Pakai,Merchandise',
@@ -508,42 +388,63 @@ class AdminItemController extends Controller
                     'required',
                     'in:Good,Damaged',
                 ],
-
             ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATE TRANSACTION STRUCTURE
-        |--------------------------------------------------------------------------
-        */
 
         $this->validateTransactionStructure(
             $request
         );
 
+        $this->normalizeTransactionFields(
+            $validated
+        );
 
         /*
         |--------------------------------------------------------------------------
-        | PHOTO
+        | SAFETY: JANGAN MENGURANGI PHYSICAL STOCK RETURNABLE
+        | DI BAWAH BARANG YANG SEDANG TERBOOKING
         |--------------------------------------------------------------------------
         */
+
+        if (
+            in_array(
+                $validated['transaction_type'],
+                [
+                    'Peralatan',
+                    'Handy Talkie',
+                ],
+                true
+            )
+        ) {
+            $maxBooked =
+                $this->getMaximumActiveBookingQuantity(
+                    $item
+                );
+
+            if (
+                (int) $validated['stock_quantity']
+                <
+                $maxBooked
+            ) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        "Stok fisik tidak dapat diatur menjadi {$validated['stock_quantity']} karena saat ini ada {$maxBooked} unit yang sedang terbooking."
+                    );
+            }
+        }
 
         if (
             $request->hasFile(
                 'item_photo'
             )
         ) {
-
             if ($item->item_photo) {
-
                 Storage::disk('public')
                     ->delete(
                         $item->item_photo
                     );
-
             }
-
 
             $validated['item_photo'] =
                 $request
@@ -552,31 +453,38 @@ class AdminItemController extends Controller
                         'items',
                         'public'
                     );
-
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | NORMALIZE
+        | JIKA ITEM DIUBAH DARI RETURNABLE KE NON-RETURNABLE
         |--------------------------------------------------------------------------
+        |
+        | Ini sengaja diblok kalau item sudah pernah dipakai transaksi,
+        | supaya histori tidak rusak.
+        |
         */
 
-        $this->normalizeTransactionFields(
-            $validated
-        );
+        if (
+            $item->transaction_type !==
+            $validated['transaction_type']
+        ) {
+            $hasHistory =
+                $item->orderItems()->exists();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE
-        |--------------------------------------------------------------------------
-        */
+            if ($hasHistory) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Transaction Type barang tidak dapat diubah karena barang ini sudah memiliki histori transaksi.'
+                    );
+            }
+        }
 
         $item->update(
             $validated
         );
-
 
         return redirect()
             ->route(
@@ -588,17 +496,9 @@ class AdminItemController extends Controller
             );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | TRANSACTION STRUCTURE VALIDATION
-    |--------------------------------------------------------------------------
-    */
-
     private function validateTransactionStructure(
         Request $request
     ): void {
-
         $transactionType =
             $request->input(
                 'transaction_type'
@@ -614,18 +514,10 @@ class AdminItemController extends Controller
                 'subcategory'
             );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | HANDY TALKIE
-        |--------------------------------------------------------------------------
-        */
-
         if (
             $transactionType ===
             'Handy Talkie'
         ) {
-
             if (
                 !in_array(
                     $transactionDetail,
@@ -633,86 +525,50 @@ class AdminItemController extends Controller
                     true
                 )
             ) {
-
                 abort(
                     422,
                     'Transaction Detail untuk Handy Talkie wajib dipilih.'
                 );
-
             }
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | PERALATAN
-        |--------------------------------------------------------------------------
-        */
-
-       if (
-    $transactionType ===
-    'Peralatan'
-) {
-
-    if (
-        !in_array(
-            $transactionDetail,
-            self::EQUIPMENT_DETAILS,
-            true
-        )
-    ) {
-
-        abort(
-            422,
-            'Transaction Detail untuk Peralatan wajib dipilih.'
-        );
-
-    }
-
-}
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | HABIS PAKAI
-        |--------------------------------------------------------------------------
-        |
-        | Habis Pakai tidak membutuhkan transaction_detail.
-        |
-        */
+        if (
+            $transactionType ===
+            'Peralatan'
+        ) {
+            if (
+                !in_array(
+                    $transactionDetail,
+                    self::EQUIPMENT_DETAILS,
+                    true
+                )
+            ) {
+                abort(
+                    422,
+                    'Transaction Detail untuk Peralatan wajib dipilih.'
+                );
+            }
+        }
 
         if (
             $transactionType ===
             'Habis Pakai'
         ) {
-
             if (
                 $transactionDetail !== null &&
                 $transactionDetail !== ''
             ) {
-
                 abort(
                     422,
                     'Habis Pakai tidak menggunakan Transaction Detail.'
                 );
-
             }
-
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | MERCHANDISE
-        |--------------------------------------------------------------------------
-        */
 
         if (
             $transactionType ===
             'Merchandise'
         ) {
-
             if (
                 !in_array(
                     $subcategory,
@@ -724,254 +580,115 @@ class AdminItemController extends Controller
                     true
                 )
             ) {
-
                 abort(
                     422,
                     'Subcategory Merchandise wajib dipilih.'
                 );
-
             }
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | NON-MERCHANDISE CANNOT HAVE SUBCATEGORY
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $transactionType !==
-            'Merchandise'
-        ) {
-
-            if (
-                $subcategory !== null &&
-                $subcategory !== ''
-            ) {
-
-                abort(
-                    422,
-                    'Subcategory hanya boleh digunakan untuk Merchandise.'
-                );
-
-            }
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TRANSACTION DETAIL ONLY FOR SPECIFIC TYPES
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $transactionType ===
-            'Merchandise'
-        ) {
 
             if (
                 $transactionDetail !== null &&
                 $transactionDetail !== ''
             ) {
-
                 abort(
                     422,
                     'Merchandise tidak menggunakan Transaction Detail.'
                 );
-
             }
-
         }
 
+        if (
+            $transactionType !==
+            'Merchandise' &&
+            $subcategory !== null &&
+            $subcategory !== ''
+        ) {
+            abort(
+                422,
+                'Subcategory hanya boleh digunakan untuk Merchandise.'
+            );
+        }
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | NORMALIZE TRANSACTION FIELDS
-    |--------------------------------------------------------------------------
-    */
 
     private function normalizeTransactionFields(
         array &$validated
     ): void {
-        if (
-    $validated['transaction_type'] ===
-    'Merchandise' &&
-    ($validated['subcategory'] ?? null) ===
-    'Lainnya'
-) {
+        $type =
+            $validated['transaction_type'];
 
-    $validated['requires_mou'] = false;
-
-}
-
-        /*
-        |--------------------------------------------------------------------------
-        | HABIS PAKAI
-        |--------------------------------------------------------------------------
-        |
-        | Habis Pakai tidak memerlukan MoU.
-        |
-        */
-
-        if (
-            $validated['transaction_type'] ===
-            'Habis Pakai'
-        ) {
-
+        if ($type === 'Habis Pakai') {
             $validated['transaction_detail'] =
                 null;
-
-            $validated['requires_mou'] =
-                false;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | HANDY TALKIE
-        |--------------------------------------------------------------------------
-        |
-        | HT menggunakan detail model HT.
-        |
-        */
-
-        if (
-            $validated['transaction_type'] ===
-            'Handy Talkie'
-        ) {
-
-            /*
-             * Detail wajib dipertahankan.
-             */
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | PERALATAN
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $validated['transaction_type'] !==
-            'Peralatan'
-        ) {
-
-            /*
-             * Bukan Peralatan =
-             * tidak boleh punya Internal/Vendor Rental detail.
-             */
-
-            if (
-                isset(
-                    $validated['transaction_detail']
-                )
-            ) {
-
-                if (
-                    $validated['transaction_type'] !==
-                    'Handy Talkie'
-                ) {
-
-                    $validated['transaction_detail'] =
-                        null;
-
-                }
-
-            }
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | MERCHANDISE
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $validated['transaction_type'] !==
-            'Merchandise'
-        ) {
 
             $validated['subcategory'] =
                 null;
 
+            $validated['requires_mou'] =
+                false;
         }
 
+        if ($type === 'Handy Talkie') {
+            $validated['subcategory'] =
+                null;
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | MERCHANDISE DOES NOT USE TRANSACTION DETAIL
-        |--------------------------------------------------------------------------
-        */
+        if ($type === 'Peralatan') {
+            $validated['subcategory'] =
+                null;
+        }
 
-        if (
-            $validated['transaction_type'] ===
-            'Merchandise'
-        ) {
-
+        if ($type === 'Merchandise') {
             $validated['transaction_detail'] =
                 null;
 
+            if (
+                ($validated['subcategory']
+                ?? null) ===
+                'Lainnya'
+            ) {
+                $validated['requires_mou'] =
+                    false;
+            }
         }
-
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE ITEM
-    |--------------------------------------------------------------------------
-    */
 
     public function destroy(
         Item $item
     ) {
-
         if (
-            $item->item_photo
+            $item->orderItems()->exists()
         ) {
+            return back()->with(
+                'error',
+                'Barang tidak dapat dihapus karena sudah memiliki histori transaksi.'
+            );
+        }
 
+        if ($item->item_photo) {
             Storage::disk('public')
                 ->delete(
                     $item->item_photo
                 );
-
         }
-
 
         $item->delete();
 
-
-        return back()
-            ->with(
-                'success',
-                'Barang dihapus dari sistem.'
-            );
+        return back()->with(
+            'success',
+            'Barang dihapus dari sistem.'
+        );
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ORDERS
-    |--------------------------------------------------------------------------
-    */
 
     public function orders(
         Request $request
     ) {
-
         $search =
-            $request->input('search');
-
+            trim(
+                (string) $request->input(
+                    'search',
+                    ''
+                )
+            );
 
         $orders =
             Order::with([
@@ -980,39 +697,33 @@ class AdminItemController extends Controller
                 'mouDocuments',
             ])
             ->when(
-                $search,
-                function (
-                    $query,
-                    $search
-                ) {
-
-                    $query
-                        ->where(
-                            'order_number',
-                            'like',
-                            "%{$search}%"
-                        )
-                        ->orWhereHas(
-                            'user',
-                            function (
-                                $q
-                            ) use ($search) {
-
-                                $q->where(
-                                    'name',
+                $search !== '',
+                function ($query) use ($search) {
+                    $query->where(
+                        function ($q) use ($search) {
+                            $q
+                                ->where(
+                                    'order_number',
                                     'like',
                                     "%{$search}%"
+                                )
+                                ->orWhereHas(
+                                    'user',
+                                    function ($userQuery) use ($search) {
+                                        $userQuery->where(
+                                            'name',
+                                            'like',
+                                            "%{$search}%"
+                                        );
+                                    }
                                 );
-
-                            }
-                        );
-
+                        }
+                    );
                 }
             )
             ->latest()
             ->paginate(10)
             ->withQueryString();
-
 
         return view(
             'admin.orders.index',
@@ -1022,20 +733,11 @@ class AdminItemController extends Controller
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE ORDER STATUS
-    |--------------------------------------------------------------------------
-    */
-
     public function updateStatus(
         Request $request,
         Order $order
     ) {
-
         $request->validate([
-
             'status' =>
                 'required|string',
 
@@ -1061,36 +763,164 @@ class AdminItemController extends Controller
                 'nullable|string',
 
             'ba_total_fine' =>
-                'nullable|numeric',
-
+                'nullable|numeric|min:0',
         ]);
-
-
-        $oldStatus =
-            $order->status;
 
         $newStatus =
             $request->status;
 
+        if (
+            !in_array(
+                $newStatus,
+                self::ORDER_STATUSES,
+                true
+            )
+        ) {
+            return back()->with(
+                'error',
+                'Status transaksi tidak valid.'
+            );
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | STATUS THAT MEANS ITEM IS NO LONGER OUT
-        |--------------------------------------------------------------------------
-        */
-
-        $restockStatuses = [
-            'Returned',
-            'Rejected',
-            'Cancelled',
-            'Resolved (Fine Paid)',
-        ];
-
+        $oldStatus =
+            $order->status;
 
         DB::beginTransaction();
 
-
         try {
+            /*
+            |--------------------------------------------------------------------------
+            | REJECT / CANCEL
+            |--------------------------------------------------------------------------
+            |
+            | HANYA restore non-returnable.
+            |
+            */
+
+            if (
+                in_array(
+                    $newStatus,
+                    self::RESTORE_STOCK_STATUSES,
+                    true
+                ) &&
+                !in_array(
+                    $oldStatus,
+                    self::RESTORE_STOCK_STATUSES,
+                    true
+                )
+            ) {
+                $order->load(
+                    'orderItems.item'
+                );
+
+                foreach (
+                    $order->orderItems
+                    as $detail
+                ) {
+                    $item =
+                        Item::lockForUpdate()
+                            ->find(
+                                $detail->item_id
+                            );
+
+                    if (!$item) {
+                        continue;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | RETURNABLE
+                    |--------------------------------------------------------------------------
+                    |
+                    | Tidak pernah decrement saat checkout.
+                    | Jadi JANGAN increment.
+                    |
+                    */
+
+                    if (
+                        $item->requires_return
+                    ) {
+                        continue;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NON-RETURNABLE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $item->increment(
+                        'stock_quantity',
+                        $detail->quantity
+                    );
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | REACTIVATE FROM REJECT / CANCEL
+            |--------------------------------------------------------------------------
+            |
+            | HANYA decrement non-returnable.
+            |
+            */
+
+            if (
+                in_array(
+                    $oldStatus,
+                    self::RESTORE_STOCK_STATUSES,
+                    true
+                ) &&
+                !in_array(
+                    $newStatus,
+                    self::RESTORE_STOCK_STATUSES,
+                    true
+                )
+            ) {
+                $order->load(
+                    'orderItems.item'
+                );
+
+                foreach (
+                    $order->orderItems
+                    as $detail
+                ) {
+                    $item =
+                        Item::lockForUpdate()
+                            ->find(
+                                $detail->item_id
+                            );
+
+                    if (!$item) {
+                        continue;
+                    }
+
+                    if (
+                        $item->requires_return
+                    ) {
+                        /*
+                         * Returnable tidak menyentuh
+                         * physical stock.
+                         */
+                        continue;
+                    }
+
+                    if (
+                        (int) $item->stock_quantity
+                        <
+                        (int) $detail->quantity
+                    ) {
+                        throw new \Exception(
+                            "Stok '{$item->name}' tidak cukup untuk mengaktifkan kembali transaksi."
+                        );
+                    }
+
+                    $item->decrement(
+                        'stock_quantity',
+                        $detail->quantity
+                    );
+                }
+            }
 
             /*
             |--------------------------------------------------------------------------
@@ -1099,7 +929,6 @@ class AdminItemController extends Controller
             */
 
             $order->update([
-
                 'status' =>
                     $newStatus,
 
@@ -1126,242 +955,43 @@ class AdminItemController extends Controller
 
                 'ba_total_fine' =>
                     $request->ba_total_fine,
-
             ]);
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | RESTOCK
-            |--------------------------------------------------------------------------
-            |
-            | Hanya Peralatan & Handy Talkie adalah returnable.
-            |
-            */
-
-            if (
-                in_array(
-                    $newStatus,
-                    $restockStatuses,
-                    true
-                ) &&
-                !in_array(
-                    $oldStatus,
-                    $restockStatuses,
-                    true
-                )
-            ) {
-
-                foreach (
-    $order->orderItems
-    as $detail
-) {
-
-    $item =
-        Item::find(
-            $detail->item_id
-        );
-
-    if (!$item) {
-        continue;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | RETURNED
-    |--------------------------------------------------------------------------
-    |
-    | Returned hanya mengembalikan stock untuk
-    | item yang memang harus dikembalikan.
-    |
-    */
-
-    if (
-        $newStatus === 'Returned' ||
-        $newStatus === 'Returned (Damaged)' ||
-        $newStatus === 'Resolved (Fine Paid)'
-    ) {
-
-        if (
-            !$item->requires_return
-        ) {
-            continue;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | REJECTED / CANCELLED
-    |--------------------------------------------------------------------------
-    |
-    | Saat transaksi ditolak / dibatalkan,
-    | stock yang sudah dikurangi saat checkout
-    | harus dikembalikan.
-    |
-    */
-
-    if (
-        $newStatus === 'Rejected' ||
-        $newStatus === 'Cancelled'
-    ) {
-
-        $item->increment(
-            'stock_quantity',
-            $detail->quantity
-        );
-
-        continue;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | RETURNABLE
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        !$item->requires_return
-    ) {
-        continue;
-    }
-
-    $item->increment(
-        'stock_quantity',
-        $detail->quantity
-    );
-}
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | TAKE STOCK AGAIN
-            |--------------------------------------------------------------------------
-            |
-            | This handles an admin moving an order back
-            | from returned/cancelled into an active state.
-            |
-            */
-
-            if (
-                in_array(
-                    $oldStatus,
-                    $restockStatuses,
-                    true
-                ) &&
-                !in_array(
-                    $newStatus,
-                    $restockStatuses,
-                    true
-                )
-            ) {
-
-                foreach (
-                    $order->orderItems
-                    as $detail
-                ) {
-
-                    $item =
-                        Item::lockForUpdate()
-                            ->find(
-                                $detail->item_id
-                            );
-
-
-                    if (!$item) {
-                        continue;
-                    }
-
-
-                    if (
-                        !$item->requires_return
-                    ) {
-
-                        continue;
-
-                    }
-
-
-                    if (
-                        $item->stock_quantity <
-                        $detail->quantity
-                    ) {
-
-                        DB::rollBack();
-
-
-                        return back()
-                            ->with(
-                                'error',
-                                "Stok '{$item->name}' tidak cukup untuk mengaktifkan transaksi kembali."
-                            );
-
-                    }
-
-
-                    $item->decrement(
-                        'stock_quantity',
-                        $detail->quantity
-                    );
-
-                }
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | NOTIFICATION
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 $oldStatus !==
                 $newStatus
             ) {
-
-                $order->user->notify(
-                    new OrderStatusUpdated(
-                        $order
-                    )
+                $order->loadMissing(
+                    'user'
                 );
 
+                if ($order->user) {
+                    $order->user->notify(
+                        new OrderStatusUpdated(
+                            $order
+                        )
+                    );
+                }
             }
-
 
             DB::commit();
 
-
-            return back()
-                ->with(
-                    'success',
-                    'Status & dokumen berhasil diperbarui!'
-                );
+            return back()->with(
+                'success',
+                'Status & dokumen berhasil diperbarui!'
+            );
 
         } catch (
             \Throwable $e
         ) {
-
             DB::rollBack();
 
-
-            return back()
-                ->with(
-                    'error',
-                    $e->getMessage()
-                );
-
+            return back()->with(
+                'error',
+                $e->getMessage()
+            );
         }
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EXPORT EXCEL
-    |--------------------------------------------------------------------------
-    */
 
     public function exportExcel()
     {
@@ -1371,216 +1001,254 @@ class AdminItemController extends Controller
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE ORDER
-    |--------------------------------------------------------------------------
-    */
-
-  public function destroyOrder(
-    $id
-) {
-    $order = Order::with([
-        'orderItems.item',
-        'mouDocuments',
-    ])->findOrFail(
+    public function destroyOrder(
         $id
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE ORDER FILES
-    |--------------------------------------------------------------------------
-    */
-
-    $filesToDelete = [
-
-        /*
-         * Legacy files
-         */
-        $order->signed_mou,
-
-        $order->payment_receipt,
-
-        $order->signed_kwitansi,
-
-        $order->signed_ba_file,
-
-    ];
-
-
-    foreach (
-        $filesToDelete
-        as $file
     ) {
+        $order =
+            Order::with([
+                'orderItems.item',
+                'mouDocuments',
+            ])->findOrFail($id);
 
-        if (
-            !empty($file) &&
-            Storage::disk('public')->exists(
-                $file
-            )
+        DB::beginTransaction();
+
+        try {
+            /*
+            |--------------------------------------------------------------------------
+            | RESTORE STOCK
+            |--------------------------------------------------------------------------
+            |
+            | HANYA restore non-returnable bila order masih aktif.
+            |
+            */
+
+            if (
+                !in_array(
+                    $order->status,
+                    self::TERMINAL_STATUSES,
+                    true
+                )
+            ) {
+                foreach (
+                    $order->orderItems
+                    as $detail
+                ) {
+                    $item =
+                        Item::lockForUpdate()
+                            ->find(
+                                $detail->item_id
+                            );
+
+                    if (!$item) {
+                        continue;
+                    }
+
+                    if (
+                        $item->requires_return
+                    ) {
+                        continue;
+                    }
+
+                    $item->increment(
+                        'stock_quantity',
+                        $detail->quantity
+                    );
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE FILES
+            |--------------------------------------------------------------------------
+            */
+
+            $files = [
+                $order->signed_mou,
+                $order->payment_receipt,
+                $order->signed_kwitansi,
+                $order->signed_ba_file,
+            ];
+
+            foreach ($files as $file) {
+                if (
+                    !empty($file) &&
+                    Storage::disk('public')
+                        ->exists($file)
+                ) {
+                    Storage::disk('public')
+                        ->delete($file);
+                }
+            }
+
+            foreach (
+                $order->mouDocuments
+                as $document
+            ) {
+                if (
+                    !empty(
+                        $document->signed_file_path
+                    ) &&
+                    Storage::disk('public')
+                        ->exists(
+                            $document->signed_file_path
+                        )
+                ) {
+                    Storage::disk('public')
+                        ->delete(
+                            $document->signed_file_path
+                        );
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE DOCUMENTS + ITEMS + ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            $order->mouDocuments()
+                ->delete();
+
+            $order->orderItems()
+                ->delete();
+
+            $order->delete();
+
+            DB::commit();
+
+            return back()->with(
+                'success',
+                'Transaksi berhasil dihapus dari sistem.'
+            );
+
+        } catch (
+            \Throwable $e
         ) {
+            DB::rollBack();
 
-            Storage::disk('public')
-                ->delete(
-                    $file
+            return back()->with(
+                'error',
+                'Transaksi gagal dihapus: ' .
+                $e->getMessage()
+            );
+        }
+    }
+
+    private function getMaximumActiveBookingQuantity(
+        Item $item
+    ): int {
+        $bookings =
+            $item->orderItems()
+                ->whereHas(
+                    'order',
+                    function ($query) {
+                        $query->whereIn(
+                            'status',
+                            [
+                                'Pending',
+                                'Waiting for MoU',
+                                'Pending Review MoU',
+                                'Waiting for Payment',
+                                'Pending Review Payment',
+                                'Waiting for Kwitansi',
+                                'Pending Review Kwitansi',
+                                'Handed Over',
+                                'Pending Return Review',
+                                'Pending Review BA',
+                            ]
+                        );
+                    }
+                )
+                ->with('order')
+                ->get();
+
+        $events = [];
+
+        foreach (
+            $bookings as $booking
+        ) {
+            $order =
+                $booking->order;
+
+            if (
+                !$order ||
+                !$order->start_date ||
+                !$order->end_date
+            ) {
+                continue;
+            }
+
+            $start =
+                \Carbon\Carbon::parse(
+                    $order->start_date .
+                    ' ' .
+                    (
+                        $order->start_time
+                        ?? '00:00'
+                    )
                 );
 
-        }
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE NEW MOU FILES
-    |--------------------------------------------------------------------------
-    |
-    | Signed MoU sekarang disimpan di:
-    |
-    | order_mou_documents.signed_file_path
-    |
-    */
-
-    foreach (
-        $order->mouDocuments
-        as $mouDocument
-    ) {
-
-        if (
-            !empty(
-                $mouDocument->signed_file_path
-            ) &&
-            Storage::disk('public')->exists(
-                $mouDocument->signed_file_path
-            )
-        ) {
-
-            Storage::disk('public')
-                ->delete(
-                    $mouDocument->signed_file_path
+            $end =
+                \Carbon\Carbon::parse(
+                    $order->end_date .
+                    ' ' .
+                    (
+                        $order->end_time
+                        ?? '23:59'
+                    )
                 );
 
+            $events[] = [
+                'time' =>
+                    $start->timestamp,
+
+                'change' =>
+                    (int) $booking->quantity,
+            ];
+
+            $events[] = [
+                'time' =>
+                    $end->timestamp,
+
+                'change' =>
+                    -(int) $booking->quantity,
+            ];
         }
 
-    }
+        usort(
+            $events,
+            function ($a, $b) {
+                if (
+                    $a['time'] ===
+                    $b['time']
+                ) {
+                    return
+                        $a['change']
+                        <=>
+                        $b['change'];
+                }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESTOCK ACTIVE RETURNABLE ITEMS
-    |--------------------------------------------------------------------------
-    |
-    | Jangan tambah stok lagi kalau order sudah
-    | pernah dikembalikan/dibatalkan/ditolak.
-    |
-    */
-
-    $alreadyRestockedStatuses = [
-
-        'Rejected',
-
-        'Cancelled',
-
-        'Returned',
-
-        'Resolved (Fine Paid)',
-
-    ];
-
-
-    foreach (
-        $order->orderItems
-        as $detail
-    ) {
-
-        $item = $detail->item;
-
-
-        if (!$item) {
-
-            continue;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ONLY RETURNABLE ITEMS
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            !$item->requires_return
-        ) {
-
-            continue;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ACTIVE ORDER = RESTOCK
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            in_array(
-                $order->status,
-                $alreadyRestockedStatuses,
-                true
-            )
-        ) {
-
-            continue;
-
-        }
-
-
-        $item->increment(
-            'stock_quantity',
-            $detail->quantity
+                return
+                    $a['time']
+                    <=>
+                    $b['time'];
+            }
         );
 
+        $current = 0;
+        $maximum = 0;
+
+        foreach ($events as $event) {
+            $current +=
+                $event['change'];
+
+            $maximum =
+                max(
+                    $maximum,
+                    $current
+                );
+        }
+
+        return $maximum;
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE MOU DOCUMENT RECORDS
-    |--------------------------------------------------------------------------
-    */
-
-    $order->mouDocuments()
-        ->delete();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE ORDER ITEMS
-    |--------------------------------------------------------------------------
-    */
-
-    $order->orderItems()
-        ->delete();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE ORDER
-    |--------------------------------------------------------------------------
-    */
-
-    $order->delete();
-
-
-    return back()
-        ->with(
-            'success',
-            'Transaksi berhasil dihapus dari sistem.'
-        );
-}
 }

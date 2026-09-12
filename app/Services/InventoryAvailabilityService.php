@@ -8,9 +8,15 @@ use Illuminate\Support\Collection;
 
 class InventoryAvailabilityService
 {
-    /**
-     * Status yang dianggap masih memakai stok returnable.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIVE STATUSES
+    |--------------------------------------------------------------------------
+    |
+    | Status yang masih menggunakan stok virtual returnable.
+    |
+    */
+
     private const ACTIVE_STATUSES = [
         'Pending',
         'Waiting for MoU',
@@ -24,9 +30,12 @@ class InventoryAvailabilityService
         'Pending Review BA',
     ];
 
-    /**
-     * Status yang sudah tidak memakai stok returnable.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | CLOSED STATUSES
+    |--------------------------------------------------------------------------
+    */
+
     private const CLOSED_STATUSES = [
         'Returned',
         'Returned (Damaged)',
@@ -35,29 +44,46 @@ class InventoryAvailabilityService
         'Cancelled',
     ];
 
-    /**
-     * Ambil seluruh booking aktif untuk item.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | GET ACTIVE BOOKINGS
+    |--------------------------------------------------------------------------
+    */
+
     public function getActiveBookings(int $itemId): Collection
     {
         return OrderItem::query()
             ->where('item_id', $itemId)
-            ->whereHas(
-                'order',
-                function ($query) {
-                    $query->whereIn(
-                        'status',
-                        self::ACTIVE_STATUSES
-                    );
-                }
-            )
+            ->whereHas('order', function ($query) {
+                $query->whereIn(
+                    'status',
+                    self::ACTIVE_STATUSES
+                );
+            })
             ->with('order')
             ->get();
     }
 
-    /**
-     * Hitung jumlah unit yang bentrok pada rentang waktu tertentu.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | GET OVERLAPPING QUANTITY
+    |--------------------------------------------------------------------------
+    |
+    | Exact datetime overlap:
+    |
+    | requestedStart < existingEnd
+    | &&
+    | requestedEnd > existingStart
+    |
+    | Jadi:
+    |
+    | 17:00 - 18:00
+    | 18:00 - 19:00
+    |
+    | tidak dianggap bentrok.
+    |
+    */
+
     public function getOverlappingQuantity(
         int $itemId,
         string $startDate,
@@ -78,30 +104,32 @@ class InventoryAvailabilityService
             "{$endDate} {$endTime}"
         );
 
+        if (
+            $requestedEnd->lessThanOrEqualTo(
+                $requestedStart
+            )
+        ) {
+            return 0;
+        }
+
         $query = OrderItem::query()
             ->where('item_id', $itemId)
-            ->whereHas(
-                'order',
-                function ($orderQuery) {
-                    $orderQuery->whereIn(
-                        'status',
-                        self::ACTIVE_STATUSES
-                    );
-                }
-            )
+            ->whereHas('order', function ($query) {
+                $query->whereIn(
+                    'status',
+                    self::ACTIVE_STATUSES
+                );
+            })
             ->with('order');
 
-        if ($ignoreOrderId) {
-            $query->whereHas(
-                'order',
-                function ($orderQuery) use ($ignoreOrderId) {
-                    $orderQuery->where(
-                        'id',
-                        '!=',
-                        $ignoreOrderId
-                    );
-                }
-            );
+        if ($ignoreOrderId !== null) {
+            $query->whereHas('order', function ($query) use ($ignoreOrderId) {
+                $query->where(
+                    'id',
+                    '!=',
+                    $ignoreOrderId
+                );
+            });
         }
 
         $orderItems = $query->get();
@@ -123,10 +151,11 @@ class InventoryAvailabilityService
             }
 
             /*
-             * Order lama yang belum mempunyai jam.
-             *
-             * Dianggap menggunakan satu hari penuh.
-             */
+            |--------------------------------------------------------------------------
+            | LEGACY BOOKING TANPA JAM
+            |--------------------------------------------------------------------------
+            */
+
             if (
                 !$order->start_time ||
                 !$order->end_time
@@ -150,20 +179,17 @@ class InventoryAvailabilityService
             }
 
             $existingStart = Carbon::parse(
-                $order->start_date . ' ' . $order->start_time
+                $order->start_date .
+                ' ' .
+                $order->start_time
             );
 
             $existingEnd = Carbon::parse(
-                $order->end_date . ' ' . $order->end_time
+                $order->end_date .
+                ' ' .
+                $order->end_time
             );
 
-            /*
-             * Interval overlap:
-             *
-             * requestedStart < existingEnd
-             * &&
-             * requestedEnd > existingStart
-             */
             if (
                 $requestedStart < $existingEnd &&
                 $requestedEnd > $existingStart
@@ -175,9 +201,12 @@ class InventoryAvailabilityService
         return $total;
     }
 
-    /**
-     * Hitung sisa stok returnable untuk jadwal tertentu.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | REMAINING STOCK
+    |--------------------------------------------------------------------------
+    */
+
     public function getRemainingStock(
         int $totalStock,
         int $bookedQuantity
@@ -188,12 +217,18 @@ class InventoryAvailabilityService
         );
     }
 
-    /**
-     * Buat kalender availability berdasarkan tanggal.
-     *
-     * Nilai tanggal adalah jumlah stok minimum yang tersedia
-     * pada hari tersebut berdasarkan seluruh booking aktif.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | DAILY AVAILABILITY
+    |--------------------------------------------------------------------------
+    |
+    | Dipakai frontend lama untuk menentukan apakah sebuah tanggal
+    | memiliki stok yang tersedia.
+    |
+    | Checkout tetap melakukan pemeriksaan exact datetime lagi.
+    |
+    */
+
     public function getDailyAvailability(
         int $itemId,
         int $totalStock,
@@ -208,9 +243,7 @@ class InventoryAvailabilityService
         $startDate = Carbon::today();
 
         for ($i = 0; $i < $days; $i++) {
-            $date = $startDate
-                ->copy()
-                ->addDays($i);
+            $date = $startDate->copy()->addDays($i);
 
             $booked = 0;
 
@@ -227,17 +260,18 @@ class InventoryAvailabilityService
 
                 $orderStart = Carbon::parse(
                     $order->start_date
-                );
+                )->startOfDay();
 
                 $orderEnd = Carbon::parse(
                     $order->end_date
-                );
+                )->endOfDay();
+
+                $dayStart = $date->copy()->startOfDay();
+                $dayEnd = $date->copy()->endOfDay();
 
                 if (
-                    $date->copy()->startOfDay()
-                        ->lte($orderEnd->endOfDay()) &&
-                    $date->copy()->endOfDay()
-                        ->gte($orderStart->startOfDay())
+                    $dayStart <= $orderEnd &&
+                    $dayEnd >= $orderStart
                 ) {
                     $booked += (int) $booking->quantity;
                 }
@@ -254,30 +288,41 @@ class InventoryAvailabilityService
         return $availability;
     }
 
-    /**
-     * Daftar booking untuk halaman schedule.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | SCHEDULE
+    |--------------------------------------------------------------------------
+    */
+
     public function getSchedule(
         int $itemId
     ): Collection {
         return $this->getActiveBookings(
             $itemId
         )
-        ->sortBy(
-            function ($orderItem) {
-                $order = $orderItem->order;
+        ->sortBy(function ($orderItem) {
+            $order = $orderItem->order;
 
-                if (!$order) {
-                    return '';
-                }
-
-                return Carbon::parse(
-                    ($order->start_date ?? '1900-01-01')
-                    . ' '
-                    . ($order->start_time ?? '00:00')
-                )->timestamp;
+            if (!$order) {
+                return 0;
             }
-        )
+
+            $date = $order->start_date
+                ? Carbon::parse(
+                    $order->start_date
+                )->format('Y-m-d')
+                : '1900-01-01';
+
+            $time = $order->start_time
+                ? Carbon::parse(
+                    $order->start_time
+                )->format('H:i:s')
+                : '00:00:00';
+
+            return Carbon::parse(
+                "{$date} {$time}"
+            )->timestamp;
+        })
         ->values();
     }
 }

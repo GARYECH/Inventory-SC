@@ -63,7 +63,6 @@ Route::get('/dashboard', function () {
         return redirect()->route(
             'admin.dashboard'
         );
-
     }
 
     return redirect()->route(
@@ -72,7 +71,7 @@ Route::get('/dashboard', function () {
 
 })->middleware([
     'auth',
-    'verified'
+    'verified',
 ])->name('dashboard');
 
 
@@ -87,7 +86,7 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Profile Management
+    | Profile
     |--------------------------------------------------------------------------
     */
 
@@ -131,49 +130,48 @@ Route::middleware('auth')->group(function () {
     })->name('notifications.index');
 
 
-    Route::post('/notifications/clear', function () {
+    Route::post(
+        '/notifications/clear',
+        function () {
 
-        auth()->user()
-            ->notifications()
-            ->delete();
+            auth()->user()
+                ->notifications()
+                ->delete();
 
-        return back()->with(
-            'success',
-            'Semua notifikasi telah dibersihkan!'
-        );
+            return back()->with(
+                'success',
+                'Semua notifikasi telah dibersihkan!'
+            );
+        }
+    )->name('notifications.clear');
 
-    })->name('notifications.clear');
 
+    Route::delete(
+        '/notifications/{id}',
+        function ($id) {
 
-    Route::delete('/notifications/{id}', function ($id) {
+            auth()->user()
+                ->notifications()
+                ->where('id', $id)
+                ->delete();
 
-        auth()->user()
-            ->notifications()
-            ->where('id', $id)
-            ->delete();
-
-        return back()->with(
-            'success',
-            'Notifikasi berhasil dihapus.'
-        );
-
-    })->name('notifications.destroy');
+            return back()->with(
+                'success',
+                'Notifikasi berhasil dihapus.'
+            );
+        }
+    )->name('notifications.destroy');
 
 
     /*
     |--------------------------------------------------------------------------
-    | ADMIN SECTION
+    | ADMIN
     |--------------------------------------------------------------------------
     */
 
     Route::prefix('admin')
         ->name('admin.')
         ->group(function () {
-
-
-            /*
-             * Dashboard
-             */
 
             Route::get(
                 '/dashboard',
@@ -191,7 +189,7 @@ Route::middleware('auth')->group(function () {
             )->only([
                 'index',
                 'store',
-                'destroy'
+                'destroy',
             ]);
 
 
@@ -258,7 +256,7 @@ Route::middleware('auth')->group(function () {
                 '/settings',
                 [
                     \App\Http\Controllers\Admin\SettingController::class,
-                    'index'
+                    'index',
                 ]
             )->name('settings.index');
 
@@ -266,7 +264,7 @@ Route::middleware('auth')->group(function () {
                 '/settings',
                 [
                     \App\Http\Controllers\Admin\SettingController::class,
-                    'update'
+                    'update',
                 ]
             )->name('settings.update');
 
@@ -285,7 +283,7 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | STUDENT SECTION
+    | STUDENT
     |--------------------------------------------------------------------------
     */
 
@@ -315,7 +313,7 @@ Route::middleware('auth')->group(function () {
 
 
             /*
-             * Item Booking Schedule
+             * Item Schedule
              */
 
             Route::get(
@@ -330,25 +328,15 @@ Route::middleware('auth')->group(function () {
              * ==========================================================
              */
 
-
             /*
-             * Multiple MoU Support
-             *
-             * Examples:
-             * /student/orders/15/upload-mou/baju
-             * /student/orders/15/upload-mou/id_card
-             * /student/orders/15/upload-mou/ht
+             * ONE MOU PER ORDER
              */
 
             Route::post(
-                '/orders/{order}/upload-mou/{type?}',
+                '/orders/{order}/upload-mou',
                 [DocumentController::class, 'uploadSignedMou']
             )->name('orders.upload-mou');
 
-
-            /*
-             * Payment
-             */
 
             Route::post(
                 '/orders/{order}/upload-payment',
@@ -356,29 +344,17 @@ Route::middleware('auth')->group(function () {
             )->name('orders.upload-payment');
 
 
-            /*
-             * Signed Kwitansi
-             */
-
             Route::post(
                 '/orders/{order}/upload-kwitansi',
                 [DocumentController::class, 'uploadSignedKwitansi']
             )->name('orders.upload-kwitansi');
 
 
-            /*
-             * Return Evidence
-             */
-
             Route::post(
                 '/orders/{order}/return-link',
                 [DocumentController::class, 'submitReturnLink']
             )->name('orders.return-link');
 
-
-            /*
-             * Berita Acara
-             */
 
             Route::post(
                 '/orders/{order}/upload-ba',
@@ -396,36 +372,30 @@ Route::middleware('auth')->group(function () {
                 ->name('cart.')
                 ->group(function () {
 
-
                     Route::get(
                         '/',
                         [CartController::class, 'viewCart']
                     )->name('index');
-
 
                     Route::post(
                         '/add/{item}',
                         [CartController::class, 'addToCart']
                     )->name('add');
 
-
                     Route::post(
                         '/clear',
                         [CartController::class, 'clearCart']
                     )->name('clear');
-
 
                     Route::post(
                         '/checkout',
                         [CartController::class, 'processCheckout']
                     )->name('checkout');
 
-
                     Route::patch(
                         '/{id}/update',
                         [CartController::class, 'updateCart']
                     )->name('update');
-
 
                     Route::delete(
                         '/{id}/remove',
@@ -445,26 +415,21 @@ Route::middleware('auth')->group(function () {
                 ->name('document.')
                 ->group(function () {
 
-
                     /*
-                     * Multiple MoU Support
+                     * ONE MOU ROUTE
                      *
-                     * Examples:
+                     * Controller menentukan:
                      *
-                     * /student/document/mou/15/baju
-                     * /student/document/mou/15/id_card
-                     * /student/document/mou/15/ht
+                     * HT       -> mou_HT
+                     * Internal -> mou_internal
+                     * Vendor   -> mou_vendor
                      */
 
                     Route::get(
-                        '/mou/{order}/{type?}',
+                        '/mou/{order}',
                         [DocumentController::class, 'downloadMou']
                     )->name('mou');
 
-
-                    /*
-                     * Invoice
-                     */
 
                     Route::get(
                         '/invoice/{order}',
@@ -472,19 +437,11 @@ Route::middleware('auth')->group(function () {
                     )->name('invoice');
 
 
-                    /*
-                     * Kwitansi
-                     */
-
                     Route::get(
                         '/kwitansi/{order}',
                         [DocumentController::class, 'downloadKwitansi']
                     )->name('kwitansi');
 
-
-                    /*
-                     * Berita Acara
-                     */
 
                     Route::get(
                         '/berita-acara/{order}',

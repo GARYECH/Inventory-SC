@@ -8,54 +8,167 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->time('start_time')->nullable()->after('start_date');
-            $table->time('end_time')->nullable()->after('end_date');
-        });
+        /*
+        |--------------------------------------------------------------------------
+        | ORDERS
+        |--------------------------------------------------------------------------
+        */
 
-        Schema::table('order_items', function (Blueprint $table) {
-            $table->string('size')->nullable()->after('quantity');
-            $table->text('design_link')->nullable()->after('size');
-            $table->integer('size_additional_price')->default(0)->after('design_link');
-        });
+        if (!Schema::hasColumn('orders', 'start_time')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->time('start_time')
+                    ->nullable()
+                    ->after('start_date');
+            });
+        }
 
-        Schema::create('order_mou_documents', function (Blueprint $table) {
-            $table->id();
+        if (!Schema::hasColumn('orders', 'end_time')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->time('end_time')
+                    ->nullable()
+                    ->after('end_date');
+            });
+        }
 
-            $table->foreignId('order_id')
-                ->constrained()
-                ->cascadeOnDelete();
 
-            $table->string('mou_type');
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER ITEMS
+        |--------------------------------------------------------------------------
+        */
 
-            $table->string('signed_file_path')->nullable();
+        if (!Schema::hasColumn('order_items', 'size')) {
+            Schema::table('order_items', function (Blueprint $table) {
+                $table->string('size')
+                    ->nullable()
+                    ->after('quantity');
+            });
+        }
 
-            $table->timestamps();
+        if (!Schema::hasColumn('order_items', 'design_link')) {
+            Schema::table('order_items', function (Blueprint $table) {
+                $table->text('design_link')
+                    ->nullable()
+                    ->after('size');
+            });
+        }
 
-            $table->unique([
-                'order_id',
-                'mou_type'
-            ]);
-        });
+        if (!Schema::hasColumn('order_items', 'size_additional_price')) {
+            Schema::table('order_items', function (Blueprint $table) {
+                $table->integer('size_additional_price')
+                    ->default(0)
+                    ->after('design_link');
+            });
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER MOU DOCUMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        if (!Schema::hasTable('order_mou_documents')) {
+            Schema::create('order_mou_documents', function (Blueprint $table) {
+                $table->id();
+
+                $table->foreignId('order_id')
+                    ->constrained()
+                    ->cascadeOnDelete();
+
+                $table->string('mou_type');
+
+                $table->string('signed_file_path')
+                    ->nullable();
+
+                $table->timestamps();
+
+                $table->unique([
+                    'order_id',
+                    'mou_type',
+                ]);
+            });
+        }
     }
+
 
     public function down(): void
     {
-        Schema::dropIfExists('order_mou_documents');
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER MOU DOCUMENTS
+        |--------------------------------------------------------------------------
+        */
 
-        Schema::table('order_items', function (Blueprint $table) {
-            $table->dropColumn([
-                'size',
-                'design_link',
-                'size_additional_price'
-            ]);
-        });
+        Schema::dropIfExists(
+            'order_mou_documents'
+        );
 
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn([
-                'start_time',
-                'end_time'
-            ]);
-        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER ITEMS
+        |--------------------------------------------------------------------------
+        */
+
+        $orderItemColumns = [];
+
+        foreach ([
+            'size',
+            'design_link',
+            'size_additional_price',
+        ] as $column) {
+
+            if (Schema::hasColumn(
+                'order_items',
+                $column
+            )) {
+                $orderItemColumns[] = $column;
+            }
+        }
+
+        if (!empty($orderItemColumns)) {
+            Schema::table(
+                'order_items',
+                function (Blueprint $table) use ($orderItemColumns) {
+                    $table->dropColumn(
+                        $orderItemColumns
+                    );
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDERS
+        |--------------------------------------------------------------------------
+        */
+
+        $orderColumns = [];
+
+        foreach ([
+            'start_time',
+            'end_time',
+        ] as $column) {
+
+            if (Schema::hasColumn(
+                'orders',
+                $column
+            )) {
+                $orderColumns[] = $column;
+            }
+        }
+
+        if (!empty($orderColumns)) {
+            Schema::table(
+                'orders',
+                function (Blueprint $table) use ($orderColumns) {
+                    $table->dropColumn(
+                        $orderColumns
+                    );
+                }
+            );
+        }
     }
 };

@@ -13,35 +13,55 @@ class AdminNotification
 {
     use Queueable;
 
+
     public $message;
+
 
     public $tries = 2;
 
+
     public $timeout = 10;
+
 
     public function __construct(
         $message
     ) {
+
         $this->message =
             $message;
 
-        $this->onQueue(
-            'notifications'
-        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | IMPORTANT
+        |--------------------------------------------------------------------------
+        | Jangan gunakan onQueue('notifications')
+        | karena worker development kamu saat ini
+        | memproses default queue.
+        |
+        | Dengan ini notification masuk ke
+        | default database queue.
+        */
+
+        $this->afterCommit();
     }
+
 
     public function via(
         $notifiable
     ) {
+
         return [
             'database',
             'mail',
         ];
     }
 
+
     public function toMail(
         $notifiable
     ) {
+
         return (new MailMessage)
             ->subject(
                 '[Inventory SC] Update Status Mahasiswa'
@@ -68,9 +88,11 @@ class AdminNotification
             );
     }
 
+
     public function toArray(
         $notifiable
     ) {
+
         return [
             'message' =>
                 $this->message,

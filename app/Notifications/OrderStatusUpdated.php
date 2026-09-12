@@ -13,35 +13,49 @@ class OrderStatusUpdated
 {
     use Queueable;
 
+
     public $order;
+
 
     public $tries = 2;
 
+
     public $timeout = 10;
+
 
     public function __construct(
         $order
     ) {
+
         $this->order =
             $order;
 
-        $this->onQueue(
-            'notifications'
-        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUEUE
+        |--------------------------------------------------------------------------
+        */
+
+        $this->afterCommit();
     }
+
 
     public function via(
         $notifiable
     ) {
+
         return [
             'database',
             'mail',
         ];
     }
 
+
     public function toMail(
         $notifiable
     ) {
+
         return (new MailMessage)
             ->subject(
                 '[Inventory SC] Update Status ' .
@@ -75,10 +89,13 @@ class OrderStatusUpdated
             );
     }
 
+
     public function toArray(
         $notifiable
     ) {
+
         return [
+
             'order_id' =>
                 $this->order->id,
 

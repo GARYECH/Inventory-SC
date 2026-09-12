@@ -4,7 +4,6 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\OrderMouDocument;
 use App\Models\User;
 use App\Notifications\AdminNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -13,152 +12,160 @@ use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
-   public function downloadMou(
-    Order $order,
-    ?string $type = null
-) {
-    $this->authorizeOrder($order);
+    public function downloadMou(
+        Order $order
+    ) {
+        $this->authorizeOrder(
+            $order
+        );
 
-    $order->load([
-        'orderItems.item',
-        'mouDocuments',
-    ]);
+        $order->load([
+            'orderItems.item',
+            'mouDocuments',
+        ]);
 
-    /*
-     * Kalau type tidak diberikan:
-     * hanya boleh otomatis apabila
-     * order memiliki satu MOU.
-     */
-    if (!$type) {
 
-        if (
-            $order->mouDocuments->count() !== 1
-        ) {
+        /*
+        |--------------------------------------------------------------------------
+        | ONE MOU PER ORDER
+        |--------------------------------------------------------------------------
+        */
+
+        $document =
+            $order->mouDocuments->first();
+
+
+        if (!$document) {
+
             abort(
                 404,
-                'Transaksi ini memiliki lebih dari satu MoU. Silakan pilih jenis MoU.'
+                'MoU tidak diperlukan untuk transaksi ini.'
             );
         }
 
-        $type =
-            $order->mouDocuments
-                ->first()
-                ->mou_type;
-    }
 
-    $document =
-        $order->mouDocuments
-            ->firstWhere(
-                'mou_type',
-                $type
+        /*
+        |--------------------------------------------------------------------------
+        | TEMPLATE ROUTING
+        |--------------------------------------------------------------------------
+        */
+
+        $view = match (
+            $document->mou_type
+        ) {
+
+            'ht' =>
+                'admin.pdf.mou_HT',
+
+            'internal' =>
+                'admin.pdf.mou_internal',
+
+            'vendor' =>
+                'admin.pdf.mou_vendor',
+
+            default =>
+                abort(
+                    404,
+                    'Template MoU tidak ditemukan.'
+                ),
+        };
+
+
+        $pdf =
+            Pdf::loadView(
+                $view,
+                compact('order')
             );
 
-    if (!$document) {
-        abort(
-            404,
-            'MoU tersebut tidak diperlukan untuk transaksi ini.'
+
+        $pdf->setPaper(
+            'a4',
+            'portrait'
+        );
+
+
+        return $pdf->stream(
+            'MoU_' .
+            $this->formatMouName(
+                $document->mou_type
+            ) .
+            '_' .
+            $order->order_number .
+            '.pdf'
         );
     }
 
-    $view = match ($type) {
 
-        'peralatan' =>
-            'admin.pdf.mou_peralatan',
-
-        'ht' =>
-            'admin.pdf.mou_HT',
-
-        'baju' =>
-            'admin.pdf.mou_merch_baju',
-
-        'id_card' =>
-            'admin.pdf.mou_merch_idcard',
-
-        default =>
-            abort(
-                404,
-                'Template MoU tidak ditemukan.'
-            ),
-    };
-
-    $pdf =
-        \Barryvdh\DomPDF\Facade\Pdf::loadView(
-            $view,
-            compact('order')
-        );
-
-    $pdf->setPaper(
-        'a4',
-        'portrait'
-    );
-
-    return $pdf->stream(
-        'MoU_' .
-        $this->formatMouName($type) .
-        '_' .
-        $order->order_number .
-        '.pdf'
-    );
-}
     public function uploadSignedMou(
         Request $request,
-        Order $order,
-        ?string $type = null
+        Order $order
     ) {
-        $this->authorizeOrder($order);
+        $this->authorizeOrder(
+            $order
+        );
+
 
         $order->load(
             'mouDocuments'
         );
 
-        if (!$type) {
-
-            if (
-                $order->mouDocuments->count() !== 1
-            ) {
-                return back()->with(
-                    'error',
-                    'Transaksi ini memiliki lebih dari satu MoU. Pilih jenis MoU yang akan diupload.'
-                );
-            }
-
-            $type =
-                $order
-                    ->mouDocuments
-                    ->first()
-                    ->mou_type;
-        }
 
         $document =
-            $order->mouDocuments
-                ->firstWhere(
-                    'mou_type',
-                    $type
-                );
+            $order->mouDocuments->first();
+
 
         if (!$document) {
-            abort(
-                404,
-                'Dokumen MoU tidak ditemukan.'
+
+            return back()->with(
+                'error',
+                'MoU untuk transaksi ini tidak ditemukan.'
             );
         }
 
+
         $request->validate([
-            'signed_mou' =>
-                'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'signed_mou' => [
+                'required',
+                'file',
+                'mimes:pdf',
+                'max:5120',
+            ],
         ]);
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | DELETE OLD FILE
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $document->signed_file_path &&
+            Storage::disk('public')->exists(
+                $document->signed_file_path
+            )
+        ) {
+
+            Storage::disk('public')->delete(
+                $document->signed_file_path
+            );
+        }
+
+
         $file =
-            $request
-                ->file('signed_mou');
+            $request->file(
+                'signed_mou'
+            );
+
 
         $filename =
             'Signed_MoU_' .
             $order->order_number .
             '_' .
-            $type .
+            $document->mou_type .
             '.' .
             $file->getClientOriginalExtension();
+
 
         $path =
             $file->storeAs(
@@ -167,36 +174,35 @@ class DocumentController extends Controller
                 'public'
             );
 
+
         $document->update([
             'signed_file_path' =>
                 $path,
         ]);
 
-        $allUploaded =
-            $order->mouDocuments()
-                ->whereNull(
-                    'signed_file_path'
-                )
-                ->doesntExist();
 
-        if ($allUploaded) {
+        /*
+        |--------------------------------------------------------------------------
+        | MOVE TO PAYMENT
+        |--------------------------------------------------------------------------
+        */
 
-            $order->update([
-                'status' =>
-                    'Waiting for Payment'
-            ]);
+        $order->update([
+            'status' =>
+                'Waiting for Payment',
+        ]);
 
-        } else {
 
-            $order->update([
-                'status' =>
-                    'Pending Review MoU'
-            ]);
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN NOTIFICATION
+        |--------------------------------------------------------------------------
+        */
 
         $this->notifyAdmins(
-            "MoU {$type} untuk {$order->order_number} berhasil diunggah."
+            "MoU {$this->formatMouName($document->mou_type)} untuk {$order->order_number} berhasil diunggah."
         );
+
 
         return back()->with(
             'success',
@@ -204,14 +210,19 @@ class DocumentController extends Controller
         );
     }
 
+
     public function downloadInvoice(
         Order $order
     ) {
-        $this->authorizeOrder($order);
+        $this->authorizeOrder(
+            $order
+        );
+
 
         $order->load(
             'orderItems.item'
         );
+
 
         $pdf =
             Pdf::loadView(
@@ -219,10 +230,12 @@ class DocumentController extends Controller
                 compact('order')
             );
 
+
         $pdf->setPaper(
             'a4',
             'portrait'
         );
+
 
         return $pdf->stream(
             'Invoice_' .
@@ -231,14 +244,19 @@ class DocumentController extends Controller
         );
     }
 
+
     public function downloadKwitansi(
         Order $order
     ) {
-        $this->authorizeOrder($order);
+        $this->authorizeOrder(
+            $order
+        );
+
 
         $order->load(
             'orderItems.item'
         );
+
 
         $pdf =
             Pdf::loadView(
@@ -246,10 +264,12 @@ class DocumentController extends Controller
                 compact('order')
             );
 
+
         $pdf->setPaper(
             'a4',
             'landscape'
         );
+
 
         return $pdf->stream(
             'Kwitansi_' .
@@ -258,14 +278,19 @@ class DocumentController extends Controller
         );
     }
 
+
     public function downloadBeritaAcara(
         Order $order
     ) {
-        $this->authorizeOrder($order);
+        $this->authorizeOrder(
+            $order
+        );
+
 
         $order->load(
             'orderItems.item'
         );
+
 
         $pdf =
             Pdf::loadView(
@@ -273,10 +298,12 @@ class DocumentController extends Controller
                 compact('order')
             );
 
+
         $pdf->setPaper(
             'a4',
             'portrait'
         );
+
 
         return $pdf->stream(
             'Berita_Acara_' .
@@ -284,6 +311,7 @@ class DocumentController extends Controller
             '.pdf'
         );
     }
+
 
     private function authorizeOrder(
         Order $order
@@ -294,6 +322,7 @@ class DocumentController extends Controller
             auth()->user()->role !==
                 'admin'
         ) {
+
             abort(
                 403,
                 'Unauthorized action.'
@@ -301,17 +330,27 @@ class DocumentController extends Controller
         }
     }
 
-private function formatMouName(
-    string $type
-): string {
-    return match ($type) {
-        'peralatan' => 'Peralatan',
-        'ht' => 'Handy_Talkie',
-        'baju' => 'Baju',
-        'id_card' => 'ID_Card',
-        default => 'MOU',
-    };
-}
+
+    private function formatMouName(
+        string $type
+    ): string {
+
+        return match ($type) {
+
+            'ht' =>
+                'Handy_Talkie',
+
+            'internal' =>
+                'Internal',
+
+            'vendor' =>
+                'Vendor',
+
+            default =>
+                'MOU',
+        };
+    }
+
 
     private function notifyAdmins(
         string $message
@@ -323,9 +362,11 @@ private function formatMouName(
                 'admin'
             )->get();
 
+
         foreach (
             $admins as $admin
         ) {
+
             $admin->notify(
                 new AdminNotification(
                     $message

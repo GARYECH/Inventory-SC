@@ -38,7 +38,8 @@ class AdminItemController extends Controller
             ->when($search, function ($query, $search) {
                 return $query->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhere('subcategory', 'like', "%{$search}%"); // 🌟 Ikut pencarian subkategori
                 });
             })
             ->when($type, function ($query, $type) {
@@ -76,8 +77,9 @@ class AdminItemController extends Controller
             'item_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
             'stock_quantity' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
-            // 🌟 UPDATE VALIDASI 6 KATEGORI BARU 🌟
+            // 🌟 VALIDASI KATEGORI BARU & SUB-KATEGORI 🌟
             'transaction_type' => 'required|in:Peralatan,HT UV-82,HT 888s,HT UV-5R,ATK,Obat,Merchandise,Internal Rental,Vendor Rental,Sale',
+            'subcategory' => 'nullable|string|max:255', // 🌟 Menangkap input subkategori
             'requires_mou' => 'required|boolean',
         ]);
 
@@ -106,8 +108,9 @@ class AdminItemController extends Controller
             'item_photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'stock_quantity' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
-            // 🌟 UPDATE VALIDASI 6 KATEGORI BARU 🌟
+            // 🌟 VALIDASI KATEGORI BARU & SUB-KATEGORI 🌟
             'transaction_type' => 'required|in:Peralatan,HT UV-82,HT 888s,HT UV-5R,ATK,Obat,Merchandise,Internal Rental,Vendor Rental,Sale',
+            'subcategory' => 'nullable|string|max:255', // 🌟 Menangkap input subkategori saat update
             'requires_mou' => 'required|boolean',
             'condition_status' => 'nullable|string',
         ]);

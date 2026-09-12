@@ -62,11 +62,12 @@
                 @php 
                     $firstItem = reset($cart);
                     $orderType = $firstItem['transaction_type'] ?? '';
-                    $isConsumable = in_array($orderType, ['ATK', 'Obat', 'Merchandise']);
+                    // 🌟 FIX: ATK Dikeluarkan, ganti Kertas
+                    $isConsumable = in_array($orderType, ['Obat', 'Kertas', 'Merchandise']);
                     $totalPrice = 0;
                     $sopPath = \App\Models\Setting::where('key', 'sop_pdf_path')->value('value');
                     
-                    // Cek apakah kategori cart saat ini mendukung gratis untuk Student Council
+                    // 🌟 FIX KEMBALI: Hanya Peralatan dan HT UV-5R yang Gratis untuk SC
                     $hasFreeForSC = in_array($orderType, ['Peralatan', 'HT UV-5R']);
                 @endphp
 
@@ -81,8 +82,8 @@
                                     <h3 class="font-black text-xl text-gray-900 tracking-tight mb-1">Rincian Barang</h3>
                                     
                                     <span class="inline-flex px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg 
-                                        {{ in_array($orderType, ['Peralatan', 'HT UV-82', 'HT 888s', 'HT UV-5R']) ? 'bg-indigo-100 text-indigo-700' : '' }}
-                                        {{ in_array($orderType, ['ATK', 'Obat']) ? 'bg-amber-100 text-amber-700' : '' }}
+                                        {{ in_array($orderType, ['Peralatan', 'ATK', 'HT UV-82', 'HT 888s', 'HT UV-5R']) ? 'bg-indigo-100 text-indigo-700' : '' }}
+                                        {{ in_array($orderType, ['Obat', 'Kertas']) ? 'bg-amber-100 text-amber-700' : '' }}
                                         {{ $orderType === 'Merchandise' ? 'bg-emerald-100 text-emerald-700' : '' }}">
                                         Kategori: {{ $orderType }}
                                     </span>
@@ -96,7 +97,7 @@
                                 </form>
                             </div>
 
-                            <!-- 🌟 NOTIFIKASI KHUSUS JIKA KATEGORI BISA DAPAN Dapatkan DISKON SC 🌟 -->
+                            <!-- 🌟 NOTIFIKASI KHUSUS JIKA KATEGORI MENDAPATKAN GRATIS SC 🌟 -->
                             @if($hasFreeForSC)
                                 <div class="px-8 pt-6">
                                     <div class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3">
@@ -116,6 +117,7 @@
                                 @foreach($cart as $id => $details)
                                     @php 
                                         $totalPrice += $details['price'] * $details['quantity'];
+                                        // 🌟 FIX KEMBALI: Hanya Peralatan dan HT UV-5R yang Gratis untuk SC
                                         $isItemFreeSC = in_array($details['transaction_type'], ['Peralatan', 'HT UV-5R']);
                                     @endphp
                                     
@@ -270,7 +272,7 @@
 
                                 <div class="mt-2">
                                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Catatan Peminjam (Notes)</label>
-                                    <textarea name="notes" rows="3" placeholder="Contoh: Min, HT UV-5R tolong dipastikan baterainya full charge ya..." 
+                                    <textarea name="notes" rows="3" placeholder="Contoh: Min, tolong dipastikan barang aman ya..." 
                                         class="w-full px-5 py-4 bg-yellow-50/50 border border-yellow-100 rounded-2xl focus:ring-2 focus:ring-yellow-400 font-bold text-gray-800 placeholder-gray-400 transition-all shadow-inner text-sm"></textarea>
                                 </div>
 
@@ -290,8 +292,9 @@
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-black text-amber-900 uppercase tracking-widest">Barang Habis Pakai / Beli Putus</p>
-                                        <p class="text-[10px] font-bold text-amber-600 mt-1 leading-snug">Item ini tidak memerlukan jadwal pengembalian. Stok akan langsung dipotong setelah disetujui.</p>
+                                        <!-- 🌟 FIX: UBAH JUDUL WARNING INI JADI KERTAS 🌟 -->
+                                        <p class="text-xs font-black text-amber-900 uppercase tracking-widest">Satu Kali Pakai (Obat / Kertas)</p>
+                                        <p class="text-[10px] font-bold text-amber-600 mt-1 leading-snug">Item ini bersifat consumable/beli putus dan tidak memerlukan jadwal pengembalian. Stok langsung dipotong setelah disetujui.</p>
                                     </div>
                                 </div>
                                 @endif

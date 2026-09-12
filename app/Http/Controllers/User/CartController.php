@@ -27,40 +27,26 @@ class CartController extends Controller
     {
         $cart = session()->get('cart', []);
         $requestQuantity = $request->quantity ?? 1;
-        $size = $request->size ?? null; // 🌟 BARU: Tangkap Input Size
 
-        $requiresDate = in_array($item->transaction_type, ['Peralatan', 'HT UV-82', 'HT 888s', 'HT UV-5R']);
+        // 🌟 FIX: ATK sekarang dimasukkan ke kategori yang wajib kalender/tanggal
+        $requiresDate = in_array($item->transaction_type, ['Peralatan', 'ATK', 'HT UV-82', 'HT 888s', 'HT UV-5R']);
 
+        // 1. STRICT CART LOGIC: CEK CAMPUR KATEGORI
         if (count($cart) > 0) {
             $firstItem = reset($cart);
             if ($firstItem['transaction_type'] !== $item->transaction_type) {
-                return back()->with('error', "Mimpi buruk database dicegah! 🚫 Kamu tidak bisa mencampur kategori '{$firstItem['transaction_type']}' dengan '{$item->transaction_type}' dalam satu keranjang.");
+                return back()->with('error', "Mimpi buruk database dicegah! 🚫 Kamu tidak bisa mencampur kategori '{$firstItem['transaction_type']}' dengan '{$item->transaction_type}' dalam satu keranjang. Selesaikan atau kosongkan keranjangmu dulu!");
             }
         }
 
-        // 🌟 BARU: LOGIKA HARGA TAMBAHAN UNTUK BAJU SIZE JUMBO 🌟
-        $extraPrice = 0;
-        if ($item->transaction_type === 'Merchandise' || str_contains(strtolower($item->name), 'baju')) {
-            switch ($size) {
-                case '2XL': $extraPrice = 5000; break;
-                case '3XL': $extraPrice = 10000; break;
-                case '4XL': $extraPrice = 15000; break;
-                case '5XL': $extraPrice = 20000; break;
-                default: $extraPrice = 0;
-            }
-        }
-        $finalPrice = $item->price + $extraPrice;
-
-        // 🌟 BARU: Bikin ID Cart Unik agar size berbeda tidak tumpuk di 1 baris
-        $cartKey = $size ? $item->id . '-' . $size : $item->id;
-
+        // 2. LOGIKA PENGECEKAN STOK & JADWAL
         if ($requiresDate) {
             $request->validate([
                 'start_date' => 'required|date|after_or_equal:today',
                 'end_date' => 'required|date|after_or_equal:start_date',
             ], [
-                'start_date.required' => 'Pilih tanggal mulai sewa terlebih dahulu!',
-                'end_date.required' => 'Pilih tanggal selesai sewa terlebih dahulu!',
+                'start_date.required' => 'Pilih tanggal mulai peminjaman terlebih dahulu!',
+                'end_date.required' => 'Pilih tanggal selesai peminjaman terlebih dahulu!',
             ]);
 
             $startDate = $request->start_date;
@@ -73,7 +59,7 @@ class CartController extends Controller
                           ->where('end_date', '>=', $startDate); 
                 })->sum('quantity');
 
-            $qtyInCart = isset($cart[$cartKey]) ? $cart[$cartKey]['quantity'] : 0;
+            $qtyInCart = isset($cart[$item->id]) ? $cart[$item->id]['quantity'] : 0;
             $totalDiminta = $overlappingQty + $qtyInCart + $requestQuantity;
 
             if ($totalDiminta > $item->stock_quantity) {
@@ -83,7 +69,8 @@ class CartController extends Controller
                 return back()->with('error', "Gagal! Untuk tanggal {$formatStart} - {$formatEnd}, sisa stok '{$item->name}' hanya {$sisaKuota} unit.");
             }
         } else {
-            $qtyInCart = isset($cart[$cartKey]) ? $cart[$cartKey]['quantity'] : 0;
+            // Logika untuk Barang Habis Pakai murni (Obat, Kertas, Merchandise)
+            $qtyInCart = isset($cart[$item->id]) ? $cart[$item->id]['quantity'] : 0;
             if (($qtyInCart + $requestQuantity) > $item->stock_quantity) {
                 return back()->with('error', "Gagal! Stok gudang tidak mencukupi. Sisa stok: {$item->stock_quantity} unit.");
             }
@@ -91,17 +78,17 @@ class CartController extends Controller
             $endDate = null;
         }
 
-        if (isset($cart[$cartKey])) {
-            $cart[$cartKey]['quantity'] += $requestQuantity;
-            $cart[$cartKey]['start_date'] = $startDate;
-            $cart[$cartKey]['end_date'] = $endDate;
+        // 3. MASUKKAN KE KERANJANG SESI
+        if (isset($cart[$item->id])) {
+            $cart[$item->id]['quantity'] += $requestQuantity;
+            $cart[$item->id]['start_date'] = $startDate;
+            $cart[$item->id]['end_date'] = $endDate;
         } else {
-            $cart[$cartKey] = [
-                'id' => $item->id, // Real Item ID untuk Database
-                'name' => $size ? $item->name . ' (' . $size . ')' : $item->name, // Nama otomatis ada sizenya
-                'price' => $finalPrice, // Harga sudah +biaya jumbo
+            $cart[$item->id] = [
+                'id' => $item->id,
+                'name' => $item->name,
+                'price' => $item->price,
                 'quantity' => $requestQuantity,
-                'size' => $size, // 🌟 BARU: Simpan size
                 'transaction_type' => $item->transaction_type,
                 'requires_mou' => $item->requires_mou,
                 'start_date' => $startDate,
@@ -122,21 +109,20 @@ class CartController extends Controller
     // ==========================================================
     // 🌟 UPDATE QTY DI HALAMAN CHECKOUT 🌟
     // ==========================================================
-    public function updateCart(Request $request, $cartKey)
+    public function updateCart(Request $request, $id)
     {
         $cart = session()->get('cart', []);
         
-        if (isset($cart[$cartKey])) {
-            // 🌟 FIX: Ambil ID Item asli dari dalam cart, bukan dari parameter $cartKey
-            $realItemId = $cart[$cartKey]['id'];
-            $item = Item::findOrFail($realItemId);
-            
+        if (isset($cart[$id])) {
+            $item = Item::findOrFail($id);
             $newQty = $request->quantity;
-            $requiresDate = in_array($item->transaction_type, ['Peralatan', 'HT UV-82', 'HT 888s', 'HT UV-5R']);
+            
+            // 🌟 FIX: ATK masuk kategori pengecekan kalender
+            $requiresDate = in_array($item->transaction_type, ['Peralatan', 'ATK', 'HT UV-82', 'HT 888s', 'HT UV-5R']);
 
             if ($requiresDate) {
-                $startDate = $cart[$cartKey]['start_date'];
-                $endDate = $cart[$cartKey]['end_date'];
+                $startDate = $cart[$id]['start_date'];
+                $endDate = $cart[$id]['end_date'];
 
                 $overlappingQty = OrderItem::where('item_id', $item->id)
                     ->whereHas('order', function ($query) use ($startDate, $endDate) {
@@ -155,7 +141,7 @@ class CartController extends Controller
                 }
             }
 
-            $cart[$cartKey]['quantity'] = $newQty;
+            $cart[$id]['quantity'] = $newQty;
             session()->put('cart', $cart);
             return back()->with('success', 'Jumlah barang berhasil diupdate!');
         }
@@ -163,18 +149,18 @@ class CartController extends Controller
         return back()->with('error', 'Barang tidak ditemukan di keranjang.');
     }
 
-    public function removeItem($cartKey)
+    public function removeItem($id)
     {
         $cart = session()->get('cart', []);
-        if (isset($cart[$cartKey])) {
-            unset($cart[$cartKey]);
+        if (isset($cart[$id])) {
+            unset($cart[$id]);
             session()->put('cart', $cart);
         }
         return back()->with('success', 'Barang berhasil dihapus dari keranjang.');
     }
 
     // ==========================================================
-    // 🌟 FASE CHECKOUT & PEMBUATAN ORDER (LOGIKA HARI RENTAL) 🌟
+    // 🌟 FASE CHECKOUT & PEMBUATAN ORDER (DENGAN NOTES & KETUA ACARA) 🌟
     // ==========================================================
     public function processCheckout(Request $request)
     {
@@ -190,24 +176,24 @@ class CartController extends Controller
             'position' => 'required|string',
             'phone_number' => 'required|string',
             'proker_name' => 'required|string',
-            'ketua_acara' => 'required|string', 
+            'ketua_acara' => 'required|string',
             'treasurer_name' => 'required|string',
             'address' => 'required|string',
-            'notes' => 'nullable|string',       
-            'design_link' => 'nullable|url', // 🌟 BARU: Validasi link drive
+            'notes' => 'nullable|string',
             'is_sop_accepted' => 'required|accepted',
         ]);
 
         $firstItem = reset($cart);
         $orderType = $firstItem['transaction_type'];
-        $isConsumable = in_array($orderType, ['ATK', 'Obat', 'Merchandise']);
+        
+        // 🌟 FIX: ATK dikeluarkan dari consumable, diganti dengan Kertas (jika ada)
+        $isConsumable = in_array($orderType, ['Obat', 'Kertas', 'Merchandise']);
 
         $globalStartDate = null;
         $globalEndDate = null;
         $totalPrice = 0;
 
-        // 🌟 LOOP 1: KALKULASI HARGA & HARI 🌟
-        foreach ($cart as $cartKey => $item) {
+        foreach ($cart as $id => $item) {
             if (!empty($item['start_date'])) {
                 if (is_null($globalStartDate) || $item['start_date'] < $globalStartDate) {
                     $globalStartDate = $item['start_date'];
@@ -217,34 +203,21 @@ class CartController extends Controller
                 }
             }
 
-            $dbItem = Item::find($item['id']); // 🌟 FIX: Gunakan $item['id'] bukan $cartKey
+            $dbItem = Item::find($id);
             $unitPrice = $item['price'];
-            $rentalDays = 1; 
             
-            if (in_array($dbItem->transaction_type, ['Peralatan', 'HT UV-82', 'HT 888s', 'HT UV-5R']) && !empty($item['start_date']) && !empty($item['end_date'])) {
-                $start = Carbon::parse($item['start_date']);
-                $end = Carbon::parse($item['end_date']);
-                $diffDays = $start->diffInDays($end);
-                $rentalDays = max(1, $diffDays - 1);
-            }
-
+            // 🌟 FIX: Pastikan SC HANYA gratis untuk Peralatan dan HT UV-5R
             if ($request->organization === 'Student Council' && in_array($dbItem->transaction_type, ['Peralatan', 'HT UV-5R'])) {
                 $unitPrice = 0; 
             }
-
-            $cart[$cartKey]['calc_unit_price'] = $unitPrice;
-            $cart[$cartKey]['calc_rental_days'] = $rentalDays;
-            $cart[$cartKey]['calc_subtotal'] = $unitPrice * $item['quantity'] * $rentalDays;
-            
-            $totalPrice += $cart[$cartKey]['calc_subtotal'];
+            $totalPrice += ($unitPrice * $item['quantity']);
         }
 
         DB::beginTransaction();
 
         try {
-            // 🛡️ GATEKEEPER: CEK STOK & OVERLAP ULANG SEBELUM COMMIT
-            foreach ($cart as $cartKey => $item) {
-                $dbItem = Item::lockForUpdate()->find($item['id']); // 🌟 FIX: Gunakan $item['id']
+            foreach ($cart as $id => $item) {
+                $dbItem = Item::lockForUpdate()->find($id);
                 
                 if ($isConsumable) {
                     if (!$dbItem || $dbItem->stock_quantity < $item['quantity']) {
@@ -253,7 +226,7 @@ class CartController extends Controller
                     }
                     $dbItem->decrement('stock_quantity', $item['quantity']);
                 } else {
-                    $overlappingQty = OrderItem::where('item_id', $item['id']) // 🌟 FIX: Gunakan $item['id']
+                    $overlappingQty = OrderItem::where('item_id', $id)
                         ->whereHas('order', function ($query) use ($item) {
                             $query->whereNotIn('status', ['Returned', 'Resolved (Fine Paid)', 'Rejected', 'Cancelled'])
                                   ->where('start_date', '<=', $item['end_date'])
@@ -267,7 +240,6 @@ class CartController extends Controller
                 }
             }
 
-            // 🌟 CREATE ORDER HEADER 🌟
             $order = Order::create([
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
                 'user_id' => auth()->id(),
@@ -276,12 +248,11 @@ class CartController extends Controller
                 'position' => $request->position,
                 'phone_number' => $request->phone_number,
                 'proker_name' => $request->proker_name,
-                'ketua_acara' => $request->ketua_acara, 
+                'ketua_acara' => $request->ketua_acara,
                 'department' => '-',
                 'treasurer_name' => $request->treasurer_name,
                 'address' => $request->address,
-                'notes' => $request->notes,             
-                'design_link' => $request->design_link, // 🌟 BARU: Simpan link G-Drive
+                'notes' => $request->notes,
                 'order_type' => $orderType,
                 'start_date' => $globalStartDate,
                 'end_date' => $globalEndDate,
@@ -290,16 +261,22 @@ class CartController extends Controller
                 'status' => 'Pending',
             ]);
 
-            // 🌟 CREATE ORDER DETAIL / ITEMS 🌟
-            foreach ($cart as $cartKey => $item) {
+            foreach ($cart as $item) {
+                $dbItem = Item::find($item['id']);
+                $unitPrice = $item['price'];
+                
+                // 🌟 FIX: Potongan harga order item juga hanya untuk Peralatan & HT UV-5R
+                if ($request->organization === 'Student Council' && in_array($dbItem->transaction_type, ['Peralatan', 'HT UV-5R'])) {
+                    $unitPrice = 0;
+                }
+
                 OrderItem::create([
                     'order_number' => $order->id, 
                     'order_id' => $order->id,
-                    'item_id' => $item['id'], // 🌟 FIX: Gunakan $item['id'] agar DB aman
-                    'size' => $item['size'] ?? null, // 🌟 BARU: Simpan size ke detail order
+                    'item_id' => $item['id'],
                     'quantity' => $item['quantity'],
-                    'price' => $item['calc_unit_price'], 
-                    'subtotal_price' => $item['calc_subtotal'], 
+                    'price' => $unitPrice,
+                    'subtotal_price' => ($unitPrice * $item['quantity']),
                 ]);
             }
 

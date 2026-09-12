@@ -9,10 +9,8 @@ class Order extends Model
 {
     use HasFactory;
 
-    // Tinggalkan $fillable yang panjang, gunakan $guarded agar lebih rapi dan dinamis.
     protected $guarded = ['id'];
 
-    // Casts: Memberi tahu Laravel agar otomatis mengubah format data ini saat diambil dari database.
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
@@ -25,13 +23,21 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    // 2. Relasi ke Rincian Barang (Cart Items) - INI PENGGANTI RELASI item() YANG LAMA
+    // 2. Relasi Langsung ke Item (SANGAT PENTING untuk pivot size & design_link)
+    public function items()
+    {
+        return $this->belongsToMany(Item::class, 'order_items')
+                    ->withPivot('quantity', 'size', 'design_link', 'subtotal_price') 
+                    ->withTimestamps();
+    }
+
+    // 3. Relasi ke model OrderItem (Jika tetap butuh akses ke Model Pivot-nya secara langsung)
     public function orderItems() 
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    // --- HELPER SAKTI (Bonus Senior Engineer) ---
+    // --- HELPER SAKTI ---
 
     // Fungsi otomatis untuk menghitung Total Harga dari seluruh isi keranjang
     public function getTotalPriceAttribute()
@@ -39,17 +45,18 @@ class Order extends Model
         return $this->orderItems->sum('subtotal_price');
     }
 
-    // Fungsi pintar untuk mengecek apakah kuitansi ini mewajibkan mahasiswa upload MoU
+    // Fungsi pintar untuk mengecek apakah transaksi ini mewajibkan MoU
     public function requiresMou()
     {
-        // Jika ini Sale (Beli), kamu bilang kemarin semua Buy wajib MoU
-        if ($this->order_type === 'Sale') {
+        // 1. Cek dari 4 Macro Category yang baru (Peralatan & HT biasanya wajib MoU)
+        if (in_array($this->order_type, ['Peralatan', 'Handy Talkie'])) {
             return true;
         }
 
-        // Jika ini Rental, cek apakah ada minimal 1 barang di keranjang yang butuh MoU
-        foreach ($this->orderItems as $detail) {
-            if ($detail->item->requires_mou) {
+        // 2. Jika tipe Merchandise/Habis Pakai, loop isi keranjangnya
+        // Baju dan ID Card dari kategori Merchandise wajib MoU
+        foreach ($this->items as $item) { 
+            if (in_array($item->category, ['Baju', 'ID Card']) || $item->requires_mou) {
                 return true;
             }
         }

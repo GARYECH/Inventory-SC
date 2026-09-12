@@ -97,7 +97,6 @@
                                 <div>
                                     <label class="block text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-3 ml-1">Tipe Transaksi (Routing)</label>
                                     <div class="relative">
-                                        <!-- 🌟 MENGGUNAKAN VALUE STRING 6 KATEGORI BARU YANG BERSIH 🌟 -->
                                         <select name="transaction_type" 
                                             class="w-full px-6 py-3 bg-white border-none rounded-xl focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-900 appearance-none cursor-pointer shadow-sm" required>
                                             <option value="" disabled>-- Pilih Jalur --</option>
@@ -134,6 +133,15 @@
                                     </div>
                                     @error('requires_mou') <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">{{ $message }}</p> @enderror
                                 </div>
+                            </div>
+
+                            <!-- 🌟 BARIS TAMBAHAN: SUB-KATEGORI SPESIFIK 🌟 -->
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">Sub-Kategori Spesifik (Opsional)</label>
+                                <input type="text" name="subcategory" value="{{ old('subcategory', $item->subcategory) }}" placeholder="Contoh: Kaos / Baju, ID Card, Gantungan Kunci..." 
+                                    class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 placeholder-gray-300 transition-all shadow-sm">
+                                <p class="text-[9px] text-gray-400 mt-2 ml-1 font-bold">Berguna untuk membedakan detail jenis barang (misal: membedakan ukuran baju atau jenis merchandise).</p>
+                                @error('subcategory') <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1 tracking-tighter">{{ $message }}</p> @enderror
                             </div>
 
                             <!-- Baris 3: Deskripsi -->

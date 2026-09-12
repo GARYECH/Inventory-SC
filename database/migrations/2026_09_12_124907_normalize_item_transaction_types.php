@@ -15,10 +15,12 @@ return new class extends Migration
         |--------------------------------------------------------------------------
         */
 
-        if (!Schema::hasColumn(
-            'items',
-            'transaction_detail'
-        )) {
+        if (
+            !Schema::hasColumn(
+                'items',
+                'transaction_detail'
+            )
+        ) {
             Schema::table(
                 'items',
                 function (Blueprint $table) {
@@ -34,46 +36,24 @@ return new class extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | HANDY TALKIE
+        | NORMALIZE LEGACY HANDY TALKIE VALUES
         |--------------------------------------------------------------------------
+        |
+        | Legacy values:
+        | - HT
+        | - HT UV-82
+        | - HT 888s
+        | - HT UV-5R
+        |
         */
 
         DB::table('items')
             ->whereIn(
                 'transaction_type',
-                [
-                    'HT',
-                    'Handy Talkie',
-                ]
-            )
-            ->update([
-                'transaction_type' =>
-                    'Handy Talkie',
-            ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | LEGACY HT DETAILS
-        |--------------------------------------------------------------------------
-        */
-
-        DB::table('items')
-            ->where(
-                'transaction_type',
-                'HT'
-            )
-            ->update([
-                'transaction_type' =>
-                    'Handy Talkie',
-            ]);
-
-
-        DB::table('items')
-            ->whereIn(
-                'name',
                 [
                     'HT UV-82',
+                    'HT UV82',
+                    'UV-82',
                     'Baofeng UV-82',
                 ]
             )
@@ -88,9 +68,11 @@ return new class extends Migration
 
         DB::table('items')
             ->whereIn(
-                'name',
+                'transaction_type',
                 [
                     'HT 888s',
+                    'HT 888S',
+                    'HT 888',
                     'Baofeng 888s',
                     'Baofeng 888S',
                 ]
@@ -106,9 +88,11 @@ return new class extends Migration
 
         DB::table('items')
             ->whereIn(
-                'name',
+                'transaction_type',
                 [
                     'HT UV-5R',
+                    'HT UV5R',
+                    'UV-5R',
                     'Baofeng UV-5R',
                 ]
             )
@@ -118,6 +102,23 @@ return new class extends Migration
 
                 'transaction_detail' =>
                     'HT UV-5R',
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LEGACY GENERIC HT
+        |--------------------------------------------------------------------------
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'HT'
+            )
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
             ]);
 
 
@@ -160,10 +161,10 @@ return new class extends Migration
         | LEGACY ATK
         |--------------------------------------------------------------------------
         |
-        | Default ATK lama dipindahkan ke Habis Pakai.
+        | ATK lama dianggap Habis Pakai terlebih dahulu.
         |
-        | Barang reusable seperti Stapler nantinya bisa diubah
-        | manual melalui Edit Item menjadi Peralatan.
+        | Barang reusable seperti Stapler bisa diedit kembali
+        | melalui Admin -> Edit Item -> Peralatan.
         |
         */
 
@@ -229,24 +230,7 @@ return new class extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | MERCHANDISE CLEANUP
-        |--------------------------------------------------------------------------
-        */
-
-        DB::table('items')
-            ->where(
-                'transaction_type',
-                'Merchandise'
-            )
-            ->update([
-                'transaction_detail' =>
-                    null,
-            ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | HABIS PAKAI CLEANUP
+        | CLEAN EXISTING FINAL VALUES
         |--------------------------------------------------------------------------
         */
 
@@ -261,6 +245,37 @@ return new class extends Migration
 
                 'requires_mou' =>
                     false,
+            ]);
+
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Merchandise'
+            )
+            ->update([
+                'transaction_detail' =>
+                    null,
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PERALATAN CLEANUP
+        |--------------------------------------------------------------------------
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Peralatan'
+            )
+            ->whereNull(
+                'transaction_detail'
+            )
+            ->update([
+                'transaction_detail' =>
+                    null,
             ]);
     }
 

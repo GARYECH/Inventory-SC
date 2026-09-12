@@ -1197,8 +1197,7 @@ class CartController extends Controller
                     'status' =>
                         'Pending',
 
-                    'total_price' =>
-                        $totalPrice,
+            
 
                 ]);
 
@@ -1562,21 +1561,28 @@ class CartController extends Controller
     }
 
 
-    private function buildLineKey(
-        Item $item,
-        ?string $size
-    ): string {
+   private function buildLineKey(
+    Item $item,
+    ?string $size,
+    ?string $designLink = null
+): string {
 
-        return implode(
-            '_',
-            [
-                $item->id,
-                $item->subcategory ?? 'none',
-                $size ?? 'none',
-            ]
-        );
+    $designKey = 'none';
 
+    if ($designLink) {
+        $designKey = md5($designLink);
     }
+
+    return implode(
+        '_',
+        [
+            $item->id,
+            $item->subcategory ?? 'none',
+            $size ?? 'none',
+            $designKey,
+        ]
+    );
+}
 
 
     private function getOverlappingQuantity(

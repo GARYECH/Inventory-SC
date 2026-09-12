@@ -650,28 +650,27 @@ class AdminItemController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $transactionType ===
-            'Peralatan'
-        ) {
+       if (
+    $transactionType ===
+    'Peralatan'
+) {
 
-            if (
-                $transactionDetail !== null &&
-                !in_array(
-                    $transactionDetail,
-                    self::EQUIPMENT_DETAILS,
-                    true
-                )
-            ) {
+    if (
+        !in_array(
+            $transactionDetail,
+            self::EQUIPMENT_DETAILS,
+            true
+        )
+    ) {
 
-                abort(
-                    422,
-                    'Transaction Detail untuk Peralatan tidak valid.'
-                );
+        abort(
+            422,
+            'Transaction Detail untuk Peralatan wajib dipilih.'
+        );
 
-            }
+    }
 
-        }
+}
 
 
         /*
@@ -799,6 +798,16 @@ class AdminItemController extends Controller
     private function normalizeTransactionFields(
         array &$validated
     ): void {
+        if (
+    $validated['transaction_type'] ===
+    'Merchandise' &&
+    ($validated['subcategory'] ?? null) ===
+    'Lainnya'
+) {
+
+    $validated['requires_mou'] = false;
+
+}
 
         /*
         |--------------------------------------------------------------------------
@@ -1144,36 +1153,84 @@ class AdminItemController extends Controller
             ) {
 
                 foreach (
-                    $order->orderItems
-                    as $detail
-                ) {
+    $order->orderItems
+    as $detail
+) {
 
-                    $item =
-                        Item::find(
-                            $detail->item_id
-                        );
+    $item =
+        Item::find(
+            $detail->item_id
+        );
 
+    if (!$item) {
+        continue;
+    }
 
-                    if (!$item) {
-                        continue;
-                    }
+    /*
+    |--------------------------------------------------------------------------
+    | RETURNED
+    |--------------------------------------------------------------------------
+    |
+    | Returned hanya mengembalikan stock untuk
+    | item yang memang harus dikembalikan.
+    |
+    */
 
+    if (
+        $newStatus === 'Returned' ||
+        $newStatus === 'Returned (Damaged)' ||
+        $newStatus === 'Resolved (Fine Paid)'
+    ) {
 
-                    if (
-                        !$item->requires_return
-                    ) {
+        if (
+            !$item->requires_return
+        ) {
+            continue;
+        }
 
-                        continue;
+    }
 
-                    }
+    /*
+    |--------------------------------------------------------------------------
+    | REJECTED / CANCELLED
+    |--------------------------------------------------------------------------
+    |
+    | Saat transaksi ditolak / dibatalkan,
+    | stock yang sudah dikurangi saat checkout
+    | harus dikembalikan.
+    |
+    */
 
+    if (
+        $newStatus === 'Rejected' ||
+        $newStatus === 'Cancelled'
+    ) {
 
-                    $item->increment(
-                        'stock_quantity',
-                        $detail->quantity
-                    );
+        $item->increment(
+            'stock_quantity',
+            $detail->quantity
+        );
 
-                }
+        continue;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RETURNABLE
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        !$item->requires_return
+    ) {
+        continue;
+    }
+
+    $item->increment(
+        'stock_quantity',
+        $detail->quantity
+    );
+}
 
             }
 

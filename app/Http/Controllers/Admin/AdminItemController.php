@@ -1321,151 +1321,209 @@ class AdminItemController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function destroyOrder(
+  public function destroyOrder(
+    $id
+) {
+    $order = Order::with([
+        'orderItems.item',
+        'mouDocuments',
+    ])->findOrFail(
         $id
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE ORDER FILES
+    |--------------------------------------------------------------------------
+    */
+
+    $filesToDelete = [
+
+        /*
+         * Legacy files
+         */
+        $order->signed_mou,
+
+        $order->payment_receipt,
+
+        $order->signed_kwitansi,
+
+        $order->signed_ba_file,
+
+    ];
+
+
+    foreach (
+        $filesToDelete
+        as $file
     ) {
 
-        $order =
-            Order::with([
-                'orderItems.item',
-            ])
-            ->findOrFail(
-                $id
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | DELETE STORED FILES
-        |--------------------------------------------------------------------------
-        */
-
-        $filesToDelete = [
-
-            $order->signed_mou,
-
-            $order->payment_receipt,
-
-            $order->signed_kwitansi,
-
-            $order->signed_ba_file,
-
-        ];
-
-
-        foreach (
-            $filesToDelete
-            as $file
+        if (
+            !empty($file) &&
+            Storage::disk('public')->exists(
+                $file
+            )
         ) {
 
-            if (
-                !empty($file) &&
-                Storage::disk('public')->exists(
+            Storage::disk('public')
+                ->delete(
                     $file
-                )
-            ) {
-
-                Storage::disk('public')
-                    ->delete(
-                        $file
-                    );
-
-            }
+                );
 
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESTOCK ACTIVE RETURNABLE ITEMS
-        |--------------------------------------------------------------------------
-        |
-        | Jangan menambah stok lagi kalau order sudah
-        | berada di status yang memang sudah dikembalikan/
-        | dibatalkan/ditolak.
-        |
-        */
-
-        $alreadyRestockedStatuses = [
-
-            'Rejected',
-
-            'Cancelled',
-
-            'Returned',
-
-            'Resolved (Fine Paid)',
-
-        ];
+    }
 
 
-        foreach (
-            $order->orderItems
-            as $detail
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE NEW MOU FILES
+    |--------------------------------------------------------------------------
+    |
+    | Signed MoU sekarang disimpan di:
+    |
+    | order_mou_documents.signed_file_path
+    |
+    */
+
+    foreach (
+        $order->mouDocuments
+        as $mouDocument
+    ) {
+
+        if (
+            !empty(
+                $mouDocument->signed_file_path
+            ) &&
+            Storage::disk('public')->exists(
+                $mouDocument->signed_file_path
+            )
         ) {
 
-            $item =
-                $detail->item;
+            Storage::disk('public')
+                ->delete(
+                    $mouDocument->signed_file_path
+                );
+
+        }
+
+    }
 
 
-            if (!$item) {
-                continue;
-            }
+    /*
+    |--------------------------------------------------------------------------
+    | RESTOCK ACTIVE RETURNABLE ITEMS
+    |--------------------------------------------------------------------------
+    |
+    | Jangan tambah stok lagi kalau order sudah
+    | pernah dikembalikan/dibatalkan/ditolak.
+    |
+    */
+
+    $alreadyRestockedStatuses = [
+
+        'Rejected',
+
+        'Cancelled',
+
+        'Returned',
+
+        'Resolved (Fine Paid)',
+
+    ];
 
 
-            if (
-                !$item->requires_return
-            ) {
+    foreach (
+        $order->orderItems
+        as $detail
+    ) {
 
-                continue;
-
-            }
-
-
-            if (
-                in_array(
-                    $order->status,
-                    $alreadyRestockedStatuses,
-                    true
-                )
-            ) {
-
-                continue;
-
-            }
+        $item = $detail->item;
 
 
-            $item->increment(
-                'stock_quantity',
-                $detail->quantity
-            );
+        if (!$item) {
+
+            continue;
 
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | DELETE ORDER ITEMS
+        | ONLY RETURNABLE ITEMS
         |--------------------------------------------------------------------------
         */
 
-        $order->orderItems()
-            ->delete();
+        if (
+            !$item->requires_return
+        ) {
+
+            continue;
+
+        }
 
 
         /*
         |--------------------------------------------------------------------------
-        | DELETE ORDER
+        | ACTIVE ORDER = RESTOCK
         |--------------------------------------------------------------------------
         */
 
-        $order->delete();
+        if (
+            in_array(
+                $order->status,
+                $alreadyRestockedStatuses,
+                true
+            )
+        ) {
+
+            continue;
+
+        }
 
 
-        return back()
-            ->with(
-                'success',
-                'Transaksi berhasil dihapus dari sistem.'
-            );
+        $item->increment(
+            'stock_quantity',
+            $detail->quantity
+        );
+
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE MOU DOCUMENT RECORDS
+    |--------------------------------------------------------------------------
+    */
+
+    $order->mouDocuments()
+        ->delete();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE ORDER ITEMS
+    |--------------------------------------------------------------------------
+    */
+
+    $order->orderItems()
+        ->delete();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE ORDER
+    |--------------------------------------------------------------------------
+    */
+
+    $order->delete();
+
+
+    return back()
+        ->with(
+            'success',
+            'Transaksi berhasil dihapus dari sistem.'
+        );
+}
 }

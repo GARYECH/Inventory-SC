@@ -1,54 +1,32 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         /*
         |--------------------------------------------------------------------------
         | ADD TRANSACTION DETAIL
         |--------------------------------------------------------------------------
-        |
-        | transaction_type sekarang hanya boleh mempunyai 4 nilai:
-        |
-        | - Peralatan
-        | - Handy Talkie
-        | - Habis Pakai
-        | - Merchandise
-        |
-        | transaction_detail digunakan untuk detail tambahan seperti:
-        |
-        | Peralatan
-        |   -> Internal Rental
-        |   -> Vendor Rental
-        |
-        | Handy Talkie
-        |   -> HT UV-82
-        |   -> HT 888s
-        |   -> HT UV-5R
-        |
         */
 
-        if (!Schema::hasColumn('items', 'transaction_detail')) {
-
+        if (!Schema::hasColumn(
+            'items',
+            'transaction_detail'
+        )) {
             Schema::table(
                 'items',
                 function (Blueprint $table) {
-
                     $table->string(
                         'transaction_detail'
                     )
                     ->nullable()
                     ->after('transaction_type');
-
                 }
             );
         }
@@ -56,7 +34,7 @@ return new class extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | NORMALIZE OLD HANDY TALKIE DATA
+        | HANDY TALKIE
         |--------------------------------------------------------------------------
         */
 
@@ -64,101 +42,128 @@ return new class extends Migration
             ->whereIn(
                 'transaction_type',
                 [
-                    'HT UV-82',
-                    'HT 888s',
-                    'HT UV-5R',
+                    'HT',
+                    'Handy Talkie',
                 ]
             )
-            ->get()
-            ->each(
-                function ($item) {
-
-                    DB::table('items')
-                        ->where(
-                            'id',
-                            $item->id
-                        )
-                        ->update([
-                            'transaction_type' =>
-                                'Handy Talkie',
-
-                            'transaction_detail' =>
-                                $item->transaction_type,
-                        ]);
-
-                }
-            );
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
+            ]);
 
 
         /*
         |--------------------------------------------------------------------------
-        | NORMALIZE OLD RENTAL DATA
-        |--------------------------------------------------------------------------
-        */
-
-        DB::table('items')
-            ->whereIn(
-                'transaction_type',
-                [
-                    'Internal Rental',
-                    'Vendor Rental',
-                ]
-            )
-            ->get()
-            ->each(
-                function ($item) {
-
-                    DB::table('items')
-                        ->where(
-                            'id',
-                            $item->id
-                        )
-                        ->update([
-                            'transaction_type' =>
-                                'Peralatan',
-
-                            'transaction_detail' =>
-                                $item->transaction_type,
-                        ]);
-
-                }
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | OLD PERALATAN
+        | LEGACY HT DETAILS
         |--------------------------------------------------------------------------
         */
 
         DB::table('items')
             ->where(
                 'transaction_type',
-                'Peralatan'
+                'HT'
             )
             ->update([
                 'transaction_type' =>
-                    'Peralatan',
+                    'Handy Talkie',
+            ]);
+
+
+        DB::table('items')
+            ->whereIn(
+                'name',
+                [
+                    'HT UV-82',
+                    'Baofeng UV-82',
+                ]
+            )
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
+
+                'transaction_detail' =>
+                    'HT UV-82',
+            ]);
+
+
+        DB::table('items')
+            ->whereIn(
+                'name',
+                [
+                    'HT 888s',
+                    'Baofeng 888s',
+                    'Baofeng 888S',
+                ]
+            )
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
+
+                'transaction_detail' =>
+                    'HT 888s',
+            ]);
+
+
+        DB::table('items')
+            ->whereIn(
+                'name',
+                [
+                    'HT UV-5R',
+                    'Baofeng UV-5R',
+                ]
+            )
+            ->update([
+                'transaction_type' =>
+                    'Handy Talkie',
+
+                'transaction_detail' =>
+                    'HT UV-5R',
             ]);
 
 
         /*
         |--------------------------------------------------------------------------
-        | OLD ATK
+        | LEGACY EQUIPMENT RENTAL
+        |--------------------------------------------------------------------------
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Internal Rental'
+            )
+            ->update([
+                'transaction_type' =>
+                    'Peralatan',
+
+                'transaction_detail' =>
+                    'Internal Rental',
+            ]);
+
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Vendor Rental'
+            )
+            ->update([
+                'transaction_type' =>
+                    'Peralatan',
+
+                'transaction_detail' =>
+                    'Vendor Rental',
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LEGACY ATK
         |--------------------------------------------------------------------------
         |
-        | Database lama tidak menyimpan apakah ATK tersebut:
+        | Default ATK lama dipindahkan ke Habis Pakai.
         |
-        | - Peralatan
-        | - Habis Pakai
-        |
-        | Karena itu kita gunakan Habis Pakai sebagai default sementara.
-        |
-        | Setelah migration:
-        |
-        | contoh:
-        | Stapler -> ubah manual menjadi Peralatan
-        | Kertas   -> tetap Habis Pakai
+        | Barang reusable seperti Stapler nantinya bisa diubah
+        | manual melalui Edit Item menjadi Peralatan.
         |
         */
 
@@ -170,12 +175,18 @@ return new class extends Migration
             ->update([
                 'transaction_type' =>
                     'Habis Pakai',
+
+                'transaction_detail' =>
+                    null,
+
+                'requires_mou' =>
+                    false,
             ]);
 
 
         /*
         |--------------------------------------------------------------------------
-        | OLD OBAT
+        | LEGACY OBAT
         |--------------------------------------------------------------------------
         */
 
@@ -187,17 +198,19 @@ return new class extends Migration
             ->update([
                 'transaction_type' =>
                     'Habis Pakai',
+
+                'transaction_detail' =>
+                    null,
+
+                'requires_mou' =>
+                    false,
             ]);
 
 
         /*
         |--------------------------------------------------------------------------
-        | OLD SALE
+        | LEGACY SALE
         |--------------------------------------------------------------------------
-        |
-        | Sale sudah tidak digunakan.
-        | Semua Sale lama dipindahkan ke Merchandise.
-        |
         */
 
         DB::table('items')
@@ -208,13 +221,50 @@ return new class extends Migration
             ->update([
                 'transaction_type' =>
                     'Merchandise',
+
+                'transaction_detail' =>
+                    null,
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MERCHANDISE CLEANUP
+        |--------------------------------------------------------------------------
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Merchandise'
+            )
+            ->update([
+                'transaction_detail' =>
+                    null,
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | HABIS PAKAI CLEANUP
+        |--------------------------------------------------------------------------
+        */
+
+        DB::table('items')
+            ->where(
+                'transaction_type',
+                'Habis Pakai'
+            )
+            ->update([
+                'transaction_detail' =>
+                    null,
+
+                'requires_mou' =>
+                    false,
             ]);
     }
 
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         if (
@@ -223,18 +273,14 @@ return new class extends Migration
                 'transaction_detail'
             )
         ) {
-
             Schema::table(
                 'items',
                 function (Blueprint $table) {
-
                     $table->dropColumn(
                         'transaction_detail'
                     );
-
                 }
             );
-
         }
     }
 };

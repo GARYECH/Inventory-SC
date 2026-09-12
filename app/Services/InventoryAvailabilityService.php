@@ -178,16 +178,34 @@ class InventoryAvailabilityService
                 continue;
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | EXISTING BOOKING DENGAN JAM
+            |--------------------------------------------------------------------------
+            |
+            | start_date dan end_date di-cast sebagai Carbon.
+            | start_time dan end_time juga di-cast sebagai Carbon
+            | melalui Model Order.
+            |
+            | Jangan menggabungkan object Carbon secara langsung
+            | dengan string tanggal karena bisa menghasilkan:
+            |
+            | 2026-09-19 00:00:00 2026-09-12 17:30:00
+            |
+            | yang menyebabkan Carbon InvalidFormatException.
+            |
+            */
+
             $existingStart = Carbon::parse(
-                $order->start_date .
-                ' ' .
-                $order->start_time
+                $order->start_date->format('Y-m-d')
+            )->setTimeFromTimeString(
+                $order->start_time->format('H:i:s')
             );
 
             $existingEnd = Carbon::parse(
-                $order->end_date .
-                ' ' .
-                $order->end_time
+                $order->end_date->format('Y-m-d')
+            )->setTimeFromTimeString(
+                $order->end_time->format('H:i:s')
             );
 
             if (

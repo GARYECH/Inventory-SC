@@ -14,12 +14,19 @@ class Order extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'start_time' => 'datetime:H:i',
+        'end_time' => 'datetime:H:i',
         'is_sop_accepted' => 'boolean',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 
     public function items()
@@ -29,14 +36,15 @@ class Order extends Model
                 'quantity',
                 'size',
                 'design_link',
+                'size_additional_price',
                 'subtotal_price'
             )
             ->withTimestamps();
     }
 
-    public function orderItems()
+    public function mouDocuments()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderMouDocument::class);
     }
 
     public function getTotalPriceAttribute()
@@ -46,44 +54,6 @@ class Order extends Model
 
     public function requiresMou()
     {
-        if (
-            in_array($this->order_type, [
-                'Peralatan',
-                'Handy Talkie'
-            ])
-        ) {
-            return true;
-        }
-
-        foreach ($this->items as $item) {
-            if (
-                in_array($item->transaction_type, [
-                    'Peralatan',
-                    'HT UV-82',
-                    'HT 888s',
-                    'HT UV-5R',
-                    'Internal Rental',
-                    'Vendor Rental'
-                ])
-            ) {
-                return true;
-            }
-
-            if (
-                $item->transaction_type === 'Merchandise' &&
-                in_array($item->subcategory, [
-                    'Baju',
-                    'ID Card'
-                ])
-            ) {
-                return true;
-            }
-
-            if ($item->requires_mou) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->mouDocuments()->exists();
     }
 }

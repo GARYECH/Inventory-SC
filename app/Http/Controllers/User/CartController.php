@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderMouDocument;
 use App\Models\User;
 use App\Notifications\AdminNotification;
 use Carbon\Carbon;
@@ -14,6 +15,14 @@ use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
+    private const TIME_OPTIONS = [
+        '17:00',
+        '17:30',
+        '18:00',
+        '18:30',
+        '19:00',
+    ];
+
     public function viewCart()
     {
         $cart = session()->get('cart', []);
@@ -24,69 +33,152 @@ class CartController extends Controller
     public function addToCart(Request $request, Item $item)
     {
         $cart = session()->get('cart', []);
+
         $requestQuantity = (int) ($request->quantity ?? 1);
 
-        $requiresReturn = in_array($item->transaction_type, [
-            'Peralatan',
-            'HT UV-82',
-            'HT 888s',
-            'HT UV-5R',
-            'Internal Rental',
-            'Vendor Rental'
-        ]);
+        $group = $this->getOrderGroup(
+            $item->transaction_type
+        );
 
-        if (count($cart) > 0) {
+        if (!$group) {
+            return back()->with(
+                'error',
+                'Jenis transaksi barang tidak valid.'
+            );
+        }
+
+        /*
+         * Barang dalam satu transaksi harus berasal
+         * dari kelompok transaksi yang sama.
+         *
+         * Contoh:
+         * Baju + ID Card       = boleh
+         * HT UV-82 + HT 888s   = boleh
+         * ATK + Obat           = boleh
+         * HT + Baju             = tidak
+         */
+        if (!empty($cart)) {
             $firstItem = reset($cart);
 
-            if (
-                $firstItem['transaction_type'] !==
+            $firstGroup = $this->getOrderGroup(
+                $firstItem['transaction_type']
+            );
+
+            if ($firstGroup !== $group) {
+                return back()->with(
+                    'error',
+                    'Barang ini tidak bisa dicampur dalam transaksi yang sama. Silakan buat transaksi baru untuk kategori berbeda.'
+                );
+            }
+        }
+
+        $isRental =
+            $this->requiresReturn(
                 $item->transaction_type
-            ) {
-                return back()->with(
-                    'error',
-                    "Kamu tidak bisa mencampur kategori '{$firstItem['transaction_type']}' dengan '{$item->transaction_type}' dalam satu keranjang."
-                );
-            }
+            );
+
+        /*
+         * Merchandise information
+         */
+        $size = null;
+        $designLink = null;
+        $sizeAdditionalPrice = 0;
+
+        if (
+            $item->transaction_type === 'Merchandise'
+        ) {
+            $subcategory = $item->subcategory;
 
             if (
-                $item->transaction_type === 'Merchandise' &&
-                ($firstItem['subcategory'] ?? null) !== $item->subcategory
+                !in_array(
+                    $subcategory,
+                    [
+                        'Baju',
+                        'ID Card',
+                        'Lainnya'
+                    ]
+                )
             ) {
                 return back()->with(
                     'error',
-                    'Kamu tidak bisa mencampur subkategori Merchandise dalam satu keranjang.'
+                    'Subkategori Merchandise belum ditentukan.'
                 );
+            }
+
+            /*
+             * Baju
+             */
+            if ($subcategory === 'Baju') {
+
+                $request->validate([
+                    'size' => 'required|in:S,M,L,XL,2XL,3XL,4XL,5XL',
+                    'design_link' => 'required|url',
+                ]);
+
+                $size = $request->size;
+                $designLink = $request->design_link;
+
+                $sizeAdditionalPrice =
+                    $this->getSizeAdditionalPrice(
+                        $size
+                    );
+
+            }
+
+            /*
+             * ID Card
+             */
+            elseif ($subcategory === 'ID Card') {
+
+                $request->validate([
+                    'design_link' => 'required|url',
+                ]);
+
+                $designLink = $request->design_link;
             }
         }
 
-        $rules = [
-            'quantity' => 'required|integer|min:1',
-            'start_date' => 'required|date|after_or_equal:today',
-            'start_time' => 'required|date_format:H:i',
-        ];
-
-        if ($requiresReturn) {
-            $rules['end_date'] = 'required|date|after_or_equal:start_date';
-            $rules['end_time'] = 'required|date_format:H:i';
-        }
-
+        /*
+         * Common validation
+         */
         $request->validate(
-            $rules,
             [
-                'quantity.required' => 'Jumlah barang wajib diisi.',
-                'start_date.required' => 'Pilih tanggal transaksi terlebih dahulu.',
-                'start_date.after_or_equal' => 'Tanggal tidak boleh sebelum hari ini.',
-                'start_time.required' => 'Pilih jam transaksi terlebih dahulu.',
-                'start_time.date_format' => 'Format jam harus HH:MM.',
-                'end_date.required' => 'Pilih tanggal pengembalian terlebih dahulu.',
-                'end_date.after_or_equal' => 'Tanggal pengembalian tidak boleh sebelum tanggal transaksi.',
-                'end_time.required' => 'Pilih jam pengembalian terlebih dahulu.',
-                'end_time.date_format' => 'Format jam harus HH:MM.',
+                'quantity' => [
+                    'required',
+                    'integer',
+                    'min:1'
+                ],
+
+                'start_date' => [
+                    'required',
+                    'date',
+                    'after_or_equal:today'
+                ],
+
+                'start_time' => [
+                    'required',
+                    'date_format:H:i'
+                ],
+            ],
+            [
+                'quantity.required' =>
+                    'Jumlah barang wajib diisi.',
+
+                'start_date.required' =>
+                    'Tanggal transaksi wajib dipilih.',
+
+                'start_date.after_or_equal' =>
+                    'Tanggal transaksi tidak boleh sebelum hari ini.',
+
+                'start_time.required' =>
+                    'Jam transaksi wajib dipilih.',
             ]
         );
 
         if (
-            !$this->isValidTime($request->start_time)
+            !$this->isValidTime(
+                $request->start_time
+            )
         ) {
             return back()->with(
                 'error',
@@ -96,11 +188,33 @@ class CartController extends Controller
 
         $startDate = $request->start_date;
         $startTime = $request->start_time;
+
         $endDate = null;
         $endTime = null;
 
-        if ($requiresReturn) {
-            if (!$this->isValidTime($request->end_time)) {
+        /*
+         * Rental
+         */
+        if ($isRental) {
+
+            $request->validate([
+                'end_date' => [
+                    'required',
+                    'date',
+                    'after_or_equal:start_date'
+                ],
+
+                'end_time' => [
+                    'required',
+                    'date_format:H:i'
+                ],
+            ]);
+
+            if (
+                !$this->isValidTime(
+                    $request->end_time
+                )
+            ) {
                 return back()->with(
                     'error',
                     'Jam pengembalian hanya boleh antara 17:00 sampai 19:00.'
@@ -118,42 +232,73 @@ class CartController extends Controller
                 "{$endDate} {$endTime}"
             );
 
-            if ($endDateTime->lessThanOrEqualTo($startDateTime)) {
+            if (
+                $endDateTime->lessThanOrEqualTo(
+                    $startDateTime
+                )
+            ) {
                 return back()->with(
                     'error',
                     'Waktu pengembalian harus setelah waktu pengambilan.'
                 );
             }
 
-            $overlappingQty = $this->getOverlappingQuantity(
-                $item->id,
-                $startDate,
-                $startTime,
-                $endDate,
-                $endTime
-            );
-
-            $qtyInCart = $cart[$item->id]['quantity'] ?? 0;
-            $totalRequested = $overlappingQty + $qtyInCart + $requestQuantity;
-
-            if ($totalRequested > $item->stock_quantity) {
-                $remainingStock = max(
-                    0,
-                    $item->stock_quantity -
-                    $overlappingQty -
-                    $qtyInCart
+            $overlappingQty =
+                $this->getOverlappingQuantity(
+                    $item->id,
+                    $startDate,
+                    $startTime,
+                    $endDate,
+                    $endTime
                 );
+        } else {
+            $overlappingQty = 0;
+        }
+
+        /*
+         * Cart line key
+         *
+         * Baju M dan Baju 2XL
+         * tidak boleh otomatis tergabung.
+         */
+        $lineKey = $this->buildLineKey(
+            $item,
+            $size
+        );
+
+        $existingQuantity =
+            $cart[$lineKey]['quantity'] ?? 0;
+
+        if ($isRental) {
+
+            $totalRequested =
+                $overlappingQty +
+                $existingQuantity +
+                $requestQuantity;
+
+            if (
+                $totalRequested >
+                $item->stock_quantity
+            ) {
+                $remaining =
+                    max(
+                        0,
+                        $item->stock_quantity -
+                        $overlappingQty -
+                        $existingQuantity
+                    );
 
                 return back()->with(
                     'error',
-                    "Gagal! Untuk jadwal tersebut, sisa stok '{$item->name}' hanya {$remainingStock} unit."
+                    "Gagal! Sisa stok '{$item->name}' untuk jadwal tersebut hanya {$remaining} unit."
                 );
             }
+
         } else {
-            $qtyInCart = $cart[$item->id]['quantity'] ?? 0;
 
             if (
-                ($qtyInCart + $requestQuantity) >
+                $existingQuantity +
+                $requestQuantity >
                 $item->stock_quantity
             ) {
                 return back()->with(
@@ -163,29 +308,87 @@ class CartController extends Controller
             }
         }
 
-        if (isset($cart[$item->id])) {
-            $cart[$item->id]['quantity'] += $requestQuantity;
-            $cart[$item->id]['start_date'] = $startDate;
-            $cart[$item->id]['start_time'] = $startTime;
-            $cart[$item->id]['end_date'] = $endDate;
-            $cart[$item->id]['end_time'] = $endTime;
+        /*
+         * Save cart
+         */
+        if (isset($cart[$lineKey])) {
+
+            $cart[$lineKey]['quantity'] +=
+                $requestQuantity;
+
+            $cart[$lineKey]['start_date'] =
+                $startDate;
+
+            $cart[$lineKey]['start_time'] =
+                $startTime;
+
+            $cart[$lineKey]['end_date'] =
+                $endDate;
+
+            $cart[$lineKey]['end_time'] =
+                $endTime;
+
+            $cart[$lineKey]['size'] =
+                $size;
+
+            $cart[$lineKey]['design_link'] =
+                $designLink;
+
+            $cart[$lineKey]['size_additional_price'] =
+                $sizeAdditionalPrice;
+
         } else {
-            $cart[$item->id] = [
-                'id' => $item->id,
-                'name' => $item->name,
-                'price' => $item->price,
-                'quantity' => $requestQuantity,
-                'transaction_type' => $item->transaction_type,
-                'subcategory' => $item->subcategory,
-                'requires_mou' => $item->requires_mou,
-                'start_date' => $startDate,
-                'start_time' => $startTime,
-                'end_date' => $endDate,
-                'end_time' => $endTime,
+
+            $cart[$lineKey] = [
+
+                'id' =>
+                    $item->id,
+
+                'name' =>
+                    $item->name,
+
+                'price' =>
+                    $item->price,
+
+                'quantity' =>
+                    $requestQuantity,
+
+                'transaction_type' =>
+                    $item->transaction_type,
+
+                'subcategory' =>
+                    $item->subcategory,
+
+                'requires_mou' =>
+                    $item->requires_mou,
+
+                'start_date' =>
+                    $startDate,
+
+                'start_time' =>
+                    $startTime,
+
+                'end_date' =>
+                    $endDate,
+
+                'end_time' =>
+                    $endTime,
+
+                'size' =>
+                    $size,
+
+                'design_link' =>
+                    $designLink,
+
+                'size_additional_price' =>
+                    $sizeAdditionalPrice,
             ];
         }
 
-        session()->put('cart', $cart);
+        session()->put(
+            'cart',
+            $cart
+        );
 
         return back()->with(
             'success',
@@ -203,11 +406,16 @@ class CartController extends Controller
         );
     }
 
-    public function updateCart(Request $request, $id)
-    {
-        $cart = session()->get('cart', []);
+    public function updateCart(
+        Request $request,
+        $lineKey
+    ) {
+        $cart = session()->get(
+            'cart',
+            []
+        );
 
-        if (!isset($cart[$id])) {
+        if (!isset($cart[$lineKey])) {
             return back()->with(
                 'error',
                 'Barang tidak ditemukan di keranjang.'
@@ -215,101 +423,96 @@ class CartController extends Controller
         }
 
         $request->validate([
-            'quantity' => 'required|integer|min:1',
+            'quantity' => [
+                'required',
+                'integer',
+                'min:1'
+            ]
         ]);
 
-        $item = Item::findOrFail($id);
-        $newQty = (int) $request->quantity;
+        $itemId =
+            $cart[$lineKey]['id'];
 
-        $requiresReturn = in_array($item->transaction_type, [
-            'Peralatan',
-            'HT UV-82',
-            'HT 888s',
-            'HT UV-5R',
-            'Internal Rental',
-            'Vendor Rental'
-        ]);
-
-        $startDate = $cart[$id]['start_date'] ?? null;
-        $startTime = $cart[$id]['start_time'] ?? null;
-        $endDate = $cart[$id]['end_date'] ?? null;
-        $endTime = $cart[$id]['end_time'] ?? null;
-
-        if (!$startDate || !$startTime) {
-            return back()->with(
-                'error',
-                'Jadwal transaksi belum lengkap. Silakan masukkan barang kembali dari katalog.'
+        $item =
+            Item::findOrFail(
+                $itemId
             );
-        }
 
-        if (!$this->isValidTime($startTime)) {
-            return back()->with(
-                'error',
-                'Jam transaksi hanya boleh antara 17:00 sampai 19:00.'
+        $quantity =
+            (int) $request->quantity;
+
+        $isRental =
+            $this->requiresReturn(
+                $item->transaction_type
             );
-        }
 
-        if ($requiresReturn) {
-            if (!$endDate || !$endTime) {
-                return back()->with(
-                    'error',
-                    'Jadwal pengembalian belum lengkap.'
+        if ($isRental) {
+
+            $overlappingQty =
+                $this->getOverlappingQuantity(
+                    $item->id,
+                    $cart[$lineKey]['start_date'],
+                    $cart[$lineKey]['start_time'],
+                    $cart[$lineKey]['end_date'],
+                    $cart[$lineKey]['end_time']
                 );
-            }
-
-            if (!$this->isValidTime($endTime)) {
-                return back()->with(
-                    'error',
-                    'Jam pengembalian hanya boleh antara 17:00 sampai 19:00.'
-                );
-            }
-
-            $overlappingQty = $this->getOverlappingQuantity(
-                $item->id,
-                $startDate,
-                $startTime,
-                $endDate,
-                $endTime
-            );
 
             if (
-                ($overlappingQty + $newQty) >
+                $overlappingQty +
+                $quantity >
                 $item->stock_quantity
             ) {
-                $remainingStock = max(
-                    0,
-                    $item->stock_quantity - $overlappingQty
-                );
-
                 return back()->with(
                     'error',
-                    "Gagal update! Sisa stok '{$item->name}' hanya {$remainingStock} unit."
+                    "Sisa stok '{$item->name}' tidak mencukupi."
                 );
             }
-        } elseif ($newQty > $item->stock_quantity) {
-            return back()->with(
-                'error',
-                "Gagal update! Stok gudang hanya {$item->stock_quantity} unit."
-            );
+
+        } else {
+
+            if (
+                $quantity >
+                $item->stock_quantity
+            ) {
+                return back()->with(
+                    'error',
+                    "Sisa stok '{$item->name}' tidak mencukupi."
+                );
+            }
         }
 
-        $cart[$id]['quantity'] = $newQty;
+        $cart[$lineKey]['quantity'] =
+            $quantity;
 
-        session()->put('cart', $cart);
+        session()->put(
+            'cart',
+            $cart
+        );
 
         return back()->with(
             'success',
-            'Jumlah barang berhasil diupdate!'
+            'Jumlah barang berhasil diupdate.'
         );
     }
 
-    public function removeItem($id)
-    {
-        $cart = session()->get('cart', []);
+    public function removeItem(
+        $lineKey
+    ) {
+        $cart =
+            session()->get(
+                'cart',
+                []
+            );
 
-        if (isset($cart[$id])) {
-            unset($cart[$id]);
-            session()->put('cart', $cart);
+        if (isset($cart[$lineKey])) {
+            unset(
+                $cart[$lineKey]
+            );
+
+            session()->put(
+                'cart',
+                $cart
+            );
         }
 
         return back()->with(
@@ -318,9 +521,14 @@ class CartController extends Controller
         );
     }
 
-    public function processCheckout(Request $request)
-    {
-        $cart = session()->get('cart', []);
+    public function processCheckout(
+        Request $request
+    ) {
+        $cart =
+            session()->get(
+                'cart',
+                []
+            );
 
         if (empty($cart)) {
             return back()->with(
@@ -330,355 +538,660 @@ class CartController extends Controller
         }
 
         $request->validate([
-            'full_name' => 'required|string',
-            'organization' => 'required|string',
-            'position' => 'required|string',
-            'phone_number' => 'required|string',
-            'proker_name' => 'required|string',
-            'ketua_acara' => 'required|string',
-            'treasurer_name' => 'required|string',
-            'address' => 'required|string',
-            'notes' => 'nullable|string',
-            'is_sop_accepted' => 'required|accepted',
+            'full_name' =>
+                'required|string|max:255',
+
+            'organization' =>
+                'required|string|max:255',
+
+            'position' =>
+                'required|string|max:255',
+
+            'phone_number' =>
+                'required|string|max:50',
+
+            'proker_name' =>
+                'required|string|max:255',
+
+            'ketua_acara' =>
+                'required|string|max:255',
+
+            'treasurer_name' =>
+                'required|string|max:255',
+
+            'address' =>
+                'required|string',
+
+            'notes' =>
+                'nullable|string',
+
+            'is_sop_accepted' =>
+                'required|accepted',
         ]);
 
-        $firstItem = reset($cart);
-        $transactionType = $firstItem['transaction_type'];
+        $firstItem =
+            reset($cart);
 
-        $orderType = $this->getOrderType($transactionType);
+        $orderType =
+            $this->getOrderGroup(
+                $firstItem['transaction_type']
+            );
 
-        $globalStartDate = null;
-        $globalStartTime = null;
-        $globalEndDate = null;
-        $globalEndTime = null;
+        /*
+         * Validate cart group
+         */
+        foreach ($cart as $cartItem) {
+
+            if (
+                $this->getOrderGroup(
+                    $cartItem['transaction_type']
+                ) !== $orderType
+            ) {
+                return back()->with(
+                    'error',
+                    'Kategori barang dalam keranjang tidak konsisten.'
+                );
+            }
+        }
+
         $totalPrice = 0;
 
-        foreach ($cart as $id => $item) {
-            if (
-                empty($item['start_date']) ||
-                empty($item['start_time'])
-            ) {
-                return back()->with(
-                    'error',
-                    'Setiap transaksi wajib memiliki tanggal dan jam.'
+        foreach (
+            $cart as $cartItem
+        ) {
+
+            $basePrice =
+                (int) $cartItem['price'];
+
+            $additionalPrice =
+                (int) (
+                    $cartItem['size_additional_price']
+                    ?? 0
                 );
-            }
 
-            if (!$this->isValidTime($item['start_time'])) {
-                return back()->with(
-                    'error',
-                    'Jam transaksi hanya boleh antara 17:00 sampai 19:00.'
-                );
-            }
+            $unitPrice =
+                $basePrice +
+                $additionalPrice;
 
+            /*
+             * Student Council FREE
+             * for consumables
+             */
             if (
-                is_null($globalStartDate) ||
-                $item['start_date'] < $globalStartDate
-            ) {
-                $globalStartDate = $item['start_date'];
-            }
-
-            if (
-                is_null($globalStartTime) ||
-                $item['start_time'] < $globalStartTime
-            ) {
-                $globalStartTime = $item['start_time'];
-            }
-
-            if (!empty($item['end_date'])) {
-                if (
-                    is_null($globalEndDate) ||
-                    $item['end_date'] > $globalEndDate
-                ) {
-                    $globalEndDate = $item['end_date'];
-                }
-
-                if (
-                    is_null($globalEndTime) ||
-                    $item['end_time'] > $globalEndTime
-                ) {
-                    $globalEndTime = $item['end_time'];
-                }
-            }
-
-            $dbItem = Item::find($id);
-
-            if (!$dbItem) {
-                return back()->with(
-                    'error',
-                    'Barang tidak ditemukan.'
-                );
-            }
-
-            $unitPrice = $item['price'];
-
-            if (
-                $request->organization === 'Student Council' &&
-                in_array($dbItem->transaction_type, [
-                    'Peralatan',
-                    'HT UV-5R'
-                ])
+                $request->organization ===
+                'Student Council' &&
+                $this->getOrderGroup(
+                    $cartItem['transaction_type']
+                ) === 'Habis Pakai'
             ) {
                 $unitPrice = 0;
             }
 
-            $totalPrice += $unitPrice * $item['quantity'];
+            $totalPrice +=
+                $unitPrice *
+                $cartItem['quantity'];
         }
 
         DB::beginTransaction();
 
         try {
-            foreach ($cart as $id => $item) {
-                $dbItem = Item::lockForUpdate()->find($id);
+
+            /*
+             * Recheck stock
+             */
+            foreach (
+                $cart as $cartItem
+            ) {
+
+                $dbItem =
+                    Item::lockForUpdate()
+                        ->find(
+                            $cartItem['id']
+                        );
 
                 if (!$dbItem) {
-                    DB::rollBack();
-
-                    return back()->with(
-                        'error',
-                        "Barang '{$item['name']}' tidak ditemukan."
+                    throw new \Exception(
+                        "Barang {$cartItem['name']} tidak ditemukan."
                     );
                 }
 
-                $requiresReturn = !empty($item['end_date']);
-
-                if ($requiresReturn) {
-                    $overlappingQty = $this->getOverlappingQuantity(
-                        $id,
-                        $item['start_date'],
-                        $item['start_time'],
-                        $item['end_date'],
-                        $item['end_time']
+                $requiresReturn =
+                    $this->requiresReturn(
+                        $cartItem['transaction_type']
                     );
 
+                if ($requiresReturn) {
+
+                    $overlappingQty =
+                        $this->getOverlappingQuantity(
+                            $dbItem->id,
+                            $cartItem['start_date'],
+                            $cartItem['start_time'],
+                            $cartItem['end_date'],
+                            $cartItem['end_time']
+                        );
+
                     if (
-                        ($overlappingQty + $item['quantity']) >
+                        $overlappingQty +
+                        $cartItem['quantity'] >
                         $dbItem->stock_quantity
                     ) {
-                        DB::rollBack();
-
-                        return back()->with(
-                            'error',
-                            "Maaf, barang '{$item['name']}' baru saja dibooking orang lain pada jadwal tersebut."
+                        throw new \Exception(
+                            "Stok '{$dbItem->name}' tidak mencukupi untuk jadwal tersebut."
                         );
                     }
+
                 } else {
+
                     if (
                         $dbItem->stock_quantity <
-                        $item['quantity']
+                        $cartItem['quantity']
                     ) {
-                        DB::rollBack();
-
-                        return back()->with(
-                            'error',
-                            "Gagal! Stok '{$item['name']}' keburu habis."
+                        throw new \Exception(
+                            "Stok '{$dbItem->name}' tidak mencukupi."
                         );
                     }
 
                     $dbItem->decrement(
                         'stock_quantity',
-                        $item['quantity']
+                        $cartItem['quantity']
                     );
                 }
             }
 
-            $order = Order::create([
-                'order_number' => 'ORD-' . strtoupper(uniqid()),
-                'user_id' => auth()->id(),
-                'full_name' => $request->full_name,
-                'organization' => $request->organization,
-                'position' => $request->position,
-                'phone_number' => $request->phone_number,
-                'proker_name' => $request->proker_name,
-                'ketua_acara' => $request->ketua_acara,
-                'department' => '-',
-                'treasurer_name' => $request->treasurer_name,
-                'address' => $request->address,
-                'notes' => $request->notes,
-                'order_type' => $orderType,
-                'start_date' => $globalStartDate,
-                'start_time' => $globalStartTime,
-                'end_date' => $globalEndDate,
-                'end_time' => $globalEndTime,
-                'is_sop_accepted' => true,
-                'total_price' => $totalPrice,
-                'status' => 'Pending',
-            ]);
+            /*
+             * Order schedule
+             */
+            $startDate =
+                $firstItem['start_date'];
 
-            foreach ($cart as $item) {
-                $dbItem = Item::find($item['id']);
-                $unitPrice = $item['price'];
+            $startTime =
+                $firstItem['start_time'];
+
+            $endDate =
+                $firstItem['end_date']
+                ?? null;
+
+            $endTime =
+                $firstItem['end_time']
+                ?? null;
+
+            $order =
+                Order::create([
+                    'order_number' =>
+                        'ORD-' .
+                        strtoupper(
+                            uniqid()
+                        ),
+
+                    'user_id' =>
+                        auth()->id(),
+
+                    'full_name' =>
+                        $request->full_name,
+
+                    'organization' =>
+                        $request->organization,
+
+                    'position' =>
+                        $request->position,
+
+                    'phone_number' =>
+                        $request->phone_number,
+
+                    'proker_name' =>
+                        $request->proker_name,
+
+                    'ketua_acara' =>
+                        $request->ketua_acara,
+
+                    'department' =>
+                        '-',
+
+                    'treasurer_name' =>
+                        $request->treasurer_name,
+
+                    'address' =>
+                        $request->address,
+
+                    'notes' =>
+                        $request->notes,
+
+                    'order_type' =>
+                        $orderType,
+
+                    'start_date' =>
+                        $startDate,
+
+                    'start_time' =>
+                        $startTime,
+
+                    'end_date' =>
+                        $endDate,
+
+                    'end_time' =>
+                        $endTime,
+
+                    'is_sop_accepted' =>
+                        true,
+
+                    'status' =>
+                        'Pending',
+
+                ]);
+
+            /*
+             * Create order items
+             */
+            foreach (
+                $cart as $cartItem
+            ) {
+
+                $basePrice =
+                    (int) $cartItem['price'];
+
+                $sizeAdditional =
+                    (int) (
+                        $cartItem['size_additional_price']
+                        ?? 0
+                    );
+
+                $unitPrice =
+                    $basePrice +
+                    $sizeAdditional;
 
                 if (
-                    $request->organization === 'Student Council' &&
-                    in_array($dbItem->transaction_type, [
-                        'Peralatan',
-                        'HT UV-5R'
-                    ])
+                    $request->organization ===
+                    'Student Council' &&
+                    $orderType === 'Habis Pakai'
                 ) {
                     $unitPrice = 0;
                 }
 
+                $subtotal =
+                    $unitPrice *
+                    $cartItem['quantity'];
+
                 OrderItem::create([
-                    'order_number' => $order->id,
-                    'order_id' => $order->id,
-                    'item_id' => $item['id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $unitPrice,
-                    'subtotal_price' => $unitPrice * $item['quantity'],
+                    'order_id' =>
+                        $order->id,
+
+                    'item_id' =>
+                        $cartItem['id'],
+
+                    'quantity' =>
+                        $cartItem['quantity'],
+
+                    'size' =>
+                        $cartItem['size']
+                        ?? null,
+
+                    'design_link' =>
+                        $cartItem['design_link']
+                        ?? null,
+
+                    'size_additional_price' =>
+                        $sizeAdditional,
+
+                    'subtotal_price' =>
+                        $subtotal,
                 ]);
             }
 
-            session()->forget('cart');
+            /*
+             * Create MOU documents
+             */
+            $mouTypes = [];
 
-            $admins = User::where('role', 'admin')->get();
+            foreach (
+                $cart as $cartItem
+            ) {
 
-            foreach ($admins as $admin) {
-                $admin->notify(
-                    new AdminNotification(
-                        'Order Baru: ' .
-                        $order->order_number .
-                        ' dari ' .
-                        $order->proker_name
+                $mouType =
+                    $this->getMouType(
+                        $cartItem
+                    );
+
+                if (
+                    $mouType &&
+                    !in_array(
+                        $mouType,
+                        $mouTypes
                     )
-                );
+                ) {
+                    $mouTypes[] =
+                        $mouType;
+                }
+            }
+
+            foreach (
+                $mouTypes as $mouType
+            ) {
+
+                OrderMouDocument::create([
+                    'order_id' =>
+                        $order->id,
+
+                    'mou_type' =>
+                        $mouType,
+                ]);
+            }
+
+            /*
+             * Status
+             */
+            if (!empty($mouTypes)) {
+                $order->update([
+                    'status' =>
+                        'Waiting for MoU'
+                ]);
+            } else {
+                $order->update([
+                    'status' =>
+                        'Waiting for Payment'
+                ]);
             }
 
             DB::commit();
 
+            session()->forget(
+                'cart'
+            );
+
+            $this->notifyAdmins(
+                "Transaksi baru masuk: {$order->order_number}"
+            );
+
             return redirect()
-                ->route('student.loans')
+                ->route(
+                    'student.loans'
+                )
                 ->with(
                     'success',
-                    'Checkout berhasil! Pengajuanmu sedang menunggu persetujuan Admin.'
+                    'Pesanan berhasil dibuat!'
                 );
-        } catch (\Exception $e) {
+
+        } catch (\Throwable $e) {
+
             DB::rollBack();
 
             return back()->with(
                 'error',
-                'Terjadi kesalahan sistem: ' . $e->getMessage()
+                $e->getMessage()
             );
         }
     }
 
-    private function isValidTime($time)
-    {
-        try {
-            $selectedTime = Carbon::createFromFormat('H:i', $time);
-            $minimumTime = Carbon::createFromFormat('H:i', '17:00');
-            $maximumTime = Carbon::createFromFormat('H:i', '19:00');
+    private function getOrderGroup(
+        string $transactionType
+    ): ?string {
 
-            return $selectedTime->betweenIncluded(
-                $minimumTime,
-                $maximumTime
-            );
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    private function getOrderType($transactionType)
-    {
-        if ($transactionType === 'Merchandise') {
-            return 'Merchandise';
+        if (
+            $transactionType ===
+            'Peralatan'
+        ) {
+            return 'Peralatan';
         }
 
         if (
-            in_array($transactionType, [
-                'ATK',
-                'Obat'
-            ])
+            in_array(
+                $transactionType,
+                [
+                    'HT UV-82',
+                    'HT 888s',
+                    'HT UV-5R'
+                ]
+            )
+        ) {
+            return 'Handy Talkie';
+        }
+
+        if (
+            in_array(
+                $transactionType,
+                [
+                    'ATK',
+                    'Obat'
+                ]
+            )
         ) {
             return 'Habis Pakai';
         }
 
         if (
-            in_array($transactionType, [
-                'HT UV-82',
-                'HT 888s',
-                'HT UV-5R'
-            ])
+            $transactionType ===
+            'Merchandise'
         ) {
-            return 'Handy Talkie';
+            return 'Merchandise';
         }
 
-        return 'Peralatan';
+        return null;
+    }
+
+    private function requiresReturn(
+        string $transactionType
+    ): bool {
+
+        return in_array(
+            $transactionType,
+            [
+                'Peralatan',
+                'HT UV-82',
+                'HT 888s',
+                'HT UV-5R',
+                'Internal Rental',
+                'Vendor Rental'
+            ]
+        );
+    }
+
+    private function getMouType(
+        array $item
+    ): ?string {
+
+        $transactionType =
+            $item['transaction_type'];
+
+        if (
+            $transactionType ===
+            'Peralatan'
+        ) {
+            return 'peralatan';
+        }
+
+        if (
+            in_array(
+                $transactionType,
+                [
+                    'HT UV-82',
+                    'HT 888s',
+                    'HT UV-5R'
+                ]
+            )
+        ) {
+            return 'ht';
+        }
+
+        if (
+            $transactionType ===
+            'Internal Rental'
+        ) {
+            return 'internal';
+        }
+
+        if (
+            $transactionType ===
+            'Vendor Rental'
+        ) {
+            return 'vendor';
+        }
+
+        if (
+            $transactionType ===
+            'Merchandise'
+        ) {
+
+            if (
+                ($item['subcategory'] ?? null) ===
+                'Baju'
+            ) {
+                return 'baju';
+            }
+
+            if (
+                ($item['subcategory'] ?? null) ===
+                'ID Card'
+            ) {
+                return 'id_card';
+            }
+        }
+
+        return null;
+    }
+
+    private function getSizeAdditionalPrice(
+        string $size
+    ): int {
+
+        return match ($size) {
+            '2XL' => 5000,
+            '3XL' => 10000,
+            '4XL' => 15000,
+            '5XL' => 20000,
+            default => 0,
+        };
+    }
+
+    private function buildLineKey(
+        Item $item,
+        ?string $size
+    ): string {
+
+        if (
+            $item->transaction_type ===
+            'Merchandise' &&
+            $item->subcategory ===
+            'Baju'
+        ) {
+            return $item->id . '_' . $size;
+        }
+
+        return (string) $item->id;
+    }
+
+    private function isValidTime(
+        string $time
+    ): bool {
+
+        return in_array(
+            $time,
+            self::TIME_OPTIONS,
+            true
+        );
     }
 
     private function getOverlappingQuantity(
-        $itemId,
-        $startDate,
-        $startTime,
-        $endDate,
-        $endTime
-    ) {
-        if (
-            empty($startDate) ||
-            empty($startTime) ||
-            empty($endDate) ||
-            empty($endTime)
-        ) {
-            return 0;
-        }
+        int $itemId,
+        string $startDate,
+        string $startTime,
+        string $endDate,
+        string $endTime
+    ): int {
 
-        $requestedStart = Carbon::parse(
-            "{$startDate} {$startTime}"
-        );
+        $newStart =
+            Carbon::parse(
+                "{$startDate} {$startTime}"
+            );
 
-        $requestedEnd = Carbon::parse(
-            "{$endDate} {$endTime}"
-        );
+        $newEnd =
+            Carbon::parse(
+                "{$endDate} {$endTime}"
+            );
 
-        $orders = OrderItem::where('item_id', $itemId)
-            ->whereHas('order', function ($query) use (
-                $startDate,
-                $endDate
-            ) {
-                $query
-                    ->whereNotIn('status', [
-                        'Returned',
-                        'Resolved (Fine Paid)',
-                        'Rejected',
-                        'Cancelled'
-                    ])
-                    ->where('start_date', '<=', $endDate)
-                    ->where('end_date', '>=', $startDate);
-            })
+        $orderItems =
+            OrderItem::where(
+                'item_id',
+                $itemId
+            )
+            ->whereHas(
+                'order',
+                function ($query) {
+
+                    $query->whereNotIn(
+                        'status',
+                        [
+                            'Returned',
+                            'Resolved (Fine Paid)',
+                            'Rejected',
+                            'Cancelled'
+                        ]
+                    );
+
+                }
+            )
             ->with('order')
             ->get();
 
-        $total = 0;
+        $quantity = 0;
 
-        foreach ($orders as $orderItem) {
-            $order = $orderItem->order;
+        foreach (
+            $orderItems as $orderItem
+        ) {
 
             if (
-                !$order ||
-                !$order->start_date ||
-                !$order->start_time ||
-                !$order->end_date ||
-                !$order->end_time
+                !$orderItem->order ||
+                !$orderItem->order->start_date ||
+                !$orderItem->order->start_time ||
+                !$orderItem->order->end_date ||
+                !$orderItem->order->end_time
             ) {
                 continue;
             }
 
-            $existingStart = Carbon::parse(
-                "{$order->start_date} {$order->start_time}"
-            );
+            $existingStart =
+                Carbon::parse(
+                    $orderItem->order->start_date
+                    . ' ' .
+                    $orderItem->order->start_time
+                );
 
-            $existingEnd = Carbon::parse(
-                "{$order->end_date} {$order->end_time}"
-            );
+            $existingEnd =
+                Carbon::parse(
+                    $orderItem->order->end_date
+                    . ' ' .
+                    $orderItem->order->end_time
+                );
 
             if (
-                $existingStart->lt($requestedEnd) &&
-                $existingEnd->gt($requestedStart)
+                $newStart < $existingEnd &&
+                $newEnd > $existingStart
             ) {
-                $total += $orderItem->quantity;
+                $quantity +=
+                    $orderItem->quantity;
             }
         }
 
-        return $total;
+        return $quantity;
+    }
+
+    private function notifyAdmins(
+        string $message
+    ): void {
+
+        $admins =
+            User::where(
+                'role',
+                'admin'
+            )->get();
+
+        foreach (
+            $admins as $admin
+        ) {
+            $admin->notify(
+                new AdminNotification(
+                    $message
+                )
+            );
+        }
     }
 }

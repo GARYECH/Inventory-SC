@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OrderItem extends Model
+class OrderMouDocument extends Model
 {
     use HasFactory;
 
@@ -14,10 +14,5 @@ class OrderItem extends Model
     public function order()
     {
         return $this->belongsTo(Order::class);
-    }
-
-    public function item()
-    {
-        return $this->belongsTo(Item::class);
     }
 }

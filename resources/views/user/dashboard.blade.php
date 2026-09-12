@@ -62,20 +62,24 @@
                         >
 
                             @if(request('type'))
+
                                 <input
                                     type="hidden"
                                     name="type"
                                     value="{{ request('type') }}"
                                 >
+
                             @endif
 
 
                             @if(request('category'))
+
                                 <input
                                     type="hidden"
                                     name="category"
                                     value="{{ request('category') }}"
                                 >
+
                             @endif
 
 
@@ -263,7 +267,7 @@
                                 'page'
                             ])
                         ) }}"
-                        class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                        class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                         {{ !request('type')
                             ? 'border-gray-950 bg-gray-950 text-white shadow-lg'
                             : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900'
@@ -301,7 +305,7 @@
                                 ]
                             )
                         ) }}"
-                        class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                        class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                         {{ request('type') === 'Peralatan'
                             ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
                             : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
@@ -310,31 +314,31 @@
 
                         <span class="h-2.5 w-2.5 rounded-full {{ request('type') === 'Peralatan' ? 'bg-indigo-500' : 'bg-gray-300' }}"></span>
 
-                        Peralatan SC
+                        Peralatan
 
                     </a>
 
 
 
-                    <!-- HT -->
+                    <!-- HANDY TALKIE -->
                     <a
                         href="{{ route(
                             'student.dashboard',
                             array_merge(
                                 request()->except('page'),
                                 [
-                                    'type' => 'HT'
+                                    'type' => 'Handy Talkie'
                                 ]
                             )
                         ) }}"
-                        class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
-                        {{ request('type') === 'HT'
+                        class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                        {{ request('type') === 'Handy Talkie'
                             ? 'border-amber-200 bg-amber-50 text-amber-700'
                             : 'border-gray-200 bg-white text-gray-500 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-600'
                         }}"
                     >
 
-                        <span class="h-2.5 w-2.5 rounded-full {{ request('type') === 'HT' ? 'bg-amber-500' : 'bg-gray-300' }}"></span>
+                        <span class="h-2.5 w-2.5 rounded-full {{ request('type') === 'Handy Talkie' ? 'bg-amber-500' : 'bg-gray-300' }}"></span>
 
                         Handy Talkie
 
@@ -349,18 +353,18 @@
                             array_merge(
                                 request()->except('page'),
                                 [
-                                    'type' => 'HabisPakai'
+                                    'type' => 'Habis Pakai'
                                 ]
                             )
                         ) }}"
-                        class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
-                        {{ request('type') === 'HabisPakai'
+                        class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                        {{ request('type') === 'Habis Pakai'
                             ? 'border-rose-200 bg-rose-50 text-rose-700'
                             : 'border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600'
                         }}"
                     >
 
-                        <span class="h-2.5 w-2.5 rounded-full {{ request('type') === 'HabisPakai' ? 'bg-rose-500' : 'bg-gray-300' }}"></span>
+                        <span class="h-2.5 w-2.5 rounded-full {{ request('type') === 'Habis Pakai' ? 'bg-rose-500' : 'bg-gray-300' }}"></span>
 
                         Habis Pakai
 
@@ -379,7 +383,7 @@
                                 ]
                             )
                         ) }}"
-                        class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                        class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                         {{ request('type') === 'Merchandise'
                             ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                             : 'border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600'
@@ -399,7 +403,7 @@
 
 
             <!-- ===================================================== -->
-            <!-- DYNAMIC CATEGORY FILTER -->
+            <!-- CATEGORY FILTER -->
             <!-- ===================================================== -->
 
             @if(isset($categories) && $categories->count() > 0)
@@ -415,7 +419,7 @@
                             </p>
 
                             <p class="mt-0.5 text-[9px] font-semibold text-gray-400">
-                                Pilih kategori untuk mempersempit katalog
+                                Kategori dan jenis transaksi tidak harus sama
                             </p>
 
                         </div>
@@ -435,7 +439,7 @@
                                     'page'
                                 ])
                             ) }}"
-                            class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                            class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                             {{ !request('category')
                                 ? 'border-gray-950 bg-gray-950 text-white shadow-lg'
                                 : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900'
@@ -459,7 +463,7 @@
                                         ]
                                     )
                                 ) }}"
-                                class="shrink-0 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                                class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
                                 {{ request('category') === $category->slug
                                     ? 'border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm'
                                     : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
@@ -468,9 +472,10 @@
 
                                 <span
                                     class="h-2 w-2 rounded-full
-                                    {{ request('category') === $category->slug
-                                        ? 'bg-indigo-500'
-                                        : 'bg-gray-300'
+                                    {{
+                                        request('category') === $category->slug
+                                            ? 'bg-indigo-500'
+                                            : 'bg-gray-300'
                                     }}"
                                 ></span>
 
@@ -481,9 +486,10 @@
 
                                     <span
                                         class="rounded-md bg-black/5 px-1.5 py-0.5 text-[8px] font-black
-                                        {{ request('category') === $category->slug
-                                            ? 'text-indigo-600'
-                                            : 'text-gray-400'
+                                        {{
+                                            request('category') === $category->slug
+                                                ? 'text-indigo-600'
+                                                : 'text-gray-400'
                                         }}"
                                     >
                                         {{ $category->items_count }}
@@ -516,82 +522,86 @@
 
                         @php
 
-                            $type =
-                                $item->transaction_type;
+                            /*
+                             * =====================================================
+                             * FINAL TRANSACTION TYPE
+                             * =====================================================
+                             *
+                             * Hanya ada 4:
+                             * - Peralatan
+                             * - Handy Talkie
+                             * - Habis Pakai
+                             * - Merchandise
+                             *
+                             */
+
+                            $type = $item->transaction_type;
 
 
                             /*
+                             * =====================================================
                              * RENTAL
+                             * =====================================================
+                             *
+                             * Hanya Peralatan dan Handy Talkie
                              */
-                            $isRental =
-                                in_array(
-                                    $type,
-                                    [
-                                        'Peralatan',
-                                        'HT UV-82',
-                                        'HT 888s',
-                                        'HT UV-5R',
-                                        'Internal Rental',
-                                        'Vendor Rental'
-                                    ]
-                                );
+
+                            $isRental = in_array(
+                                $type,
+                                [
+                                    'Peralatan',
+                                    'Handy Talkie'
+                                ]
+                            );
 
 
                             /*
-                             * CONSUMABLE
+                             * =====================================================
+                             * NON RENTAL
+                             * =====================================================
                              */
+
                             $isConsumable =
-                                in_array(
-                                    $type,
-                                    [
-                                        'ATK',
-                                        'Obat'
-                                    ]
-                                );
+                                $type === 'Habis Pakai';
 
 
-                            /*
-                             * MERCHANDISE
-                             */
                             $isMerchandise =
-                                $type ===
-                                'Merchandise';
+                                $type === 'Merchandise';
 
 
                             /*
-                             * BADGE
+                             * =====================================================
+                             * TRANSACTION DETAIL
+                             * =====================================================
                              */
-                            $badgeText =
-                                $type;
+
+                            $transactionDetail =
+                                $item->transaction_detail ?? null;
+
+
+                            /*
+                             * =====================================================
+                             * BADGE
+                             * =====================================================
+                             */
+
+                            $badgeText = $type;
 
                             $badgeClass =
                                 'bg-gray-900 text-white';
 
 
-                            if (
-                                $type ===
-                                'Peralatan'
-                            ) {
+                            if ($type === 'Peralatan') {
 
                                 $badgeText =
-                                    'Peralatan SC';
+                                    'Peralatan';
 
                                 $badgeClass =
                                     'bg-indigo-600 text-white';
 
                             }
 
-
-                            elseif (
-                                in_array(
-                                    $type,
-                                    [
-                                        'HT UV-82',
-                                        'HT 888s',
-                                        'HT UV-5R'
-                                    ]
-                                )
-                            ) {
+                            elseif ($type === 'Handy Talkie') {
 
                                 $badgeText =
                                     'Handy Talkie';
@@ -601,25 +611,17 @@
 
                             }
 
-
-                            elseif (
-                                $isConsumable
-                            ) {
+                            elseif ($type === 'Habis Pakai') {
 
                                 $badgeText =
-                                    $type === 'Obat'
-                                        ? 'Habis Pakai · Obat'
-                                        : 'Habis Pakai · ATK';
+                                    'Habis Pakai';
 
                                 $badgeClass =
                                     'bg-rose-500 text-white';
 
                             }
 
-
-                            elseif (
-                                $isMerchandise
-                            ) {
+                            elseif ($type === 'Merchandise') {
 
                                 $badgeText =
                                     'Merchandise';
@@ -631,8 +633,11 @@
 
 
                             /*
+                             * =====================================================
                              * ACTIVE RENTAL BOOKINGS
+                             * =====================================================
                              */
+
                             $activeSchedules =
                                 collect();
 
@@ -644,10 +649,10 @@
                                         ->filter(
                                             function ($detail) {
 
-                                                if (
-                                                    !$detail->order
-                                                ) {
+                                                if (!$detail->order) {
+
                                                     return false;
+
                                                 }
 
                                                 return !in_array(
@@ -665,13 +670,8 @@
                                         ->sortBy(
                                             function ($detail) {
 
-                                                return $detail
-                                                    ->order
-                                                    ->start_date
-                                                    ? $detail
-                                                        ->order
-                                                        ->start_date
-                                                        ->timestamp
+                                                return $detail->order->start_date
+                                                    ? $detail->order->start_date->timestamp
                                                     : PHP_INT_MAX;
 
                                             }
@@ -681,18 +681,15 @@
 
 
                             $displaySchedules =
-                                $activeSchedules
-                                    ->take(2);
+                                $activeSchedules->take(2);
 
 
                             $remainingCount =
                                 max(
                                     0,
-                                    $activeSchedules
-                                        ->count()
+                                    $activeSchedules->count()
                                     -
-                                    $displaySchedules
-                                        ->count()
+                                    $displaySchedules->count()
                                 );
 
                         @endphp
@@ -758,7 +755,7 @@
 
 
 
-                                    <!-- CATEGORY -->
+                                    <!-- TRANSACTION TYPE BADGE -->
                                     <div class="absolute left-3 top-3">
 
                                         <span
@@ -776,17 +773,19 @@
 
                                         <span
                                             class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[8px] font-black uppercase tracking-widest shadow-lg backdrop-blur-md
-                                            {{ $item->condition_status === 'Good'
-                                                ? 'bg-white/90 text-emerald-600'
-                                                : 'bg-red-500 text-white'
+                                            {{
+                                                $item->condition_status === 'Good'
+                                                    ? 'bg-white/90 text-emerald-600'
+                                                    : 'bg-red-500 text-white'
                                             }}"
                                         >
 
                                             <span
                                                 class="h-1.5 w-1.5 rounded-full
-                                                {{ $item->condition_status === 'Good'
-                                                    ? 'bg-emerald-500'
-                                                    : 'bg-white'
+                                                {{
+                                                    $item->condition_status === 'Good'
+                                                        ? 'bg-emerald-500'
+                                                        : 'bg-white'
                                                 }}"
                                             ></span>
 
@@ -833,7 +832,137 @@
 
 
 
+                                <!-- ================================================= -->
+                                <!-- ITEM NOTES -->
+                                <!-- ================================================= -->
+
+                                <div class="mt-4 rounded-2xl border border-gray-100 bg-gray-50 px-3.5 py-3">
+
+                                    <div class="flex items-start gap-2.5">
+
+                                        <div class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm">
+
+                                            <svg
+                                                class="h-3.5 w-3.5 text-indigo-500"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                                                />
+                                            </svg>
+
+                                        </div>
+
+
+                                        <div class="min-w-0 flex-1">
+
+                                            <p class="text-[8px] font-black uppercase tracking-[0.16em] text-gray-400">
+                                                Informasi Barang
+                                            </p>
+
+
+                                            <div class="mt-2 space-y-1.5">
+
+                                                <!-- CATEGORY -->
+                                                <div class="flex items-start justify-between gap-3">
+
+                                                    <span class="text-[8px] font-bold uppercase tracking-wider text-gray-400">
+                                                        Category
+                                                    </span>
+
+                                                    <span class="text-right text-[9px] font-black text-gray-700">
+                                                        {{ $item->category->name ?? 'Tidak ada kategori' }}
+                                                    </span>
+
+                                                </div>
+
+
+                                                <!-- TRANSACTION TYPE -->
+                                                <div class="flex items-start justify-between gap-3">
+
+                                                    <span class="text-[8px] font-bold uppercase tracking-wider text-gray-400">
+                                                        Transaction Type
+                                                    </span>
+
+                                                    <span class="text-right text-[9px] font-black text-indigo-600">
+                                                        {{ $type }}
+                                                    </span>
+
+                                                </div>
+
+
+                                                <!-- TRANSACTION DETAIL -->
+                                                @if($transactionDetail)
+
+                                                    <div class="flex items-start justify-between gap-3">
+
+                                                        <span class="text-[8px] font-bold uppercase tracking-wider text-gray-400">
+                                                            Detail
+                                                        </span>
+
+                                                        <span class="text-right text-[9px] font-black text-gray-600">
+                                                            {{ $transactionDetail }}
+                                                        </span>
+
+                                                    </div>
+
+                                                @endif
+
+                                            </div>
+
+
+                                            <!-- SIMPLE EXPLANATION -->
+                                            <div class="mt-3 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2.5">
+
+    <div class="flex items-start gap-2">
+
+        <svg
+            class="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+            />
+        </svg>
+
+        <p class="text-[8px] font-bold leading-relaxed text-indigo-600">
+
+            <span class="font-black">
+                Penting:
+            </span>
+
+            Dalam satu transaksi, semua barang harus memiliki
+            <span class="font-black">
+                Transaction Type yang sama.
+            </span>
+
+        </p>
+
+    </div>
+
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <!-- ================================================= -->
                                 <!-- PRICE + STOCK -->
+                                <!-- ================================================= -->
+
                                 <div class="mt-5 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
 
                                     <div>
@@ -928,10 +1057,7 @@
 
                                         <div class="space-y-1.5">
 
-                                            @foreach(
-                                                $displaySchedules
-                                                as $detail
-                                            )
+                                            @foreach($displaySchedules as $detail)
 
                                                 <div class="rounded-xl border border-orange-100 bg-white px-2.5 py-2">
 
@@ -941,18 +1067,12 @@
 
                                                             <p class="truncate text-[9px] font-black text-orange-700">
 
-                                                                {{ optional(
-                                                                    $detail->order->start_date
-                                                                )->format('d M Y') }}
+                                                                {{ optional($detail->order->start_date)->format('d M Y') }}
 
-                                                                @if(
-                                                                    $detail->order->end_date
-                                                                )
+                                                                @if($detail->order->end_date)
 
                                                                     —
-                                                                    {{ optional(
-                                                                        $detail->order->end_date
-                                                                    )->format('d M Y') }}
+                                                                    {{ optional($detail->order->end_date)->format('d M Y') }}
 
                                                                 @endif
 
@@ -961,14 +1081,21 @@
 
                                                             <p class="mt-1 text-[8px] font-bold text-orange-400">
 
-                                                                {{ $detail->order->start_time ?? '--:--' }}
+                                                                {{
+                                                                    optional(
+                                                                        $detail->order->start_time
+                                                                    )->format('H:i')
+                                                                    ?? '--:--'
+                                                                }}
 
-                                                                @if(
-                                                                    $detail->order->end_time
-                                                                )
+                                                                @if($detail->order->end_time)
 
                                                                     →
-                                                                    {{ $detail->order->end_time }}
+                                                                    {{
+                                                                        optional(
+                                                                            $detail->order->end_time
+                                                                        )->format('H:i')
+                                                                    }}
 
                                                                 @endif
 
@@ -997,8 +1124,7 @@
 
                                             <p class="mt-2 text-center text-[8px] font-black uppercase tracking-widest text-orange-400">
 
-                                                +
-                                                {{ $remainingCount }}
+                                                +{{ $remainingCount }}
                                                 jadwal lainnya
 
                                             </p>
@@ -1020,9 +1146,7 @@
                             <div class="border-t border-gray-100 p-4">
 
 
-                                @if(
-                                    $item->stock_quantity > 0
-                                )
+                                @if($item->stock_quantity > 0)
 
 
                                     <!-- VIEW BOOKING -->
@@ -1148,7 +1272,7 @@
                                                             stroke-linecap="round"
                                                             stroke-linejoin="round"
                                                             stroke-width="2"
-                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
+                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002-2h14"
                                                         />
                                                     </svg>
 
@@ -1454,7 +1578,6 @@
                                             $isMerchandise &&
                                             $item->subcategory === 'ID Card'
                                         )
-
 
                                             <!-- ID CARD DRIVE -->
                                             <div class="mt-4">
@@ -1874,7 +1997,9 @@
 
 
                             if (!card) {
+
                                 return;
+
                             }
 
 
@@ -1885,7 +2010,9 @@
 
 
                             if (!form) {
+
                                 return;
+
                             }
 
 
@@ -1896,7 +2023,7 @@
 
 
                             /*
-                             * Close all other forms.
+                             * CLOSE ALL OTHER FORMS
                              */
 
                             document
@@ -1924,7 +2051,7 @@
 
 
                             /*
-                             * Toggle current.
+                             * TOGGLE CURRENT FORM
                              */
 
                             form.classList.toggle(
@@ -1933,8 +2060,7 @@
 
 
                             /*
-                             * Initialize calendar
-                             * only once.
+                             * INITIALIZE CALENDAR ONLY ONCE
                              */
 
                             if (
@@ -2037,8 +2163,8 @@
             let stockData = {};
 
 
-            /*
-             * ========================================================
+
+            /* ========================================================
              * DATE PICKER
              * ========================================================
              */
@@ -2082,9 +2208,7 @@
                                 dayElem
                             ) {
 
-                                if (
-                                    !isRental
-                                ) {
+                                if (!isRental) {
 
                                     return;
 
@@ -2151,15 +2275,12 @@
                             ) {
 
                                 if (
-                                    selectedDates.length ===
-                                    0
+                                    selectedDates.length === 0
                                 ) {
 
-                                    startDate.value =
-                                        '';
+                                    startDate.value = '';
 
-                                    endDate.value =
-                                        '';
+                                    endDate.value = '';
 
                                     updateSummary();
 
@@ -2175,13 +2296,10 @@
                                     );
 
 
-                                if (
-                                    isRental
-                                ) {
+                                if (isRental) {
 
                                     if (
-                                        selectedDates.length >=
-                                        2
+                                        selectedDates.length >= 2
                                     ) {
 
                                         endDate.value =
@@ -2202,8 +2320,7 @@
 
                                 } else {
 
-                                    endDate.value =
-                                        '';
+                                    endDate.value = '';
 
                                 }
 
@@ -2217,7 +2334,7 @@
 
 
             /*
-             * Mark initialized.
+             * MARK INITIALIZED
              */
 
             form.dataset.initialized =
@@ -2225,15 +2342,12 @@
 
 
 
-            /*
-             * ========================================================
+            /* ========================================================
              * LOAD STOCK
              * ========================================================
              */
 
-            if (
-                isRental
-            ) {
+            if (isRental) {
 
                 fetch(
                     '/api/check-stock/' +
@@ -2242,9 +2356,7 @@
                     .then(
                         function (response) {
 
-                            if (
-                                !response.ok
-                            ) {
+                            if (!response.ok) {
 
                                 throw new Error(
                                     'Stock API failed.'
@@ -2282,8 +2394,7 @@
 
 
 
-            /*
-             * ========================================================
+            /* ========================================================
              * SCHEDULE SUMMARY
              * ========================================================
              */
@@ -2313,12 +2424,10 @@
 
 
                 /*
-                 * Non-rental
+                 * NON RENTAL
                  */
 
-                if (
-                    !isRental
-                ) {
+                if (!isRental) {
 
                     summary.classList.remove(
                         'hidden'
@@ -2333,7 +2442,7 @@
 
 
                 /*
-                 * Rental, incomplete return.
+                 * RENTAL WITHOUT COMPLETE RETURN
                  */
 
                 if (
@@ -2376,8 +2485,7 @@
 
 
 
-            /*
-             * ========================================================
+            /* ========================================================
              * SHIRT SIZE EXTRA PRICE
              * ========================================================
              */
@@ -2397,9 +2505,7 @@
                             );
 
 
-                        if (
-                            extra > 0
-                        ) {
+                        if (extra > 0) {
 
                             extraPriceBox.classList.remove(
                                 'hidden'
@@ -2412,9 +2518,7 @@
                                 );
 
 
-                            if (
-                                priceText
-                            ) {
+                            if (priceText) {
 
                                 priceText.textContent =
                                     '+Rp' +
@@ -2439,15 +2543,12 @@
 
 
 
-            /*
-             * ========================================================
+            /* ========================================================
              * TIME LISTENERS
              * ========================================================
              */
 
-            if (
-                startTime
-            ) {
+            if (startTime) {
 
                 startTime.addEventListener(
                     'change',
@@ -2457,9 +2558,7 @@
             }
 
 
-            if (
-                endTime
-            ) {
+            if (endTime) {
 
                 endTime.addEventListener(
                     'change',
@@ -2470,8 +2569,7 @@
 
 
 
-            /*
-             * ========================================================
+            /* ========================================================
              * FORM VALIDATION
              * ========================================================
              */
@@ -2484,9 +2582,7 @@
                      * DATE
                      */
 
-                    if (
-                        !startDate.value
-                    ) {
+                    if (!startDate.value) {
 
                         event.preventDefault();
 
@@ -2503,9 +2599,7 @@
                      * START TIME
                      */
 
-                    if (
-                        !startTime.value
-                    ) {
+                    if (!startTime.value) {
 
                         event.preventDefault();
 
@@ -2519,12 +2613,11 @@
 
 
                     /*
-                     * Baju
+                     * BAJU
                      */
 
                     if (
-                        subcategory ===
-                        'Baju'
+                        subcategory === 'Baju'
                     ) {
 
                         if (
@@ -2546,16 +2639,12 @@
 
 
                     /*
-                     * Rental.
+                     * RENTAL
                      */
 
-                    if (
-                        isRental
-                    ) {
+                    if (isRental) {
 
-                        if (
-                            !endDate.value
-                        ) {
+                        if (!endDate.value) {
 
                             event.preventDefault();
 
@@ -2568,9 +2657,7 @@
                         }
 
 
-                        if (
-                            !endTime.value
-                        ) {
+                        if (!endTime.value) {
 
                             event.preventDefault();
 
@@ -2667,9 +2754,7 @@
             value
         ) {
 
-            if (
-                !value
-            ) {
+            if (!value) {
 
                 return '';
 

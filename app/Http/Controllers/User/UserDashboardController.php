@@ -12,60 +12,42 @@ use Illuminate\Http\Request;
 
 class UserDashboardController extends Controller
 {
-    public function index(
-        Request $request
-    ) {
-        $search =
-            $request->input('search');
+    private const RENTAL_TYPES = [
+        'Peralatan',
+        'Internal Rental',
+        'Vendor Rental',
+        'HT UV-82',
+        'HT 888s',
+        'HT UV-5R',
+    ];
 
-        $type =
-            $request->input('type');
+    private const HT_TYPES = [
+        'HT UV-82',
+        'HT 888s',
+        'HT UV-5R',
+    ];
 
-        $category =
-            $request->input('category');
+    private const USED_TYPES = [
+        'ATK',
+        'Obat',
+    ];
 
-        $query =
-            Item::where(
-                'condition_status',
-                'Good'
-            )
-            ->with([
-                'category',
-                'orderItems.order',
-            ]);
+    public function index(Request $request)
+    {
+        $search = $request->input('search');
+        $type = $request->input('type');
+        $category = $request->input('category');
 
-        /*
-         * Fixed transaction filters.
-         */
+        $query = Item::where(
+            'condition_status',
+            'Good'
+        )->with([
+            'category',
+            'orderItems.order',
+        ]);
+
         if ($type) {
-
-            if ($type === 'HT') {
-
-                $query->whereIn(
-                    'transaction_type',
-                    [
-                        'HT UV-82',
-                        'HT 888s',
-                        'HT UV-5R',
-                    ]
-                );
-
-            } elseif (
-                $type === 'HabisPakai'
-            ) {
-
-                $query->whereIn(
-                    'transaction_type',
-                    [
-                        'ATK',
-                        'Obat',
-                    ]
-                );
-
-            } elseif (
-                $type === 'Peralatan'
-            ) {
-
+            if ($type === 'Peralatan') {
                 $query->whereIn(
                     'transaction_type',
                     [
@@ -74,11 +56,17 @@ class UserDashboardController extends Controller
                         'Vendor Rental',
                     ]
                 );
-
-            } elseif (
-                $type === 'Merchandise'
-            ) {
-
+            } elseif ($type === 'HT') {
+                $query->whereIn(
+                    'transaction_type',
+                    self::HT_TYPES
+                );
+            } elseif ($type === 'HabisPakai') {
+                $query->whereIn(
+                    'transaction_type',
+                    self::USED_TYPES
+                );
+            } elseif ($type === 'Merchandise') {
                 $query->where(
                     'transaction_type',
                     'Merchandise'
@@ -86,15 +74,11 @@ class UserDashboardController extends Controller
             }
         }
 
-        /*
-         * Dynamic category.
-         */
         if ($category) {
-
             $query->whereHas(
                 'category',
-                function ($q) use ($category) {
-                    $q->where(
+                function ($query) use ($category) {
+                    $query->where(
                         'slug',
                         $category
                     );
@@ -102,66 +86,56 @@ class UserDashboardController extends Controller
             );
         }
 
-        /*
-         * Search.
-         */
         if ($search) {
-
             $query->where(
-                function ($q) use ($search) {
-
-                    $q->where(
-                        'name',
-                        'like',
-                        "%{$search}%"
-                    )
-
-                    ->orWhere(
-                        'description',
-                        'like',
-                        "%{$search}%"
-                    )
-
-                    ->orWhere(
-                        'subcategory',
-                        'like',
-                        "%{$search}%"
-                    )
-
-                    ->orWhereHas(
-                        'category',
-                        function ($categoryQuery)
-                            use ($search) {
-
-                            $categoryQuery->where(
-                                'name',
-                                'like',
-                                "%{$search}%"
-                            );
-                        }
-                    );
+                function ($query) use ($search) {
+                    $query
+                        ->where(
+                            'name',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'description',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'subcategory',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhereHas(
+                            'category',
+                            function ($categoryQuery) use ($search) {
+                                $categoryQuery->where(
+                                    'name',
+                                    'like',
+                                    "%{$search}%"
+                                );
+                            }
+                        );
                 }
             );
         }
 
-        $items =
-            $query
-                ->latest()
-                ->paginate(12)
-                ->withQueryString();
+        $items = $query
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
 
-        $categories =
-            Category::withCount('items')
-                ->orderBy('name')
-                ->get();
+        $categories = Category::withCount(
+            'items'
+        )
+            ->orderBy('name')
+            ->get();
 
-        $cartCount =
-            count(
-                session()->get(
-                    'cart',
-                    []
-                )
-            );
+        $cartCount = count(
+            session()->get(
+                'cart',
+                []
+            )
+        );
 
         return view(
             'user.dashboard',
@@ -178,15 +152,15 @@ class UserDashboardController extends Controller
 
     public function loans()
     {
-        $activeLoans =
-            Order::where(
-                'user_id',
-                auth()->id()
-            )
+        $activeLoans = Order::where(
+            'user_id',
+            auth()->id()
+        )
             ->whereNotIn(
                 'status',
                 [
                     'Returned',
+                    'Returned (Damaged)',
                     'Resolved (Fine Paid)',
                     'Cancelled',
                     'Rejected',
@@ -199,15 +173,15 @@ class UserDashboardController extends Controller
             ->latest()
             ->get();
 
-        $pastLoans =
-            Order::where(
-                'user_id',
-                auth()->id()
-            )
+        $pastLoans = Order::where(
+            'user_id',
+            auth()->id()
+        )
             ->whereIn(
                 'status',
                 [
                     'Returned',
+                    'Returned (Damaged)',
                     'Resolved (Fine Paid)',
                     'Cancelled',
                     'Rejected',
@@ -229,25 +203,24 @@ class UserDashboardController extends Controller
         );
     }
 
-    public function itemSchedule(
-        $id
-    ) {
-        $item =
-            Item::findOrFail($id);
+    public function itemSchedule($id)
+    {
+        $item = Item::findOrFail(
+            $id
+        );
 
-        $activeBookings =
-            OrderItem::where(
-                'item_id',
-                $id
-            )
+        $activeBookings = OrderItem::where(
+            'item_id',
+            $id
+        )
             ->whereHas(
                 'order',
                 function ($query) {
-
                     $query->whereNotIn(
                         'status',
                         [
                             'Returned',
+                            'Returned (Damaged)',
                             'Resolved (Fine Paid)',
                             'Rejected',
                             'Cancelled',
@@ -261,7 +234,6 @@ class UserDashboardController extends Controller
             ->get()
             ->sortBy(
                 function ($orderItem) {
-
                     return optional(
                         $orderItem->order
                     )->start_date;
@@ -277,28 +249,27 @@ class UserDashboardController extends Controller
         );
     }
 
-    public function checkStock(
-        $id
-    ) {
-        $item =
-            Item::findOrFail($id);
+    public function checkStock($id)
+    {
+        $item = Item::findOrFail(
+            $id
+        );
 
         $totalStock =
             $item->stock_quantity;
 
-        $activeLoans =
-            OrderItem::where(
-                'item_id',
-                $id
-            )
+        $activeLoans = OrderItem::where(
+            'item_id',
+            $id
+        )
             ->whereHas(
                 'order',
                 function ($query) {
-
                     $query->whereNotIn(
                         'status',
                         [
                             'Returned',
+                            'Returned (Damaged)',
                             'Resolved (Fine Paid)',
                             'Rejected',
                             'Cancelled',
@@ -311,29 +282,22 @@ class UserDashboardController extends Controller
 
         $availability = [];
 
-        $startDate =
-            Carbon::today()
-                ->subDays(7);
+        $startDate = Carbon::today()
+            ->subDays(7);
 
         for (
             $i = 0;
             $i < 90;
             $i++
         ) {
-
-            $date =
-                $startDate
-                    ->copy()
-                    ->addDays($i);
+            $date = $startDate
+                ->copy()
+                ->addDays($i);
 
             $bookedToday = 0;
 
-            foreach (
-                $activeLoans as $loan
-            ) {
-
-                $order =
-                    $loan->order;
+            foreach ($activeLoans as $loan) {
+                $order = $loan->order;
 
                 if (
                     !$order ||
@@ -343,21 +307,17 @@ class UserDashboardController extends Controller
                     continue;
                 }
 
-                $loanStart =
-                    Carbon::parse(
-                        $order->start_date
-                    )->toDateString();
+                $loanStart = Carbon::parse(
+                    $order->start_date
+                )->toDateString();
 
-                $loanEnd =
-                    Carbon::parse(
-                        $order->end_date
-                    )->toDateString();
+                $loanEnd = Carbon::parse(
+                    $order->end_date
+                )->toDateString();
 
                 if (
-                    $date->toDateString() >=
-                        $loanStart &&
-                    $date->toDateString() <=
-                        $loanEnd
+                    $date->toDateString() >= $loanStart &&
+                    $date->toDateString() <= $loanEnd
                 ) {
                     $bookedToday +=
                         $loan->quantity;

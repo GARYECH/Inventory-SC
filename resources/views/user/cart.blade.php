@@ -7,14 +7,15 @@
         <!-- HEADER -->
         <!-- ========================================================= -->
 
-        <div class="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur-xl shadow-sm">
+        <div class="sticky top-0 z-40 border-b border-gray-100 bg-white/90 shadow-sm backdrop-blur-xl">
 
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
 
                 <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
 
 
                     <!-- BRAND -->
+
                     <div class="flex items-center gap-4">
 
                         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-200">
@@ -25,12 +26,14 @@
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
                             >
+
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                                 />
+
                             </svg>
 
                         </div>
@@ -38,11 +41,11 @@
 
                         <div>
 
-                            <h1 class="text-xl sm:text-2xl font-black tracking-tight text-gray-950">
+                            <h1 class="text-xl font-black tracking-tight text-gray-950 sm:text-2xl">
                                 Checkout Request
                             </h1>
 
-                            <p class="mt-1 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">
+                            <p class="mt-1 text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600 sm:text-[10px]">
                                 Review & Confirm Your Items
                             </p>
 
@@ -51,12 +54,14 @@
                     </div>
 
 
-                    <!-- BACK TO CATALOG -->
+
+                    <!-- BACK -->
+
                     <div>
 
                         <a
                             href="{{ route('student.dashboard') }}"
-                            class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 sm:px-6 py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-700 transition-all hover:bg-gray-50 hover:text-indigo-600 hover:shadow-sm active:scale-95"
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-700 transition-all hover:bg-gray-50 hover:text-indigo-600 sm:w-auto sm:px-6"
                         >
 
                             <svg
@@ -65,12 +70,14 @@
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
                             >
+
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M10 19l-7-7m0 0l7-7m-7 7h18"
                                 />
+
                             </svg>
 
                             Kembali ke Katalog
@@ -91,7 +98,7 @@
         <!-- CONTENT -->
         <!-- ========================================================= -->
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div class="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
 
 
             <!-- ===================================================== -->
@@ -102,7 +109,7 @@
 
                 <div class="mb-6 flex items-center gap-4 rounded-2xl border border-red-100 bg-red-50 px-5 py-4 shadow-sm">
 
-                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-500 shadow-lg shadow-red-200">
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-500">
 
                         <svg
                             class="h-4 w-4 text-white"
@@ -110,15 +117,18 @@
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                         >
+
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502 1.667 1.732 3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 1.707z"
                             />
+
                         </svg>
 
                     </div>
+
 
                     <p class="text-sm font-bold text-red-800">
                         {{ session('error') }}
@@ -138,7 +148,7 @@
 
                 <div class="mb-6 flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 shadow-sm">
 
-                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 shadow-lg shadow-emerald-200">
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500">
 
                         <svg
                             class="h-4 w-4 text-white"
@@ -146,15 +156,18 @@
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                         >
+
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M5 13l4 4L19 7"
                             />
+
                         </svg>
 
                     </div>
+
 
                     <p class="text-sm font-bold text-emerald-800">
                         {{ session('success') }}
@@ -174,7 +187,6 @@
 
                 <div class="rounded-[2.5rem] border border-gray-100 bg-white px-6 py-28 text-center shadow-sm">
 
-
                     <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full border border-gray-100 bg-gray-50 text-gray-300 shadow-inner">
 
                         <svg
@@ -183,12 +195,14 @@
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                         >
+
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="1.5"
                                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                             />
+
                         </svg>
 
                     </div>
@@ -206,7 +220,7 @@
 
                     <a
                         href="{{ route('student.dashboard') }}"
-                        class="mt-8 inline-flex items-center rounded-2xl bg-indigo-600 px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95"
+                        class="mt-8 inline-flex items-center rounded-2xl bg-indigo-600 px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-indigo-200 transition-all hover:bg-indigo-700"
                     >
 
                         Jelajahi Katalog
@@ -215,25 +229,42 @@
 
                 </div>
 
-
             @else
 
 
                 @php
 
                     /*
-                     * ==================================================
-                     * CART SUMMARY DATA
-                     * ==================================================
-                     */
+                    |--------------------------------------------------------------------------
+                    | FINAL TRANSACTION TYPES
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $allowedTransactionTypes = [
+                        'Peralatan',
+                        'Handy Talkie',
+                        'Habis Pakai',
+                        'Merchandise',
+                    ];
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | SUMMARY
+                    |--------------------------------------------------------------------------
+                    */
 
                     $totalPrice = 0;
 
+                    $hasEquipment = false;
+
+                    $hasHandyTalkie = false;
+
                     $hasConsumable = false;
 
-                    $hasRental = false;
-
                     $hasMerchandise = false;
+
+                    $transactionTypes = [];
 
                     $mouTypes = [];
 
@@ -243,55 +274,57 @@
                         $transactionType =
                             $details['transaction_type'] ?? '';
 
+                        $transactionDetail =
+                            $details['transaction_detail'] ?? null;
+
                         $subcategory =
                             $details['subcategory'] ?? null;
 
 
                         /*
-                         * Rental
-                         */
+                        |--------------------------------------------------------------------------
+                        | TYPES
+                        |--------------------------------------------------------------------------
+                        */
 
                         if (
-                            in_array(
-                                $transactionType,
-                                [
-                                    'Peralatan',
-                                    'HT UV-82',
-                                    'HT 888s',
-                                    'HT UV-5R',
-                                    'Internal Rental',
-                                    'Vendor Rental'
-                                ]
-                            )
+                            $transactionType ===
+                            'Peralatan'
                         ) {
 
-                            $hasRental = true;
+                            $hasEquipment = true;
+
+                            $transactionTypes['Peralatan'] =
+                                true;
 
                         }
 
 
-                        /*
-                         * Habis Pakai
-                         */
+                        if (
+                            $transactionType ===
+                            'Handy Talkie'
+                        ) {
+
+                            $hasHandyTalkie = true;
+
+                            $transactionTypes['Handy Talkie'] =
+                                true;
+
+                        }
+
 
                         if (
-                            in_array(
-                                $transactionType,
-                                [
-                                    'ATK',
-                                    'Obat'
-                                ]
-                            )
+                            $transactionType ===
+                            'Habis Pakai'
                         ) {
 
                             $hasConsumable = true;
 
+                            $transactionTypes['Habis Pakai'] =
+                                true;
+
                         }
 
-
-                        /*
-                         * Merchandise
-                         */
 
                         if (
                             $transactionType ===
@@ -300,12 +333,17 @@
 
                             $hasMerchandise = true;
 
+                            $transactionTypes['Merchandise'] =
+                                true;
+
                         }
 
 
                         /*
-                         * Normal price
-                         */
+                        |--------------------------------------------------------------------------
+                        | PRICE
+                        |--------------------------------------------------------------------------
+                        */
 
                         $basePrice =
                             (int) (
@@ -319,44 +357,56 @@
                                 ] ?? 0
                             );
 
+                        $quantity =
+                            (int) (
+                                $details['quantity'] ?? 1
+                            );
+
                         $unitPrice =
                             $basePrice +
                             $sizeExtra;
 
-                        $quantity =
-                            (int) (
-                                $details['quantity'] ?? 0
-                            );
-
-
-                        $totalPrice +=
+                        $subtotal =
                             $unitPrice *
                             $quantity;
 
 
+                        $totalPrice +=
+                            $subtotal;
+
+
                         /*
-                         * MOU preview
-                         */
+                        |--------------------------------------------------------------------------
+                        | MOU
+                        |--------------------------------------------------------------------------
+                        */
 
                         if (
                             $transactionType ===
                             'Peralatan'
                         ) {
 
-                            $mouTypes['peralatan'] =
-                                'MoU Peralatan';
+                            if (
+                                $transactionDetail ===
+                                'Vendor Rental'
+                            ) {
+
+                                $mouTypes['vendor'] =
+                                    'MoU Vendor Rental';
+
+                            } else {
+
+                                $mouTypes['internal'] =
+                                    'MoU Internal Rental';
+
+                            }
 
                         }
 
-                        elseif (
-                            in_array(
-                                $transactionType,
-                                [
-                                    'HT UV-82',
-                                    'HT 888s',
-                                    'HT UV-5R'
-                                ]
-                            )
+
+                        if (
+                            $transactionType ===
+                            'Handy Talkie'
                         ) {
 
                             $mouTypes['ht'] =
@@ -364,27 +414,8 @@
 
                         }
 
-                        elseif (
-                            $transactionType ===
-                            'Internal Rental'
-                        ) {
 
-                            $mouTypes['internal'] =
-                                'MoU Internal Rental';
-
-                        }
-
-                        elseif (
-                            $transactionType ===
-                            'Vendor Rental'
-                        ) {
-
-                            $mouTypes['vendor'] =
-                                'MoU Vendor Rental';
-
-                        }
-
-                        elseif (
+                        if (
                             $transactionType ===
                             'Merchandise'
                         ) {
@@ -399,7 +430,8 @@
 
                             }
 
-                            elseif (
+
+                            if (
                                 $subcategory ===
                                 'ID Card'
                             ) {
@@ -413,6 +445,18 @@
 
                     }
 
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CART TYPE COUNT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $transactionTypeCount =
+                        count(
+                            $transactionTypes
+                        );
+
                 @endphp
 
 
@@ -425,7 +469,7 @@
 
 
                     <!-- ================================================= -->
-                    <!-- LEFT: CART -->
+                    <!-- LEFT -->
                     <!-- ================================================= -->
 
                     <div class="lg:col-span-7">
@@ -435,6 +479,7 @@
 
 
                             <!-- HEADER -->
+
                             <div class="border-b border-gray-100 bg-gray-50/60 px-6 py-6 sm:px-8">
 
                                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -461,7 +506,7 @@
 
                                         <button
                                             type="submit"
-                                            class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-50 hover:text-red-700"
+                                            class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-50"
                                         >
 
                                             <svg
@@ -470,12 +515,14 @@
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"
                                             >
+
                                                 <path
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                                 />
+
                                             </svg>
 
                                             Kosongkan
@@ -491,50 +538,179 @@
 
 
                             <!-- ================================================= -->
-                            <!-- CATEGORY NOTICE -->
+                            <!-- TRANSACTION TYPE RULE -->
                             <!-- ================================================= -->
 
                             <div class="px-6 pt-6 sm:px-8">
 
+                                <div class="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
 
-                                @if($hasMerchandise)
+                                    <div class="flex items-start gap-3">
 
-                                    <div class="mb-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
 
-                                        <div class="flex items-start gap-3">
+                                            <svg
+                                                class="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
 
-                                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white">
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                                                />
 
-                                                <svg
-                                                    class="h-4 w-4"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M5 12h14M12 5l7 7-7 7"
-                                                    />
-                                                </svg>
-
-                                            </div>
-
-
-                                            <div>
-
-                                                <p class="text-[9px] font-black uppercase tracking-[0.15em] text-emerald-600">
-                                                    Merchandise
-                                                </p>
-
-                                                <p class="mt-1 text-xs font-bold leading-relaxed text-emerald-800">
-                                                    Baju, ID Card, dan Merchandise Lainnya dapat berada dalam satu transaksi.
-                                                </p>
-
-                                            </div>
+                                            </svg>
 
                                         </div>
+
+
+                                        <div>
+
+                                            <p class="text-[9px] font-black uppercase tracking-[0.15em] text-indigo-600">
+                                                Aturan Transaction Type
+                                            </p>
+
+
+                                            <p class="mt-1 text-xs font-bold leading-relaxed text-indigo-900">
+
+                                                Dalam satu transaksi,
+                                                <span class="font-black">
+                                                    semua barang harus memiliki Transaction Type yang sama.
+                                                </span>
+
+                                            </p>
+
+
+                                            <p class="mt-2 text-[9px] font-bold leading-relaxed text-indigo-600">
+
+                                                Peralatan + Peralatan ✅
+
+                                                <span class="mx-1">
+                                                    •
+                                                </span>
+
+                                                Peralatan + Habis Pakai ❌
+
+                                            </p>
+
+
+                                            @if($transactionTypeCount > 1)
+
+                                                <div class="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2">
+
+                                                    <p class="text-[9px] font-black uppercase tracking-widest text-red-600">
+                                                        Perhatian
+                                                    </p>
+
+                                                    <p class="mt-1 text-[9px] font-bold text-red-700">
+
+                                                        Keranjang saat ini memiliki lebih dari satu Transaction Type.
+                                                        Silakan hapus barang dari type lain sebelum checkout.
+
+                                                    </p>
+
+                                                </div>
+
+                                            @endif
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- ================================================= -->
+                            <!-- TYPE SUMMARY -->
+                            <!-- ================================================= -->
+
+                            <div class="px-6 pt-4 sm:px-8">
+
+                                <div class="flex flex-wrap gap-2">
+
+                                    @foreach($transactionTypes as $type => $enabled)
+
+                                        @if($type === 'Peralatan')
+
+                                            <span class="rounded-lg bg-indigo-100 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-indigo-700">
+                                                Peralatan
+                                            </span>
+
+                                        @elseif($type === 'Handy Talkie')
+
+                                            <span class="rounded-lg bg-amber-100 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-amber-700">
+                                                Handy Talkie
+                                            </span>
+
+                                        @elseif($type === 'Habis Pakai')
+
+                                            <span class="rounded-lg bg-rose-100 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-rose-700">
+                                                Habis Pakai
+                                            </span>
+
+                                        @elseif($type === 'Merchandise')
+
+                                            <span class="rounded-lg bg-emerald-100 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-700">
+                                                Merchandise
+                                            </span>
+
+                                        @endif
+
+                                    @endforeach
+
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- ================================================= -->
+                            <!-- ADDITIONAL TYPE NOTICE -->
+                            <!-- ================================================= -->
+
+                            <div class="space-y-3 px-6 pt-4 sm:px-8">
+
+
+                                @if($hasEquipment)
+
+                                    <div class="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-indigo-600">
+                                            Peralatan
+                                        </p>
+
+                                        <p class="mt-1 text-[10px] font-bold leading-relaxed text-indigo-800">
+
+                                            Barang wajib dikembalikan sesuai jadwal yang telah dipilih.
+
+                                        </p>
+
+                                    </div>
+
+                                @endif
+
+
+
+                                @if($hasHandyTalkie)
+
+                                    <div class="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-amber-600">
+                                            Handy Talkie
+                                        </p>
+
+                                        <p class="mt-1 text-[10px] font-bold leading-relaxed text-amber-800">
+
+                                            HT wajib dikembalikan dan menggunakan MoU Handy Talkie.
+
+                                        </p>
 
                                     </div>
 
@@ -544,47 +720,43 @@
 
                                 @if($hasConsumable)
 
-                                    <div class="mb-4 rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                                    <div class="rounded-2xl border border-rose-100 bg-rose-50/60 p-4">
 
-                                        <div class="flex items-start gap-3">
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-rose-600">
+                                            Habis Pakai
+                                        </p>
 
-                                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white">
+                                        <p class="mt-1 text-[10px] font-bold leading-relaxed text-rose-800">
 
-                                                <svg
-                                                    class="h-4 w-4"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z"
-                                                    />
-                                                </svg>
+                                            Barang tidak perlu dikembalikan.
+                                            Stok akan berkurang permanen setelah transaksi.
 
-                                            </div>
-
-
-                                            <div>
-
-                                                <p class="text-[9px] font-black uppercase tracking-[0.15em] text-amber-600">
-                                                    Barang Sekali Pakai
-                                                </p>
-
-                                                <p class="mt-1 text-xs font-bold leading-relaxed text-amber-800">
-                                                    ATK dan Obat tidak memerlukan pengembalian barang.
-                                                </p>
-
-                                            </div>
-
-                                        </div>
+                                        </p>
 
                                     </div>
 
                                 @endif
 
+
+
+                                @if($hasMerchandise)
+
+                                    <div class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-emerald-600">
+                                            Merchandise
+                                        </p>
+
+                                        <p class="mt-1 text-[10px] font-bold leading-relaxed text-emerald-800">
+
+                                            Merchandise merupakan pembelian putus.
+                                            Baju dan ID Card dapat membutuhkan detail desain dan MoU.
+
+                                        </p>
+
+                                    </div>
+
+                                @endif
 
                             </div>
 
@@ -597,46 +769,31 @@
                             <div class="space-y-4 p-6 sm:px-8">
 
 
-                                @foreach(
-                                    $cart as $id => $details
-                                )
+                                @foreach($cart as $id => $details)
 
                                     @php
 
                                         $transactionType =
-                                            $details['transaction_type']
-                                            ?? '';
+                                            $details[
+                                                'transaction_type'
+                                            ] ?? '';
+
+                                        $transactionDetail =
+                                            $details[
+                                                'transaction_detail'
+                                            ] ?? null;
 
                                         $subcategory =
-                                            $details['subcategory']
-                                            ?? null;
+                                            $details[
+                                                'subcategory'
+                                            ] ?? null;
 
-
-                                        /*
-                                         * Rental
-                                         */
-
-                                        $isItemRental =
-                                            in_array(
-                                                $transactionType,
-                                                [
-                                                    'Peralatan',
-                                                    'HT UV-82',
-                                                    'HT 888s',
-                                                    'HT UV-5R',
-                                                    'Internal Rental',
-                                                    'Vendor Rental'
-                                                ]
-                                            );
-
-
-                                        /*
-                                         * Size
-                                         */
 
                                         $size =
-                                            $details['size']
-                                            ?? null;
+                                            $details[
+                                                'size'
+                                            ] ?? null;
+
 
                                         $sizeExtra =
                                             (int) (
@@ -646,10 +803,6 @@
                                             );
 
 
-                                        /*
-                                         * Prices
-                                         */
-
                                         $basePrice =
                                             (int) (
                                                 $details[
@@ -657,9 +810,6 @@
                                                 ] ?? 0
                                             );
 
-                                        $unitPrice =
-                                            $basePrice +
-                                            $sizeExtra;
 
                                         $quantity =
                                             (int) (
@@ -668,67 +818,78 @@
                                                 ] ?? 1
                                             );
 
+
+                                        $unitPrice =
+                                            $basePrice +
+                                            $sizeExtra;
+
+
                                         $subtotal =
                                             $unitPrice *
                                             $quantity;
 
-
-                                        /*
-                                         * Dates
-                                         */
 
                                         $startDate =
                                             $details[
                                                 'start_date'
                                             ] ?? null;
 
+
                                         $startTime =
                                             $details[
                                                 'start_time'
                                             ] ?? null;
+
 
                                         $endDate =
                                             $details[
                                                 'end_date'
                                             ] ?? null;
 
+
                                         $endTime =
                                             $details[
                                                 'end_time'
                                             ] ?? null;
 
+
                                         $hasStartSchedule =
-                                            !empty(
-                                                $startDate
-                                            ) &&
-                                            !empty(
-                                                $startTime
-                                            );
+                                            !empty($startDate) &&
+                                            !empty($startTime);
+
 
                                         $hasEndSchedule =
-                                            !empty(
-                                                $endDate
-                                            ) &&
-                                            !empty(
-                                                $endTime
+                                            !empty($endDate) &&
+                                            !empty($endTime);
+
+
+                                        $isRental =
+                                            in_array(
+                                                $transactionType,
+                                                [
+                                                    'Peralatan',
+                                                    'Handy Talkie'
+                                                ]
                                             );
 
                                     @endphp
 
 
 
-                                    <!-- ================================================= -->
                                     <!-- ITEM -->
-                                    <!-- ================================================= -->
 
-                                    <div class="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5 shadow-sm transition-all hover:border-indigo-100 hover:shadow-md">
+                                    <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-indigo-100 hover:shadow-md sm:p-5">
 
 
+                                        <!-- ================================================= -->
                                         <!-- TOP -->
+                                        <!-- ================================================= -->
+
                                         <div class="flex items-start gap-4">
 
 
                                             <!-- ICON -->
+
                                             <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-gray-100 bg-gray-50">
 
                                                 <svg
@@ -737,33 +898,83 @@
                                                     stroke="currentColor"
                                                     viewBox="0 0 24 24"
                                                 >
+
                                                     <path
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                         stroke-width="1.5"
                                                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                                                     />
+
                                                 </svg>
 
                                             </div>
 
 
+
                                             <!-- INFO -->
+
                                             <div class="min-w-0 flex-1">
 
 
                                                 <div class="flex items-start justify-between gap-3">
 
+
                                                     <div class="min-w-0">
 
                                                         <h3 class="text-base font-black leading-tight text-gray-950 sm:text-lg">
-                                                            {{ $details['name'] }}
+                                                            {{ $details['name'] ?? 'Unnamed Item' }}
                                                         </h3>
 
 
+
+                                                        <!-- TRANSACTION TYPE -->
+
+                                                        @if($transactionType === 'Peralatan')
+
+                                                            <span class="mt-2 inline-flex rounded-lg bg-indigo-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-indigo-700">
+                                                                Peralatan
+                                                            </span>
+
+                                                        @elseif($transactionType === 'Handy Talkie')
+
+                                                            <span class="mt-2 inline-flex rounded-lg bg-amber-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-amber-700">
+                                                                Handy Talkie
+                                                            </span>
+
+                                                        @elseif($transactionType === 'Habis Pakai')
+
+                                                            <span class="mt-2 inline-flex rounded-lg bg-rose-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-rose-700">
+                                                                Habis Pakai
+                                                            </span>
+
+                                                        @elseif($transactionType === 'Merchandise')
+
+                                                            <span class="mt-2 inline-flex rounded-lg bg-emerald-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-emerald-700">
+                                                                Merchandise
+                                                            </span>
+
+                                                        @endif
+
+
+
+                                                        <!-- DETAIL -->
+
+                                                        @if($transactionDetail)
+
+                                                            <span class="ml-1 mt-2 inline-flex rounded-lg bg-gray-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-gray-600">
+                                                                {{ $transactionDetail }}
+                                                            </span>
+
+                                                        @endif
+
+
+
+                                                        <!-- SUBCATEGORY -->
+
                                                         @if($subcategory)
 
-                                                            <span class="mt-2 inline-flex rounded-lg bg-gray-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-gray-600">
+                                                            <span class="ml-1 mt-2 inline-flex rounded-lg bg-gray-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-gray-600">
                                                                 {{ $subcategory }}
                                                             </span>
 
@@ -772,7 +983,9 @@
                                                     </div>
 
 
+
                                                     <!-- REMOVE -->
+
                                                     <form
                                                         action="{{ route('student.cart.remove', $id) }}"
                                                         method="POST"
@@ -782,6 +995,7 @@
                                                         @csrf
 
                                                         @method('DELETE')
+
 
                                                         <button
                                                             type="submit"
@@ -795,12 +1009,14 @@
                                                                 stroke="currentColor"
                                                                 viewBox="0 0 24 24"
                                                             >
+
                                                                 <path
                                                                     stroke-linecap="round"
                                                                     stroke-linejoin="round"
                                                                     stroke-width="2"
                                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                                                 />
+
                                                             </svg>
 
                                                         </button>
@@ -810,18 +1026,26 @@
                                                 </div>
 
 
+
                                                 <!-- PRICE -->
+
                                                 <div class="mt-2 flex flex-wrap items-center gap-2">
 
                                                     <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                                                        Rp {{ number_format($basePrice, 0, ',', '.') }}
+
+                                                        Rp
+                                                        {{ number_format($basePrice, 0, ',', '.') }}
+
                                                     </span>
 
 
                                                     @if($sizeExtra > 0)
 
                                                         <span class="rounded-md bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700">
-                                                            +Rp {{ number_format($sizeExtra, 0, ',', '.') }}
+
+                                                            +Rp
+                                                            {{ number_format($sizeExtra, 0, ',', '.') }}
+
                                                         </span>
 
                                                     @endif
@@ -835,7 +1059,7 @@
 
 
                                         <!-- ================================================= -->
-                                        <!-- MERCHANDISE DETAILS -->
+                                        <!-- MERCHANDISE -->
                                         <!-- ================================================= -->
 
                                         @if(
@@ -852,23 +1076,10 @@
 
                                                         @if($size)
 
-                                                            <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-[9px] font-black text-indigo-700 shadow-sm">
+                                                            <span class="inline-flex items-center rounded-lg bg-white px-3 py-2 text-[9px] font-black text-indigo-700 shadow-sm">
 
-                                                                <svg
-                                                                    class="h-3.5 w-3.5"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    stroke="currentColor"
-                                                                >
-                                                                    <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M4 6h16M4 12h10M4 18h16"
-                                                                    />
-                                                                </svg>
-
-                                                                Size {{ $size }}
+                                                                Size:
+                                                                {{ $size }}
 
                                                             </span>
 
@@ -879,7 +1090,8 @@
 
                                                             <span class="inline-flex items-center rounded-lg bg-amber-100 px-3 py-2 text-[9px] font-black text-amber-700">
 
-                                                                +Rp {{ number_format($sizeExtra, 0, ',', '.') }}
+                                                                +Rp
+                                                                {{ number_format($sizeExtra, 0, ',', '.') }}
 
                                                             </span>
 
@@ -890,6 +1102,7 @@
                                                 </div>
 
                                             @endif
+
 
 
                                             @if(
@@ -919,12 +1132,14 @@
                                                                 viewBox="0 0 24 24"
                                                                 stroke="currentColor"
                                                             >
+
                                                                 <path
                                                                     stroke-linecap="round"
                                                                     stroke-linejoin="round"
                                                                     stroke-width="2"
                                                                     d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
                                                                 />
+
                                                             </svg>
 
                                                         </div>
@@ -961,7 +1176,8 @@
                                             <div class="mt-4 grid grid-cols-1 gap-2 {{ $hasEndSchedule ? 'sm:grid-cols-2' : '' }}">
 
 
-                                                <!-- TRANSACTION -->
+                                                <!-- START -->
+
                                                 <div class="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3">
 
                                                     <div class="flex items-start gap-2.5">
@@ -974,12 +1190,14 @@
                                                                 stroke="currentColor"
                                                                 viewBox="0 0 24 24"
                                                             >
+
                                                                 <path
                                                                     stroke-linecap="round"
                                                                     stroke-linejoin="round"
                                                                     stroke-width="2"
                                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
                                                                 />
+
                                                             </svg>
 
                                                         </div>
@@ -988,14 +1206,18 @@
                                                         <div>
 
                                                             <p class="text-[8px] font-black uppercase tracking-widest text-indigo-400">
-                                                                {{ $isItemRental ? 'Pengambilan' : 'Transaksi' }}
+
+                                                                {{ $isRental ? 'Pengambilan' : 'Transaksi' }}
+
                                                             </p>
+
 
                                                             <p class="mt-0.5 text-[10px] font-black text-indigo-800">
 
                                                                 {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }}
 
                                                             </p>
+
 
                                                             <p class="mt-0.5 text-[9px] font-bold text-indigo-500">
 
@@ -1010,7 +1232,9 @@
                                                 </div>
 
 
-                                                <!-- RETURN -->
+
+                                                <!-- END -->
+
                                                 @if($hasEndSchedule)
 
                                                     <div class="rounded-xl border border-amber-100 bg-amber-50/60 p-3">
@@ -1025,12 +1249,14 @@
                                                                     stroke="currentColor"
                                                                     viewBox="0 0 24 24"
                                                                 >
+
                                                                     <path
                                                                         stroke-linecap="round"
                                                                         stroke-linejoin="round"
                                                                         stroke-width="2"
                                                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9M20 20v-5h-.581m-15.357-2a8.001 8.001 0 01-15.356-2"
                                                                     />
+
                                                                 </svg>
 
                                                             </div>
@@ -1042,11 +1268,13 @@
                                                                     Pengembalian
                                                                 </p>
 
+
                                                                 <p class="mt-0.5 text-[10px] font-black text-amber-800">
 
                                                                     {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}
 
                                                                 </p>
+
 
                                                                 <p class="mt-0.5 text-[9px] font-bold text-amber-500">
 
@@ -1069,13 +1297,12 @@
 
 
                                         <!-- ================================================= -->
-                                        <!-- QUANTITY + SUBTOTAL -->
+                                        <!-- QUANTITY -->
                                         <!-- ================================================= -->
 
                                         <div class="mt-4 flex flex-col gap-4 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
 
 
-                                            <!-- QTY -->
                                             <form
                                                 action="{{ route('student.cart.update', $id) }}"
                                                 method="POST"
@@ -1110,7 +1337,9 @@
                                                     type="submit"
                                                     class="h-full border-l border-gray-200 bg-indigo-50 px-4 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white"
                                                 >
+
                                                     Update
+
                                                 </button>
 
                                             </form>
@@ -1118,15 +1347,18 @@
 
 
                                             <!-- SUBTOTAL -->
+
                                             <div class="text-left sm:text-right">
 
                                                 <p class="text-[8px] font-black uppercase tracking-widest text-gray-400">
                                                     Subtotal
                                                 </p>
 
+
                                                 <p class="mt-1 text-lg font-black text-indigo-600 sm:text-xl">
 
-                                                    Rp {{ number_format($subtotal, 0, ',', '.') }}
+                                                    Rp
+                                                    {{ number_format($subtotal, 0, ',', '.') }}
 
                                                 </p>
 
@@ -1153,19 +1385,20 @@
                                     <div>
 
                                         <p class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">
-                                            Total Normal
+                                            Total
                                         </p>
 
                                         <p class="mt-1 text-[10px] font-bold text-gray-500">
-                                            Belum memperhitungkan fasilitas gratis Student Council.
+                                            Total dihitung berdasarkan harga barang dan tambahan ukuran.
                                         </p>
 
                                     </div>
 
 
-                                    <p class="text-2xl sm:text-3xl font-black text-white">
+                                    <p class="text-2xl font-black text-white sm:text-3xl">
 
-                                        Rp {{ number_format($totalPrice, 0, ',', '.') }}
+                                        Rp
+                                        {{ number_format($totalPrice, 0, ',', '.') }}
 
                                     </p>
 
@@ -1190,6 +1423,7 @@
 
 
                             <!-- HEADER -->
+
                             <div class="mb-8 flex items-center">
 
                                 <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
@@ -1197,15 +1431,17 @@
                                     <svg
                                         class="h-4 w-4"
                                         fill="none"
-                                        stroke="currentColor"
                                         viewBox="0 0 24 24"
+                                        stroke="currentColor"
                                     >
+
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
                                             stroke-width="2"
                                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                         />
+
                                     </svg>
 
                                 </div>
@@ -1228,7 +1464,7 @@
 
 
                             <!-- ================================================= -->
-                            <!-- CHECKOUT FORM -->
+                            <!-- CHECKOUT -->
                             <!-- ================================================= -->
 
                             <form
@@ -1241,7 +1477,8 @@
 
 
 
-                                <!-- NAMA -->
+                                <!-- NAME -->
+
                                 <div>
 
                                     <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
@@ -1254,15 +1491,17 @@
                                         value="{{ old('full_name') }}"
                                         placeholder="Masukkan nama lengkap..."
                                         required
-                                        class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none transition-all placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                        class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                     >
 
                                 </div>
 
 
 
-                                <!-- ORGANIZATION -->
+                                <!-- ORGANIZATION + POSITION -->
+
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
 
                                     <div>
 
@@ -1270,16 +1509,21 @@
                                             Organisasi
                                         </label>
 
+
                                         <select
                                             name="organization"
-                                            id="organizationSelect"
                                             required
-                                            class="w-full appearance-none rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none transition-all focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                            class="w-full appearance-none rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                         >
 
-                                            <option value="" disabled {{ old('organization') ? '' : 'selected' }}>
+                                            <option
+                                                value=""
+                                                disabled
+                                                {{ old('organization') ? '' : 'selected' }}
+                                            >
                                                 Pilih Organisasi...
                                             </option>
+
 
                                             <option
                                                 value="Student Council"
@@ -1288,12 +1532,14 @@
                                                 Student Council
                                             </option>
 
+
                                             <option
                                                 value="Student Union"
                                                 {{ old('organization') === 'Student Union' ? 'selected' : '' }}
                                             >
                                                 Student Union
                                             </option>
+
 
                                             <option
                                                 value="Mentoring Department"
@@ -1302,6 +1548,7 @@
                                                 Mentoring Department
                                             </option>
 
+
                                             <option
                                                 value="Student Representative Board"
                                                 {{ old('organization') === 'Student Representative Board' ? 'selected' : '' }}
@@ -1309,12 +1556,14 @@
                                                 Student Representative Board
                                             </option>
 
+
                                             <option
                                                 value="Unit Kegiatan Mahasiswa (UKM)"
                                                 {{ old('organization') === 'Unit Kegiatan Mahasiswa (UKM)' ? 'selected' : '' }}
                                             >
                                                 Unit Kegiatan Mahasiswa (UKM)
                                             </option>
+
 
                                             <option
                                                 value="Organisasi External"
@@ -1329,12 +1578,12 @@
 
 
 
-                                    <!-- JABATAN -->
                                     <div>
 
                                         <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
                                             Jabatan
                                         </label>
+
 
                                         <input
                                             type="text"
@@ -1342,7 +1591,7 @@
                                             value="{{ old('position') }}"
                                             placeholder="Contoh: Koordinator"
                                             required
-                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none transition-all placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                         >
 
                                     </div>
@@ -1352,7 +1601,9 @@
 
 
                                 <!-- PROKER + KETUA -->
+
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
 
                                     <div>
 
@@ -1360,13 +1611,14 @@
                                             Nama Proker / Event
                                         </label>
 
+
                                         <input
                                             type="text"
                                             name="proker_name"
                                             value="{{ old('proker_name') }}"
                                             placeholder="Contoh: Rector Cup 2026"
                                             required
-                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none transition-all placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                         >
 
                                     </div>
@@ -1379,13 +1631,14 @@
                                             Nama Ketua Acara
                                         </label>
 
+
                                         <input
                                             type="text"
                                             name="ketua_acara"
                                             value="{{ old('ketua_acara') }}"
                                             placeholder="Nama lengkap ketua..."
                                             required
-                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none transition-all placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                         >
 
                                     </div>
@@ -1395,18 +1648,20 @@
 
 
                                 <!-- ADDRESS -->
+
                                 <div>
 
                                     <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
                                         Alamat Lengkap
                                     </label>
 
+
                                     <textarea
                                         name="address"
                                         rows="2"
                                         placeholder="Contoh: Universitas Ciputra Surabaya..."
                                         required
-                                        class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none transition-all placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                        class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                     >{{ old('address') }}</textarea>
 
                                 </div>
@@ -1414,7 +1669,9 @@
 
 
                                 <!-- PHONE + TREASURER -->
+
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
 
                                     <div>
 
@@ -1422,13 +1679,14 @@
                                             No. WhatsApp
                                         </label>
 
+
                                         <input
                                             type="text"
                                             name="phone_number"
                                             value="{{ old('phone_number') }}"
                                             placeholder="0812..."
                                             required
-                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none transition-all placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                         >
 
                                     </div>
@@ -1441,13 +1699,14 @@
                                             Nama Bendahara
                                         </label>
 
+
                                         <input
                                             type="text"
                                             name="treasurer_name"
                                             value="{{ old('treasurer_name') }}"
                                             placeholder="Nama lengkap..."
                                             required
-                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none transition-all placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                            class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                         >
 
                                     </div>
@@ -1457,17 +1716,19 @@
 
 
                                 <!-- NOTES -->
+
                                 <div>
 
                                     <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
                                         Catatan Peminjam
                                     </label>
 
+
                                     <textarea
                                         name="notes"
                                         rows="3"
                                         placeholder="Contoh: Barang akan digunakan di Gedung A..."
-                                        class="w-full rounded-2xl border border-yellow-100 bg-yellow-50/50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400"
+                                        class="w-full rounded-2xl border border-yellow-100 bg-yellow-50/50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400"
                                     >{{ old('notes') }}</textarea>
 
                                 </div>
@@ -1475,7 +1736,7 @@
 
 
                                 <!-- ================================================= -->
-                                <!-- CONSUMABLE FREE NOTICE -->
+                                <!-- HABIS PAKAI NOTICE -->
                                 <!-- ================================================= -->
 
                                 @if($hasConsumable)
@@ -1484,7 +1745,7 @@
 
                                         <div class="flex items-start gap-3">
 
-                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-xs font-black text-white shadow-md shadow-emerald-100">
+                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-xs font-black text-white">
                                                 SC
                                             </div>
 
@@ -1495,25 +1756,25 @@
                                                     Fasilitas Student Council
                                                 </p>
 
+
                                                 <p class="mt-1 text-xs font-bold leading-relaxed text-emerald-800">
 
-                                                    Barang sekali pakai seperti
+                                                    Barang
                                                     <span class="font-black">
-                                                        ATK dan Obat
+                                                        Habis Pakai
                                                     </span>
-                                                    diberikan
-                                                    <span class="font-black">
-                                                        gratis
-                                                    </span>
-                                                    untuk kebutuhan
+                                                    tidak perlu dikembalikan dan stok akan berkurang setelah transaksi.
+
+                                                </p>
+
+
+                                                <p class="mt-2 text-[8px] font-bold leading-relaxed text-emerald-600">
+
+                                                    Untuk fasilitas gratis, pilih organisasi
                                                     <span class="font-black">
                                                         Student Council
                                                     </span>.
 
-                                                </p>
-
-                                                <p class="mt-2 text-[8px] font-bold leading-relaxed text-emerald-600">
-                                                    Pilih organisasi Student Council pada formulir untuk mendapatkan fasilitas ini.
                                                 </p>
 
                                             </div>
@@ -1544,36 +1805,41 @@
                                                     stroke="currentColor"
                                                     viewBox="0 0 24 24"
                                                 >
+
                                                     <path
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                         stroke-width="2"
-                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 4v15a2 2 0 01-2 2z"
+                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A2 2 0 0119 5.414V19a2 2 0 01-2 2z"
                                                     />
+
                                                 </svg>
 
                                             </div>
 
 
-                                            <div class="min-w-0">
+                                            <div class="min-w-0 flex-1">
 
                                                 <p class="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600">
                                                     Dokumen MoU
                                                 </p>
 
+
                                                 <p class="mt-1 text-xs font-bold leading-relaxed text-indigo-800">
-                                                    Setelah pengajuan dibuat, sistem akan menyediakan MoU sesuai barang yang dipesan.
+
+                                                    Pengajuan ini membutuhkan dokumen MoU berikut:
+
                                                 </p>
 
 
                                                 <div class="mt-3 flex flex-wrap gap-2">
 
-                                                    @foreach(
-                                                        $mouTypes as $mouName
-                                                    )
+                                                    @foreach($mouTypes as $mouName)
 
                                                         <span class="rounded-lg bg-white px-2.5 py-1.5 text-[8px] font-black uppercase tracking-widest text-indigo-600 shadow-sm">
+
                                                             {{ $mouName }}
+
                                                         </span>
 
                                                     @endforeach
@@ -1591,7 +1857,7 @@
 
 
                                 <!-- ================================================= -->
-                                <!-- SCHEDULE INFORMATION -->
+                                <!-- SCHEDULE -->
                                 <!-- ================================================= -->
 
                                 <div class="rounded-2xl border border-gray-100 bg-gray-50 p-5">
@@ -1603,15 +1869,17 @@
                                             <svg
                                                 class="h-5 w-5"
                                                 fill="none"
-                                                stroke="currentColor"
                                                 viewBox="0 0 24 24"
+                                                stroke="currentColor"
                                             >
+
                                                 <path
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
                                                     d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
                                                 />
+
                                             </svg>
 
                                         </div>
@@ -1623,18 +1891,26 @@
                                                 Ketentuan Waktu
                                             </p>
 
+
                                             <p class="mt-1 text-xs font-bold leading-relaxed text-gray-600">
-                                                Semua transaksi memiliki tanggal dan jam transaksi yang telah dipilih dari katalog.
-                                                Jam hanya tersedia pada pukul
+
+                                                Tanggal dan jam transaksi mengikuti pilihan dari katalog.
+
+                                                Jam yang tersedia:
                                                 <span class="font-black text-gray-900">
                                                     17:00–19:00
                                                 </span>.
+
                                             </p>
 
-                                            @if($hasRental)
+
+                                            @if($hasEquipment || $hasHandyTalkie)
 
                                                 <p class="mt-2 text-[9px] font-bold leading-relaxed text-gray-500">
-                                                    Untuk barang yang dipinjam, tanggal dan jam pengembalian juga wajib tersedia.
+
+                                                    Karena barang merupakan barang yang wajib dikembalikan,
+                                                    tanggal dan jam pengembalian juga digunakan.
+
                                                 </p>
 
                                             @endif
@@ -1652,18 +1928,19 @@
                                 <!-- ================================================= -->
 
                                 @php
+
                                     $sopPath =
                                         \App\Models\Setting::where(
                                             'key',
                                             'sop_pdf_path'
                                         )->value('value');
+
                                 @endphp
 
 
                                 <div class="overflow-hidden rounded-[2rem] border-2 border-red-100 bg-white shadow-xl shadow-red-100/40">
 
 
-                                    <!-- SOP HEADER -->
                                     <div class="flex flex-col gap-4 border-b border-red-100 bg-red-50/80 p-5 sm:flex-row sm:items-center sm:justify-between">
 
                                         <div class="flex items-center gap-3">
@@ -1673,15 +1950,17 @@
                                                 <svg
                                                     class="h-5 w-5"
                                                     fill="none"
-                                                    stroke="currentColor"
                                                     viewBox="0 0 24 24"
+                                                    stroke="currentColor"
                                                 >
+
                                                     <path
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M12 9v2m0 4h.01m-6.938 4h13.856c.98 0 1.54-1.06 1.05-1.91L13.05 4.91c-.47-.82-1.63-.82-2.1 0L3.89 16.09c-.49.85.07 1.91 1.05 1.91z"
                                                     />
+
                                                 </svg>
 
                                             </div>
@@ -1707,7 +1986,7 @@
                                             <a
                                                 href="{{ asset('storage/' . $sopPath) }}"
                                                 target="_blank"
-                                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-200 active:scale-95"
+                                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white transition-all hover:bg-red-700"
                                             >
 
                                                 <svg
@@ -1716,12 +1995,14 @@
                                                     viewBox="0 0 24 24"
                                                     stroke="currentColor"
                                                 >
+
                                                     <path
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                         stroke-width="2"
-                                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 5v14a2 2 0 01-2 2z"
+                                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586A2 2 0 0119 5v14a2 2 0 01-2 2z"
                                                     />
+
                                                 </svg>
 
                                                 Buka File SOP
@@ -1740,7 +2021,6 @@
 
 
 
-                                    <!-- ACCEPT SOP -->
                                     <label class="flex cursor-pointer items-start gap-4 p-5 transition-all hover:bg-gray-50">
 
                                         <input
@@ -1758,8 +2038,11 @@
                                                 Saya Menyetujui Persyaratan
                                             </span>
 
+
                                             <span class="mt-1.5 block text-[9px] font-bold leading-relaxed text-gray-500">
+
                                                 Dengan mencentang kotak ini, saya menyatakan telah membaca SOP dan bertanggung jawab atas barang yang dipinjam atau dibeli serta bersedia mematuhi ketentuan yang berlaku.
+
                                             </span>
 
                                         </div>
@@ -1776,24 +2059,37 @@
 
                                 <button
                                     type="submit"
-                                    class="group flex w-full items-center justify-center gap-3 rounded-2xl bg-gray-950 py-5 text-[10px] font-black uppercase tracking-[0.25em] text-white shadow-xl shadow-gray-200 transition-all hover:bg-indigo-600 active:scale-[0.98]"
+                                    @if($transactionTypeCount > 1)
+                                        disabled
+                                    @endif
+                                    class="group flex w-full items-center justify-center gap-3 rounded-2xl bg-gray-950 py-5 text-[10px] font-black uppercase tracking-[0.25em] text-white shadow-xl transition-all hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-300"
                                 >
 
-                                    Submit Order Request
+                                    @if($transactionTypeCount > 1)
 
-                                    <svg
-                                        class="h-4 w-4 transition-transform group-hover:translate-x-1"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M14 5l7 7m0 0l-7 7m7-7H3"
-                                        />
-                                    </svg>
+                                        Pisahkan Transaction Type Terlebih Dahulu
+
+                                    @else
+
+                                        Submit Order Request
+
+                                        <svg
+                                            class="h-4 w-4 transition-transform group-hover:translate-x-1"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M14 5l7 7m0 0l-7 7m7-7H3"
+                                            />
+
+                                        </svg>
+
+                                    @endif
 
                                 </button>
 
@@ -1810,6 +2106,5 @@
         </div>
 
     </div>
-
 
 </x-app-layout>

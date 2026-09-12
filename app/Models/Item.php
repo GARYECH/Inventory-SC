@@ -12,15 +12,53 @@ class Item extends Model
     protected $fillable = [
         'name',
         'category_id',
+
+        /*
+         * Transaction Type hanya mempunyai 4 nilai:
+         *
+         * - Peralatan
+         * - Handy Talkie
+         * - Habis Pakai
+         * - Merchandise
+         */
         'transaction_type',
+
+        /*
+         * Detail tambahan dari Transaction Type.
+         *
+         * Peralatan:
+         * - Internal Rental
+         * - Vendor Rental
+         *
+         * Handy Talkie:
+         * - HT UV-82
+         * - HT 888s
+         * - HT UV-5R
+         */
+        'transaction_detail',
+
+        /*
+         * Khusus Merchandise:
+         * - Baju
+         * - ID Card
+         * - Lainnya
+         */
         'subcategory',
+
         'requires_mou',
         'description',
         'item_photo',
-        'price',
         'stock_quantity',
+        'price',
         'condition_status',
     ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CATEGORY
+    |--------------------------------------------------------------------------
+    */
 
     public function category()
     {
@@ -29,6 +67,13 @@ class Item extends Model
         );
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | ORDER ITEMS
+    |--------------------------------------------------------------------------
+    */
+
     public function orderItems()
     {
         return $this->hasMany(
@@ -36,104 +81,115 @@ class Item extends Model
         );
     }
 
-    public function getTransactionLabelAttribute()
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSACTION TYPE LABEL
+    |--------------------------------------------------------------------------
+    |
+    | Transaction Type sudah langsung menyimpan salah satu dari 4
+    | nilai final. Tidak perlu mapping HT / ATK / Obat lagi.
+    |
+    */
+
+    public function getTransactionLabelAttribute(): string
     {
-        if (in_array(
-            $this->transaction_type,
-            [
-                'Peralatan',
-                'Internal Rental',
-                'Vendor Rental',
-            ],
-            true
-        )) {
-            return 'Peralatan';
-        }
-
-        if (in_array(
-            $this->transaction_type,
-            [
-                'HT UV-82',
-                'HT 888s',
-                'HT UV-5R',
-            ],
-            true
-        )) {
-            return 'Handy Talkie';
-        }
-
-        if (in_array(
-            $this->transaction_type,
-            [
-                'ATK',
-                'Obat',
-            ],
-            true
-        )) {
-            return 'Habis Pakai';
-        }
-
-        if ($this->transaction_type === 'Merchandise') {
-            return 'Merchandise';
-        }
-
-        return 'Peralatan';
+        return $this->transaction_type;
     }
 
-    public function getRequiresReturnAttribute()
+
+    /*
+    |--------------------------------------------------------------------------
+    | RETURNABLE / RENTAL
+    |--------------------------------------------------------------------------
+    |
+    | Barang yang dikembalikan:
+    *
+    * - Peralatan
+    * - Handy Talkie
+    *
+    * Barang Habis Pakai dan Merchandise tidak perlu dikembalikan.
+    |
+    */
+
+    public function getRequiresReturnAttribute(): bool
     {
         return in_array(
             $this->transaction_type,
             [
                 'Peralatan',
-                'Internal Rental',
-                'Vendor Rental',
-                'HT UV-82',
-                'HT 888s',
-                'HT UV-5R',
+                'Handy Talkie',
             ],
             true
         );
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | RENTAL / STOCK CHECK
+    |--------------------------------------------------------------------------
+    |
+    | Untuk barang returnable, stok tersedia harus memperhitungkan
+    | booking pada tanggal yang dipilih.
+    |
+    */
+
     public function getAvailableStockForDate($date)
     {
+        /*
+         * Habis Pakai dan Merchandise tidak memakai sistem
+         * booking stok berdasarkan tanggal.
+         */
         if (!$this->requires_return) {
+
             return $this->stock_quantity;
+
         }
 
-        $booked = $this->orderItems()
-            ->whereHas(
-                'order',
-                function ($query) use ($date) {
-                    $query
-                        ->whereNotIn(
-                            'status',
-                            [
-                                'Returned',
-                                'Returned (Damaged)',
-                                'Resolved (Fine Paid)',
-                                'Rejected',
-                                'Cancelled',
-                            ]
-                        )
-                        ->whereDate(
-                            'start_date',
-                            '<=',
-                            $date
-                        )
-                        ->whereDate(
-                            'end_date',
-                            '>=',
-                            $date
-                        );
-                }
-            )
-            ->sum('quantity');
+
+        /*
+         * Hitung jumlah barang yang sedang dipinjam.
+         */
+        $booked =
+            $this->orderItems()
+                ->whereHas(
+                    'order',
+                    function ($query) use ($date) {
+
+                        $query
+                            ->whereNotIn(
+                                'status',
+                                [
+                                    'Returned',
+                                    'Returned (Damaged)',
+                                    'Resolved (Fine Paid)',
+                                    'Rejected',
+                                    'Cancelled',
+                                ]
+                            )
+                            ->whereDate(
+                                'start_date',
+                                '<=',
+                                $date
+                            )
+                            ->whereDate(
+                                'end_date',
+                                '>=',
+                                $date
+                            );
+
+                    }
+                )
+                ->sum(
+                    'quantity'
+                );
+
 
         return max(
             0,
-            $this->stock_quantity - $booked
+            $this->stock_quantity -
+            $booked
         );
     }
 }

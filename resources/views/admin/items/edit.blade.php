@@ -2,38 +2,43 @@
 
     <x-slot name="header">
 
-        <div class="flex justify-between items-center">
+        <div class="flex items-center justify-between gap-4">
 
             <div>
 
                 <h2 class="font-black text-2xl text-gray-900 leading-tight tracking-tight">
-                    {{ __('Modify Asset') }}
+                    Modify Asset
                 </h2>
 
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 italic">
-                    Updating Vault Data — Admin Suite
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                    Update Student Council Inventory
                 </p>
 
             </div>
 
 
-            <a href="{{ route('admin.items.index') }}"
-               class="group text-xs font-black text-gray-400 hover:text-indigo-600 transition uppercase tracking-tighter flex items-center">
+            <a
+                href="{{ route('admin.items.index') }}"
+                class="group inline-flex items-center text-xs font-black text-gray-400 hover:text-indigo-600 transition uppercase tracking-widest"
+            >
 
-                <svg class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition"
-                     fill="none"
-                     stroke="currentColor"
-                     viewBox="0 0 24 24">
+                <svg
+                    class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
 
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M10 19l-7-7m0 0l7-7m-7 7h18">
-                    </path>
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
 
                 </svg>
 
-                Abort & Return
+                Back to Inventory
 
             </a>
 
@@ -42,75 +47,83 @@
     </x-slot>
 
 
+
     <div class="py-12">
 
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            <div class="flex flex-col lg:flex-row gap-10">
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
 
 
-                <!-- ================================================= -->
-                <!-- KIRI: RULES & PREVIEW -->
-                <!-- ================================================= -->
+                <!-- ===================================================== -->
+                <!-- LEFT -->
+                <!-- ===================================================== -->
 
-                <div class="lg:w-1/3 space-y-6">
+                <div class="lg:col-span-4 space-y-6">
 
-                    <div class="bg-indigo-600 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
 
-                        <h3 class="text-xl font-black mb-4">
+                    <!-- RULES -->
+
+                    <div class="relative overflow-hidden rounded-[2.5rem] bg-indigo-600 p-8 text-white shadow-2xl shadow-indigo-200">
+
+                        <h3 class="text-xl font-black tracking-tight">
                             Inventory Rules
                         </h3>
 
 
-                        <div class="space-y-6">
+                        <div class="mt-6 space-y-5">
+
 
                             <div>
 
-                                <h4 class="text-[11px] font-black uppercase text-indigo-200">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-indigo-200">
                                     1. Peralatan
-                                </h4>
+                                </p>
 
-                                <p class="text-[10px] leading-relaxed">
-                                    Barang inventaris/umum milik kampus. Butuh MoU standar dan wajib kembali.
+                                <p class="mt-1 text-[10px] leading-relaxed text-indigo-50">
+                                    Barang yang wajib dikembalikan setelah digunakan.
                                 </p>
 
                             </div>
 
 
+
                             <div>
 
-                                <h4 class="text-[11px] font-black uppercase text-amber-200">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-amber-200">
                                     2. Handy Talkie
-                                </h4>
+                                </p>
 
-                                <p class="text-[10px] leading-relaxed">
-                                    Aset komunikasi berisiko tinggi. Wajib kembali. Akan dicetak MoU spesifik tipe HT.
+                                <p class="mt-1 text-[10px] leading-relaxed text-indigo-50">
+                                    HT yang wajib dikembalikan dan menggunakan detail tipe HT.
                                 </p>
 
                             </div>
 
 
+
                             <div>
 
-                                <h4 class="text-[11px] font-black uppercase text-rose-200">
-                                    3. Habis Pakai (ATK/Obat)
-                                </h4>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-rose-200">
+                                    3. Habis Pakai
+                                </p>
 
-                                <p class="text-[10px] leading-relaxed">
-                                    Barang operasional yang akan dihanguskan. Stok potong permanen tanpa jadwal kembali.
+                                <p class="mt-1 text-[10px] leading-relaxed text-indigo-50">
+                                    Barang yang stoknya berkurang permanen dan tidak dikembalikan.
                                 </p>
 
                             </div>
 
 
+
                             <div>
 
-                                <h4 class="text-[11px] font-black uppercase text-emerald-200">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-emerald-200">
                                     4. Merchandise
-                                </h4>
+                                </p>
 
-                                <p class="text-[10px] leading-relaxed">
-                                    Beli putus. Stok dipotong permanen dan diterbitkan Invoice/Kwitansi.
+                                <p class="mt-1 text-[10px] leading-relaxed text-indigo-50">
+                                    Barang beli putus seperti Baju, ID Card, atau lainnya.
                                 </p>
 
                             </div>
@@ -120,25 +133,48 @@
                     </div>
 
 
+
                     <!-- IMAGE PREVIEW -->
 
-                    <div class="bg-white border-2 border-dashed border-gray-200 rounded-[2.5rem] p-2 h-72 flex items-center justify-center relative overflow-hidden shadow-inner group">
+                    <div class="relative h-72 overflow-hidden rounded-[2.5rem] border-2 border-dashed border-gray-200 bg-white shadow-inner">
 
                         @if($item->item_photo)
 
-                            <img id="preview"
-                                 class="w-full h-full object-cover rounded-[2rem]"
-                                 src="{{ asset('storage/' . $item->item_photo) }}">
+                            <img
+                                id="preview"
+                                src="{{ asset('storage/' . $item->item_photo) }}"
+                                alt="{{ $item->name }}"
+                                class="h-full w-full rounded-[2rem] object-cover"
+                            >
+
+
+                            <div
+                                id="placeholder"
+                                class="hidden h-full items-center justify-center"
+                            >
+
+                                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">
+                                    No Current Image
+                                </p>
+
+                            </div>
 
                         @else
 
-                            <img id="preview"
-                                 class="hidden w-full h-full object-cover rounded-[2rem]"
-                                 src="">
+                            <img
+                                id="preview"
+                                src=""
+                                alt="Preview"
+                                class="hidden h-full w-full rounded-[2rem] object-cover"
+                            >
 
-                            <div id="placeholder" class="text-center">
 
-                                <p class="text-[10px] text-gray-300 font-black uppercase tracking-[0.2em]">
+                            <div
+                                id="placeholder"
+                                class="flex h-full items-center justify-center"
+                            >
+
+                                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">
                                     No Current Image
                                 </p>
 
@@ -151,48 +187,57 @@
                 </div>
 
 
-                <!-- ================================================= -->
-                <!-- KANAN: FORM EDIT -->
-                <!-- ================================================= -->
 
-                <div class="lg:w-2/3">
+                <!-- ===================================================== -->
+                <!-- RIGHT -->
+                <!-- ===================================================== -->
 
-                    <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100">
+                <div class="lg:col-span-8">
 
-                        <form action="{{ route('admin.items.update', $item->id) }}"
-                              method="POST"
-                              enctype="multipart/form-data"
-                              class="space-y-6">
+                    <div class="rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-sm md:p-10">
+
+
+                        <form
+                            action="{{ route('admin.items.update', $item->id) }}"
+                            method="POST"
+                            enctype="multipart/form-data"
+                            class="space-y-7"
+                        >
 
                             @csrf
 
                             @method('PUT')
 
 
+
                             <!-- ================================================= -->
-                            <!-- BARIS 1: NAMA & KATEGORI -->
+                            <!-- NAME + CATEGORY -->
                             <!-- ================================================= -->
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 
 
-                                <!-- ASSET NAME -->
+                                <!-- NAME -->
 
                                 <div>
 
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">
+                                    <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                                         Asset Name
                                     </label>
 
-                                    <input type="text"
-                                           name="name"
-                                           value="{{ old('name', $item->name) }}"
-                                           class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 transition-all shadow-sm"
-                                           required>
+
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value="{{ old('name', $item->name) }}"
+                                        required
+                                        class="w-full rounded-2xl border-0 bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                    >
+
 
                                     @error('name')
 
-                                        <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
+                                        <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
                                             {{ $message }}
                                         </p>
 
@@ -201,61 +246,44 @@
                                 </div>
 
 
-                                <!-- KATEGORI -->
+
+                                <!-- CATEGORY -->
 
                                 <div>
 
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">
+                                    <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                                         Kategori Barang
                                     </label>
 
-                                    <div class="relative">
 
-                                        <select name="category_id"
-                                                class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 appearance-none cursor-pointer shadow-sm"
-                                                required>
+                                    <select
+                                        name="category_id"
+                                        required
+                                        class="w-full rounded-2xl border-0 bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                    >
 
-                                            <option value="" disabled>
-                                                -- Pilih Kategori --
+                                        <option value="">
+                                            -- Pilih Kategori --
+                                        </option>
+
+
+                                        @foreach($categories as $category)
+
+                                            <option
+                                                value="{{ $category->id }}"
+                                                {{ old('category_id', $item->category_id) == $category->id ? 'selected' : '' }}
+                                            >
+                                                {{ $category->name }}
                                             </option>
 
-                                            @foreach($categories as $category)
+                                        @endforeach
 
-                                                <option value="{{ $category->id }}"
-                                                    {{ old('category_id', $item->category_id) == $category->id ? 'selected' : '' }}>
-
-                                                    {{ $category->name }}
-
-                                                </option>
-
-                                            @endforeach
-
-                                        </select>
-
-
-                                        <div class="absolute right-6 top-5 pointer-events-none text-gray-400">
-
-                                            <svg class="w-4 h-4"
-                                                 fill="none"
-                                                 stroke="currentColor"
-                                                 viewBox="0 0 24 24">
-
-                                                <path stroke-linecap="round"
-                                                      stroke-linejoin="round"
-                                                      stroke-width="2"
-                                                      d="M19 9l-7 7-7-7">
-                                                </path>
-
-                                            </svg>
-
-                                        </div>
-
-                                    </div>
+                                    </select>
 
 
                                     @error('category_id')
 
-                                        <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
+                                        <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
                                             {{ $message }}
                                         </p>
 
@@ -266,365 +294,428 @@
                             </div>
 
 
+
                             <!-- ================================================= -->
-                            <!-- BARIS 2: TRANSACTION TYPE & MOU -->
+                            <!-- TRANSACTION SETUP -->
                             <!-- ================================================= -->
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-indigo-50/50 rounded-[2rem] border border-indigo-100/50">
+                            @php
+
+                                $currentType =
+                                    old(
+                                        'transaction_type',
+                                        $item->transaction_type
+                                    );
+
+                                $currentDetail =
+                                    old(
+                                        'transaction_detail',
+                                        $item->transaction_detail
+                                    );
+
+                                /*
+                                |--------------------------------------------------------------------------
+                                | Legacy fallback
+                                |--------------------------------------------------------------------------
+                                | Ini hanya membantu kalau migration normalization
+                                | belum mengubah data lama.
+                                */
+
+                                if (
+                                    $currentType === 'HT UV-82' ||
+                                    $currentType === 'HT 888s' ||
+                                    $currentType === 'HT UV-5R'
+                                ) {
+
+                                    $currentDetail =
+                                        $currentType;
+
+                                    $currentType =
+                                        'Handy Talkie';
+
+                                }
 
 
-                                <!-- TRANSACTION TYPE -->
+                                if (
+                                    $currentType === 'Internal Rental' ||
+                                    $currentType === 'Vendor Rental'
+                                ) {
 
-                                <div>
+                                    $currentDetail =
+                                        $currentType;
 
-                                    <label class="block text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-3 ml-1">
-                                        Tipe Transaksi (Routing)
-                                    </label>
+                                    $currentType =
+                                        'Peralatan';
 
-
-                                    <div class="relative">
-
-                                        <select name="transaction_type"
-                                                id="transaction_type"
-                                                class="w-full px-6 py-3 bg-white border-none rounded-xl focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-900 appearance-none cursor-pointer shadow-sm"
-                                                required>
-
-                                            <option value="" disabled>
-                                                -- Pilih Jalur --
-                                            </option>
+                                }
 
 
-                                            <optgroup label="Aset Wajib Kembali">
+                                if (
+                                    $currentType === 'ATK' ||
+                                    $currentType === 'Obat'
+                                ) {
 
-                                                <option value="Peralatan"
-                                                    {{ old('transaction_type', $item->transaction_type) == 'Peralatan'
-                                                    || old('transaction_type', $item->transaction_type) == 'Internal Rental'
-                                                    ? 'selected'
-                                                    : '' }}>
-                                                    📦 Peralatan Umum
-                                                </option>
+                                    $currentType =
+                                        'Habis Pakai';
 
-
-                                                <option value="HT UV-82"
-                                                    {{ old('transaction_type', $item->transaction_type) == 'HT UV-82'
-                                                    || old('transaction_type', $item->transaction_type) == 'Vendor Rental'
-                                                    ? 'selected'
-                                                    : '' }}>
-                                                    📻 HT UV-82
-                                                </option>
+                                }
 
 
-                                                <option value="HT 888s"
-                                                    {{ old('transaction_type', $item->transaction_type) == 'HT 888s'
-                                                    ? 'selected'
-                                                    : '' }}>
-                                                    📻 HT 888s
-                                                </option>
+                                if (
+                                    $currentType === 'Sale'
+                                ) {
+
+                                    $currentType =
+                                        'Merchandise';
+
+                                }
+
+                            @endphp
 
 
-                                                <option value="HT UV-5R"
-                                                    {{ old('transaction_type', $item->transaction_type) == 'HT UV-5R'
-                                                    ? 'selected'
-                                                    : '' }}>
-                                                    📻 HT UV-5R
-                                                </option>
-
-                                            </optgroup>
+                            <div class="rounded-[2rem] border border-indigo-100 bg-indigo-50/50 p-5">
 
 
-                                            <optgroup label="Barang Habis Pakai (Potong Permanen)">
+                                <div class="mb-5">
 
-                                                <option value="ATK"
-                                                    {{ old('transaction_type', $item->transaction_type) == 'ATK'
-                                                    ? 'selected'
-                                                    : '' }}>
-                                                    📎 ATK / Kertas
-                                                </option>
+                                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">
+                                        Transaction Setup
+                                    </p>
 
+                                    <p class="mt-1 text-xs font-semibold text-indigo-400">
 
-                                                <option value="Obat"
-                                                    {{ old('transaction_type', $item->transaction_type) == 'Obat'
-                                                    ? 'selected'
-                                                    : '' }}>
-                                                    💊 Obat-obatan
-                                                </option>
+                                        Category dan Transaction Type berbeda.
+                                        Barang dalam Category yang sama dapat memiliki Transaction Type berbeda.
 
-
-                                                <option value="Merchandise"
-                                                    {{ old('transaction_type', $item->transaction_type) == 'Merchandise'
-                                                    || old('transaction_type', $item->transaction_type) == 'Sale'
-                                                    ? 'selected'
-                                                    : '' }}>
-                                                    🛍️ Merchandise
-                                                </option>
-
-                                            </optgroup>
-
-                                        </select>
-
-
-                                        <div class="absolute right-4 top-4 pointer-events-none text-indigo-400">
-
-                                            <svg class="w-4 h-4"
-                                                 fill="none"
-                                                 stroke="currentColor"
-                                                 viewBox="0 0 24 24">
-
-                                                <path stroke-linecap="round"
-                                                      stroke-linejoin="round"
-                                                      stroke-width="2"
-                                                      d="M19 9l-7 7-7-7">
-                                                </path>
-
-                                            </svg>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    @error('transaction_type')
-
-                                        <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
-                                            {{ $message }}
-                                        </p>
-
-                                    @enderror
+                                    </p>
 
                                 </div>
 
 
-                                <!-- MOU -->
 
-                                <div>
-
-                                    <label class="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-3 ml-1">
-                                        Wajib Pakai MoU?
-                                    </label>
+                                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 
 
-                                    <div class="relative">
+                                    <!-- TRANSACTION TYPE -->
 
-                                        <select name="requires_mou"
-                                                class="w-full px-6 py-3 bg-white border-none rounded-xl focus:ring-2 focus:ring-amber-500 font-bold text-gray-800 appearance-none cursor-pointer shadow-sm"
-                                                required>
+                                    <div>
 
-                                            <option value="1"
-                                                {{ old('requires_mou', $item->requires_mou) == '1'
-                                                ? 'selected'
-                                                : '' }}>
-                                                📝 YA - Butuh MoU
+                                        <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">
+                                            Transaction Type
+                                        </label>
+
+
+                                        <select
+                                            name="transaction_type"
+                                            id="transaction_type"
+                                            required
+                                            class="w-full rounded-2xl border-0 bg-white px-5 py-4 text-sm font-bold text-gray-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                                        >
+
+                                            <option value="">
+                                                -- Pilih Transaction Type --
                                             </option>
 
 
-                                            <option value="0"
-                                                {{ old('requires_mou', $item->requires_mou) == '0'
-                                                ? 'selected'
-                                                : '' }}>
-                                                ❌ TIDAK - Tanpa MoU
+                                            <option
+                                                value="Peralatan"
+                                                {{ $currentType === 'Peralatan' ? 'selected' : '' }}
+                                            >
+                                                Peralatan
+                                            </option>
+
+
+                                            <option
+                                                value="Handy Talkie"
+                                                {{ $currentType === 'Handy Talkie' ? 'selected' : '' }}
+                                            >
+                                                Handy Talkie
+                                            </option>
+
+
+                                            <option
+                                                value="Habis Pakai"
+                                                {{ $currentType === 'Habis Pakai' ? 'selected' : '' }}
+                                            >
+                                                Habis Pakai
+                                            </option>
+
+
+                                            <option
+                                                value="Merchandise"
+                                                {{ $currentType === 'Merchandise' ? 'selected' : '' }}
+                                            >
+                                                Merchandise
                                             </option>
 
                                         </select>
 
 
-                                        <div class="absolute right-4 top-4 pointer-events-none text-amber-400">
+                                        @error('transaction_type')
 
-                                            <svg class="w-4 h-4"
-                                                 fill="none"
-                                                 stroke="currentColor"
-                                                 viewBox="0 0 24 24">
+                                            <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
+                                                {{ $message }}
+                                            </p>
 
-                                                <path stroke-linecap="round"
-                                                      stroke-linejoin="round"
-                                                      stroke-width="2"
-                                                      d="M19 9l-7 7-7-7">
-                                                </path>
-
-                                            </svg>
-
-                                        </div>
+                                        @enderror
 
                                     </div>
 
 
-                                    @error('requires_mou')
 
-                                        <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
-                                            {{ $message }}
-                                        </p>
+                                    <!-- MOU -->
 
-                                    @enderror
+                                    <div>
+
+                                        <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">
+                                            Wajib Pakai MoU?
+                                        </label>
+
+
+                                        <select
+                                            name="requires_mou"
+                                            id="requires_mou"
+                                            required
+                                            class="w-full rounded-2xl border-0 bg-white px-5 py-4 text-sm font-bold text-gray-900 shadow-sm outline-none focus:ring-2 focus:ring-amber-500"
+                                        >
+
+                                            <option
+                                                value="1"
+                                                {{ old('requires_mou', $item->requires_mou) == '1' ? 'selected' : '' }}
+                                            >
+                                                YA - Butuh MoU
+                                            </option>
+
+
+                                            <option
+                                                value="0"
+                                                {{ old('requires_mou', $item->requires_mou) == '0' ? 'selected' : '' }}
+                                            >
+                                                TIDAK - Tanpa MoU
+                                            </option>
+
+                                        </select>
+
+
+                                        @error('requires_mou')
+
+                                            <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
+                                                {{ $message }}
+                                            </p>
+
+                                        @enderror
+
+                                    </div>
 
                                 </div>
 
-                            </div>
 
 
-                            <!-- ================================================= -->
-                            <!-- SUB-KATEGORI MERCHANDISE -->
-                            <!-- ================================================= -->
+                                <!-- ================================================= -->
+                                <!-- TRANSACTION DETAIL -->
+                                <!-- ================================================= -->
 
-                            <div id="merchandiseSubcategoryWrapper">
+                                <div
+                                    id="transactionDetailSection"
+                                    class="mt-5 hidden"
+                                >
 
-                                <label class="block text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-3 ml-1">
-                                    Sub-Kategori Merchandise
-                                </label>
-
-
-                                <div class="relative">
-
-                                    <select name="subcategory"
-                                            id="subcategory"
-                                            class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 font-bold text-gray-800 appearance-none cursor-pointer shadow-sm">
-
-                                        <option value="" disabled>
-                                            -- Pilih Sub-Kategori --
-                                        </option>
+                                    <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">
+                                        Transaction Detail
+                                    </label>
 
 
-                                        <option value="Baju"
-                                            {{ old('subcategory', $item->subcategory) == 'Baju'
-                                            ? 'selected'
-                                            : '' }}>
-                                            👕 Baju
-                                        </option>
+                                    <select
+                                        name="transaction_detail"
+                                        id="transaction_detail"
+                                        class="w-full rounded-2xl border-0 bg-white px-5 py-4 text-sm font-bold text-gray-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                                    >
 
-
-                                        <option value="ID Card"
-                                            {{ old('subcategory', $item->subcategory) == 'ID Card'
-                                            ? 'selected'
-                                            : '' }}>
-                                            🪪 ID Card
-                                        </option>
-
-
-                                        <option value="Lainnya"
-                                            {{ old('subcategory', $item->subcategory) == 'Lainnya'
-                                            ? 'selected'
-                                            : '' }}>
-                                            📦 Lainnya
+                                        <option value="">
+                                            -- Pilih Detail --
                                         </option>
 
                                     </select>
 
 
-                                    <div class="absolute right-6 top-5 pointer-events-none text-emerald-400">
-
-                                        <svg class="w-4 h-4"
-                                             fill="none"
-                                             stroke="currentColor"
-                                             viewBox="0 0 24 24">
-
-                                            <path stroke-linecap="round"
-                                                  stroke-linejoin="round"
-                                                  stroke-width="2"
-                                                  d="M19 9l-7 7-7-7">
-                                            </path>
-
-                                        </svg>
-
-                                    </div>
-
-                                </div>
-
-
-                                <p class="text-[9px] text-gray-400 mt-2 ml-1 font-bold">
-                                    Pilih jenis Merchandise agar sistem dapat menentukan template MoU yang sesuai.
-                                </p>
-
-
-                                @error('subcategory')
-
-                                    <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
-                                        {{ $message }}
+                                    <p class="mt-2 ml-1 text-[9px] font-semibold text-gray-400">
+                                        Detail digunakan untuk membedakan model atau jalur penyewaan.
                                     </p>
 
-                                @enderror
 
-                            </div>
+                                    @error('transaction_detail')
 
-
-                            <!-- ================================================= -->
-                            <!-- BARIS 3: DESKRIPSI -->
-                            <!-- ================================================= -->
-
-                            <div>
-
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">
-                                    Asset Description
-                                </label>
-
-
-                                <textarea name="description"
-                                          rows="3"
-                                          class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 transition-all shadow-sm"
-                                          required>{{ old('description', $item->description) }}</textarea>
-
-
-                                @error('description')
-
-                                    <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
-                                        {{ $message }}
-                                    </p>
-
-                                @enderror
-
-                            </div>
-
-
-                            <!-- ================================================= -->
-                            <!-- BARIS 4: HARGA, STOK, KONDISI -->
-                            <!-- ================================================= -->
-
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-
-                                <!-- PRICE -->
-
-                                <div>
-
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">
-                                        Price (Rp)
-                                    </label>
-
-
-                                    <input type="number"
-                                           name="price"
-                                           value="{{ old('price', $item->price) }}"
-                                           class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 transition-all shadow-sm"
-                                           required>
-
-
-                                    @error('price')
-
-                                        <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
+                                        <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
                                             {{ $message }}
                                         </p>
 
                                     @enderror
 
                                 </div>
+
+
+
+                                <!-- ================================================= -->
+                                <!-- MERCHANDISE -->
+                                <!-- ================================================= -->
+
+                                <div
+                                    id="merchandiseSection"
+                                    class="mt-5 hidden"
+                                >
+
+                                    <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">
+                                        Merchandise Subcategory
+                                    </label>
+
+
+                                    <select
+                                        name="subcategory"
+                                        id="subcategory"
+                                        class="w-full rounded-2xl border-0 bg-white px-5 py-4 text-sm font-bold text-gray-900 shadow-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                                    >
+
+                                        <option value="">
+                                            -- Pilih Subcategory --
+                                        </option>
+
+
+                                        <option
+                                            value="Baju"
+                                            {{ old('subcategory', $item->subcategory) === 'Baju' ? 'selected' : '' }}
+                                        >
+                                            Baju
+                                        </option>
+
+
+                                        <option
+                                            value="ID Card"
+                                            {{ old('subcategory', $item->subcategory) === 'ID Card' ? 'selected' : '' }}
+                                        >
+                                            ID Card
+                                        </option>
+
+
+                                        <option
+                                            value="Lainnya"
+                                            {{ old('subcategory', $item->subcategory) === 'Lainnya' ? 'selected' : '' }}
+                                        >
+                                            Lainnya
+                                        </option>
+
+                                    </select>
+
+
+                                    <p class="mt-2 ml-1 text-[9px] font-semibold text-gray-400">
+                                        Merchandise Baju dan ID Card akan menggunakan template MoU masing-masing.
+                                    </p>
+
+
+                                    @error('subcategory')
+
+                                        <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
+                                            {{ $message }}
+                                        </p>
+
+                                    @enderror
+
+                                </div>
+
+
+
+                                <!-- NOTE -->
+
+                                <div class="mt-5 rounded-2xl border border-indigo-100 bg-white px-4 py-3">
+
+                                    <div class="flex items-start gap-3">
+
+                                        <svg
+                                            class="mt-0.5 h-4 w-4 shrink-0 text-indigo-500"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                                            />
+
+                                        </svg>
+
+
+                                        <div>
+
+                                            <p class="text-[9px] font-black uppercase tracking-widest text-indigo-600">
+                                                Contoh
+                                            </p>
+
+
+                                            <p class="mt-1 text-[9px] leading-relaxed text-gray-500">
+
+                                                ATK
+                                                +
+                                                <span class="font-black text-gray-700">
+                                                    Peralatan
+                                                </span>
+                                                =
+                                                Stapler
+
+                                                <span class="mx-1">
+                                                    •
+                                                </span>
+
+                                                ATK
+                                                +
+                                                <span class="font-black text-gray-700">
+                                                    Habis Pakai
+                                                </span>
+                                                =
+                                                Kertas A4
+
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- ================================================= -->
+                            <!-- STOCK + PRICE -->
+                            <!-- ================================================= -->
+
+                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 
 
                                 <!-- STOCK -->
 
                                 <div>
 
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">
-                                        Stock Qty
+                                    <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                                        Stock Quantity
                                     </label>
 
 
-                                    <input type="number"
-                                           name="stock_quantity"
-                                           value="{{ old('stock_quantity', $item->stock_quantity) }}"
-                                           class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 transition-all shadow-sm"
-                                           required>
+                                    <input
+                                        type="number"
+                                        name="stock_quantity"
+                                        min="0"
+                                        value="{{ old('stock_quantity', $item->stock_quantity) }}"
+                                        required
+                                        class="w-full rounded-2xl border-0 bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-sm outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                    >
 
 
                                     @error('stock_quantity')
 
-                                        <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
+                                        <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
                                             {{ $message }}
                                         </p>
 
@@ -633,62 +724,29 @@
                                 </div>
 
 
-                                <!-- CONDITION -->
+
+                                <!-- PRICE -->
 
                                 <div>
 
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">
-                                        Current Condition
+                                    <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                                        Price / Rental Rate
                                     </label>
 
 
-                                    <div class="relative">
-
-                                        <select name="condition_status"
-                                                class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800 appearance-none cursor-pointer shadow-sm"
-                                                required>
-
-                                            <option value="Good"
-                                                {{ old('condition_status', $item->condition_status) == 'Good'
-                                                ? 'selected'
-                                                : '' }}>
-                                                ✨ Good / Ready
-                                            </option>
+                                    <input
+                                        type="number"
+                                        name="price"
+                                        min="0"
+                                        value="{{ old('price', $item->price) }}"
+                                        required
+                                        class="w-full rounded-2xl border-0 bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-sm outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                    >
 
 
-                                            <option value="Broken"
-                                                {{ old('condition_status', $item->condition_status) == 'Broken'
-                                                ? 'selected'
-                                                : '' }}>
-                                                🛠️ Broken / Repair
-                                            </option>
+                                    @error('price')
 
-                                        </select>
-
-
-                                        <div class="absolute right-6 top-5 pointer-events-none text-gray-400">
-
-                                            <svg class="w-4 h-4"
-                                                 fill="none"
-                                                 stroke="currentColor"
-                                                 viewBox="0 0 24 24">
-
-                                                <path stroke-linecap="round"
-                                                      stroke-linejoin="round"
-                                                      stroke-width="2"
-                                                      d="M19 9l-7 7-7-7">
-                                                </path>
-
-                                            </svg>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    @error('condition_status')
-
-                                        <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
+                                        <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
                                             {{ $message }}
                                         </p>
 
@@ -699,27 +757,30 @@
                             </div>
 
 
+
                             <!-- ================================================= -->
-                            <!-- FOTO -->
+                            <!-- DESCRIPTION -->
                             <!-- ================================================= -->
 
                             <div>
 
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">
-                                    Update Asset Imagery (Opsional)
+                                <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                                    Asset Description
                                 </label>
 
 
-                                <input type="file"
-                                       name="item_photo"
-                                       id="item_photo"
-                                       onchange="previewImage(this)"
-                                       class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold text-gray-400 file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-indigo-600 file:text-white file:uppercase hover:file:bg-indigo-700 cursor-pointer transition-all shadow-sm">
+                                <textarea
+                                    name="description"
+                                    rows="4"
+                                    required
+                                    placeholder="Describe this inventory item..."
+                                    class="w-full rounded-2xl border-0 bg-gray-50 px-5 py-4 text-sm font-semibold text-gray-800 shadow-sm outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                >{{ old('description', $item->description) }}</textarea>
 
 
-                                @error('item_photo')
+                                @error('description')
 
-                                    <p class="text-red-500 text-[9px] font-black mt-2 uppercase ml-1">
+                                    <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
                                         {{ $message }}
                                     </p>
 
@@ -728,21 +789,122 @@
                             </div>
 
 
+
+                            <!-- ================================================= -->
+                            <!-- CONDITION -->
+                            <!-- ================================================= -->
+
+                            <div>
+
+                                <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                                    Condition Status
+                                </label>
+
+
+                                <select
+                                    name="condition_status"
+                                    required
+                                    class="w-full rounded-2xl border-0 bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-sm outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                >
+
+                                    <option
+                                        value="Good"
+                                        {{ old('condition_status', $item->condition_status) === 'Good' ? 'selected' : '' }}
+                                    >
+                                        Good
+                                    </option>
+
+
+                                    <option
+                                        value="Minor Damage"
+                                        {{ old('condition_status', $item->condition_status) === 'Minor Damage' ? 'selected' : '' }}
+                                    >
+                                        Minor Damage
+                                    </option>
+
+
+                                    <option
+                                        value="Damaged"
+                                        {{ old('condition_status', $item->condition_status) === 'Damaged' ? 'selected' : '' }}
+                                    >
+                                        Damaged
+                                    </option>
+
+                                </select>
+
+
+                                @error('condition_status')
+
+                                    <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
+                                        {{ $message }}
+                                    </p>
+
+                                @enderror
+
+                            </div>
+
+
+
+                            <!-- ================================================= -->
+                            <!-- NEW PHOTO -->
+                            <!-- ================================================= -->
+
+                            <div>
+
+                                <label class="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                                    Replace Item Photo
+                                </label>
+
+
+                                <input
+                                    type="file"
+                                    name="item_photo"
+                                    id="item_photo"
+                                    accept=".jpg,.jpeg,.png,.webp"
+                                    class="block w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-xs font-bold text-gray-500"
+                                >
+
+
+                                <p class="mt-2 ml-1 text-[9px] font-semibold text-gray-400">
+                                    Kosongkan apabila tidak ingin mengganti foto.
+                                </p>
+
+
+                                @error('item_photo')
+
+                                    <p class="mt-2 ml-1 text-[9px] font-black uppercase text-red-500">
+                                        {{ $message }}
+                                    </p>
+
+                                @enderror
+
+                            </div>
+
+
+
                             <!-- ================================================= -->
                             <!-- SUBMIT -->
                             <!-- ================================================= -->
 
-                            <div class="pt-4">
+                            <div class="flex flex-col-reverse gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:justify-end">
 
-                                <button type="submit"
-                                        class="w-full bg-gray-900 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-indigo-600 shadow-xl shadow-gray-200 transition-all transform active:scale-95 flex items-center justify-center group">
 
-                                    Update Vault Data
+                                <a
+                                    href="{{ route('admin.items.index') }}"
+                                    class="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-7 py-3.5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                >
+                                    Cancel
+                                </a>
 
+
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center justify-center rounded-2xl bg-gray-950 px-7 py-3.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg hover:bg-indigo-600"
+                                >
+                                    Update Asset
                                 </button>
 
                             </div>
-
 
                         </form>
 
@@ -757,115 +919,347 @@
     </div>
 
 
-    <!-- ========================================================= -->
+
+    <!-- ============================================================= -->
     <!-- JAVASCRIPT -->
-    <!-- ========================================================= -->
+    <!-- ============================================================= -->
 
     <script>
 
-        // =========================================================
-        // TOGGLE SUBCATEGORY MERCHANDISE
-        // =========================================================
-
-        function toggleMerchandiseSubcategory() {
-
-            const transactionType =
-                document.getElementById('transaction_type').value;
-
-            const wrapper =
-                document.getElementById('merchandiseSubcategoryWrapper');
-
-            const subcategory =
-                document.getElementById('subcategory');
-
-
-            if (transactionType === 'Merchandise') {
-
-                wrapper.classList.remove('hidden');
-
-                subcategory.required = true;
-
-            } else {
-
-                wrapper.classList.add('hidden');
-
-                subcategory.required = false;
-
-                subcategory.value = '';
-
-            }
-
-        }
-
-
-        // =========================================================
-        // Jalankan saat transaction type berubah
-        // =========================================================
-
-        document
-            .getElementById('transaction_type')
-            .addEventListener(
-                'change',
-                toggleMerchandiseSubcategory
-            );
-
-
-        // =========================================================
-        // Jalankan saat halaman pertama dibuka
-        // =========================================================
-
         document.addEventListener(
             'DOMContentLoaded',
-            toggleMerchandiseSubcategory
-        );
+            function () {
 
 
-        // =========================================================
-        // IMAGE PREVIEW
-        // =========================================================
-
-        function previewImage(input) {
-
-            const preview =
-                document.getElementById('preview');
-
-            const placeholder =
-                document.getElementById('placeholder');
+                const transactionType =
+                    document.getElementById(
+                        'transaction_type'
+                    );
 
 
-            if (input.files && input.files[0]) {
+                const transactionDetailSection =
+                    document.getElementById(
+                        'transactionDetailSection'
+                    );
 
-                const reader =
-                    new FileReader();
+
+                const transactionDetail =
+                    document.getElementById(
+                        'transaction_detail'
+                    );
 
 
-                reader.onload = function(e) {
+                const merchandiseSection =
+                    document.getElementById(
+                        'merchandiseSection'
+                    );
 
-                    preview.src =
-                        e.target.result;
 
-                    preview.classList.remove(
+                const subcategory =
+                    document.getElementById(
+                        'subcategory'
+                    );
+
+
+                const requiresMou =
+                    document.getElementById(
+                        'requires_mou'
+                    );
+
+
+                const photoInput =
+                    document.getElementById(
+                        'item_photo'
+                    );
+
+
+                const preview =
+                    document.getElementById(
+                        'preview'
+                    );
+
+
+                const placeholder =
+                    document.getElementById(
+                        'placeholder'
+                    );
+
+
+                const existingDetail =
+                    @json(
+                        $currentDetail
+                    );
+
+
+                function addOption(
+                    value
+                ) {
+
+                    const option =
+                        document.createElement(
+                            'option'
+                        );
+
+
+                    option.value =
+                        value;
+
+
+                    option.textContent =
+                        value;
+
+
+                    if (
+                        existingDetail ===
+                        value
+                    ) {
+
+                        option.selected =
+                            true;
+
+                    }
+
+
+                    transactionDetail.appendChild(
+                        option
+                    );
+
+                }
+
+
+                function updateTransactionFields()
+                {
+
+                    const type =
+                        transactionType.value;
+
+
+                    transactionDetail.innerHTML =
+                        '<option value="">-- Pilih Detail --</option>';
+
+
+                    transactionDetailSection.classList.add(
                         'hidden'
                     );
 
-                    if (placeholder) {
 
-                        placeholder.classList.add(
+                    merchandiseSection.classList.add(
+                        'hidden'
+                    );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PERALATAN
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        type ===
+                        'Peralatan'
+                    ) {
+
+                        transactionDetailSection.classList.remove(
                             'hidden'
+                        );
+
+
+                        addOption(
+                            'Internal Rental'
+                        );
+
+
+                        addOption(
+                            'Vendor Rental'
                         );
 
                     }
 
-                };
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | HANDY TALKIE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        type ===
+                        'Handy Talkie'
+                    ) {
+
+                        transactionDetailSection.classList.remove(
+                            'hidden'
+                        );
 
 
-                reader.readAsDataURL(
-                    input.files[0]
+                        addOption(
+                            'HT UV-82'
+                        );
+
+
+                        addOption(
+                            'HT 888s'
+                        );
+
+
+                        addOption(
+                            'HT UV-5R'
+                        );
+
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | HABIS PAKAI
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        type ===
+                        'Habis Pakai'
+                    ) {
+
+                        requiresMou.value =
+                            '0';
+
+
+                        transactionDetail.value =
+                            '';
+
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | MERCHANDISE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        type ===
+                        'Merchandise'
+                    ) {
+
+                        merchandiseSection.classList.remove(
+                            'hidden'
+                        );
+
+
+                        transactionDetail.value =
+                            '';
+
+                    }
+
+                }
+
+
+                transactionType.addEventListener(
+                    'change',
+                    function () {
+
+                        updateTransactionFields();
+
+                    }
                 );
 
-            }
 
-        }
+                /*
+                |--------------------------------------------------------------------------
+                | PHOTO PREVIEW
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    photoInput &&
+                    preview &&
+                    placeholder
+                ) {
+
+                    photoInput.addEventListener(
+                        'change',
+                        function () {
+
+                            const file =
+                                this.files[0];
+
+
+                            if (!file) {
+
+                                return;
+
+                            }
+
+
+                            const reader =
+                                new FileReader();
+
+
+                            reader.onload =
+                                function (
+                                    event
+                                ) {
+
+                                    preview.src =
+                                        event.target.result;
+
+
+                                    preview.classList.remove(
+                                        'hidden'
+                                    );
+
+
+                                    placeholder.classList.add(
+                                        'hidden'
+                                    );
+
+                                };
+
+
+                            reader.readAsDataURL(
+                                file
+                            );
+
+                        }
+                    );
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | INITIAL STATE
+                |--------------------------------------------------------------------------
+                */
+
+                updateTransactionFields();
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | OLD INPUT OVERRIDE
+                |--------------------------------------------------------------------------
+                */
+
+                const oldDetail =
+                    @json(
+                        old(
+                            'transaction_detail'
+                        )
+                    );
+
+
+                if (
+                    oldDetail
+                ) {
+
+                    transactionDetail.value =
+                        oldDetail;
+
+                }
+
+            }
+        );
 
     </script>
 

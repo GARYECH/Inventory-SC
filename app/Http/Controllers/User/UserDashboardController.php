@@ -12,130 +12,277 @@ use Illuminate\Http\Request;
 
 class UserDashboardController extends Controller
 {
-    private const RENTAL_TYPES = [
+    /*
+    |--------------------------------------------------------------------------
+    | FINAL TRANSACTION TYPES
+    |--------------------------------------------------------------------------
+    |
+    | Semua bagian sistem menggunakan 4 value ini.
+    |
+    */
+
+    private const TRANSACTION_TYPES = [
         'Peralatan',
-        'Internal Rental',
-        'Vendor Rental',
-        'HT UV-82',
-        'HT 888s',
-        'HT UV-5R',
+        'Handy Talkie',
+        'Habis Pakai',
+        'Merchandise',
     ];
 
-    private const HT_TYPES = [
-        'HT UV-82',
-        'HT 888s',
-        'HT UV-5R',
-    ];
 
-    private const USED_TYPES = [
-        'ATK',
-        'Obat',
-    ];
+    /*
+    |--------------------------------------------------------------------------
+    | STUDENT DASHBOARD
+    |--------------------------------------------------------------------------
+    */
 
-    public function index(Request $request)
-    {
-        $search = $request->input('search');
-        $type = $request->input('type');
-        $category = $request->input('category');
+    public function index(
+        Request $request
+    ) {
 
-        $query = Item::where(
-            'condition_status',
-            'Good'
-        )->with([
-            'category',
-            'orderItems.order',
-        ]);
+        $search =
+            $request->input('search');
 
-        if ($type) {
-            if ($type === 'Peralatan') {
-                $query->whereIn(
-                    'transaction_type',
-                    [
-                        'Peralatan',
-                        'Internal Rental',
-                        'Vendor Rental',
-                    ]
-                );
-            } elseif ($type === 'HT') {
-                $query->whereIn(
-                    'transaction_type',
-                    self::HT_TYPES
-                );
-            } elseif ($type === 'HabisPakai') {
-                $query->whereIn(
-                    'transaction_type',
-                    self::USED_TYPES
-                );
-            } elseif ($type === 'Merchandise') {
-                $query->where(
-                    'transaction_type',
-                    'Merchandise'
-                );
-            }
+
+        $type =
+            $request->input('type');
+
+
+        $category =
+            $request->input('category');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | OLD URL COMPATIBILITY
+        |--------------------------------------------------------------------------
+        |
+        | Kalau ada URL lama:
+        |
+        | ?type=HT
+        | ?type=HabisPakai
+        |
+        | tetap diarahkan ke nama baru.
+        |
+        */
+
+        if (
+            $type ===
+            'HT'
+        ) {
+
+            $type =
+                'Handy Talkie';
+
         }
 
+
+        if (
+            $type ===
+            'HabisPakai'
+        ) {
+
+            $type =
+                'Habis Pakai';
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ITEM QUERY
+        |--------------------------------------------------------------------------
+        */
+
+        $query =
+            Item::query()
+                ->where(
+                    'condition_status',
+                    'Good'
+                )
+                ->with([
+                    'category',
+                    'orderItems.order',
+                ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TRANSACTION TYPE FILTER
+        |--------------------------------------------------------------------------
+        |
+        | INI BAGIAN YANG MEMPERBAIKI BUG SCREENSHOT.
+        |
+        | Kalau user klik:
+        |
+        | Handy Talkie
+        |
+        | maka query menjadi:
+        |
+        | transaction_type = Handy Talkie
+        |
+        */
+
+        if (
+            in_array(
+                $type,
+                self::TRANSACTION_TYPES,
+                true
+            )
+        ) {
+
+            $query->where(
+                'transaction_type',
+                $type
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CATEGORY FILTER
+        |--------------------------------------------------------------------------
+        |
+        | Category adalah filter terpisah dari Transaction Type.
+        |
+        */
+
         if ($category) {
+
             $query->whereHas(
                 'category',
-                function ($query) use ($category) {
-                    $query->where(
+                function (
+                    $categoryQuery
+                ) use ($category) {
+
+                    $categoryQuery->where(
                         'slug',
                         $category
                     );
+
                 }
             );
+
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEARCH
+        |--------------------------------------------------------------------------
+        |
+        | Search bisa mencari:
+        |
+        | - Nama barang
+        | - Description
+        | - Transaction Detail
+        | - Subcategory
+        | - Category
+        |
+        */
+
         if ($search) {
+
             $query->where(
-                function ($query) use ($search) {
-                    $query
+                function ($q) use ($search) {
+
+                    $q
                         ->where(
                             'name',
                             'like',
                             "%{$search}%"
                         )
+
                         ->orWhere(
                             'description',
                             'like',
                             "%{$search}%"
                         )
+
+                        ->orWhere(
+                            'transaction_detail',
+                            'like',
+                            "%{$search}%"
+                        )
+
                         ->orWhere(
                             'subcategory',
                             'like',
                             "%{$search}%"
                         )
+
                         ->orWhereHas(
                             'category',
-                            function ($categoryQuery) use ($search) {
+                            function (
+                                $categoryQuery
+                            ) use ($search) {
+
                                 $categoryQuery->where(
                                     'name',
                                     'like',
                                     "%{$search}%"
                                 );
+
                             }
                         );
+
                 }
             );
+
         }
 
-        $items = $query
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
 
-        $categories = Category::withCount(
-            'items'
-        )
-            ->orderBy('name')
+        /*
+        |--------------------------------------------------------------------------
+        | PAGINATION
+        |--------------------------------------------------------------------------
+        */
+
+        $items =
+            $query
+                ->latest()
+                ->paginate(12)
+                ->withQueryString();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CATEGORY LIST
+        |--------------------------------------------------------------------------
+        */
+
+        $categories =
+            Category::withCount(
+                'items'
+            )
+            ->orderBy(
+                'name'
+            )
             ->get();
 
-        $cartCount = count(
+
+        /*
+        |--------------------------------------------------------------------------
+        | CART COUNT
+        |--------------------------------------------------------------------------
+        */
+
+        $cart =
             session()->get(
                 'cart',
                 []
-            )
-        );
+            );
+
+
+        $cartCount =
+            count($cart);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VIEW
+        |--------------------------------------------------------------------------
+        */
 
         return view(
             'user.dashboard',
@@ -150,12 +297,27 @@ class UserDashboardController extends Controller
         );
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSACTION HISTORY
+    |--------------------------------------------------------------------------
+    */
+
     public function loans()
     {
-        $activeLoans = Order::where(
-            'user_id',
-            auth()->id()
-        )
+
+        /*
+        |--------------------------------------------------------------------------
+        | ACTIVE LOANS
+        |--------------------------------------------------------------------------
+        */
+
+        $activeLoans =
+            Order::where(
+                'user_id',
+                auth()->id()
+            )
             ->whereNotIn(
                 'status',
                 [
@@ -167,16 +329,24 @@ class UserDashboardController extends Controller
                 ]
             )
             ->with([
-                'orderItems.item',
+                'orderItems.item.category',
                 'mouDocuments',
             ])
             ->latest()
             ->get();
 
-        $pastLoans = Order::where(
-            'user_id',
-            auth()->id()
-        )
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAST LOANS
+        |--------------------------------------------------------------------------
+        */
+
+        $pastLoans =
+            Order::where(
+                'user_id',
+                auth()->id()
+            )
             ->whereIn(
                 'status',
                 [
@@ -188,11 +358,12 @@ class UserDashboardController extends Controller
                 ]
             )
             ->with([
-                'orderItems.item',
+                'orderItems.item.category',
                 'mouDocuments',
             ])
             ->latest()
             ->paginate(5);
+
 
         return view(
             'user.loans',
@@ -203,19 +374,37 @@ class UserDashboardController extends Controller
         );
     }
 
-    public function itemSchedule($id)
-    {
-        $item = Item::findOrFail(
-            $id
-        );
 
-        $activeBookings = OrderItem::where(
-            'item_id',
-            $id
-        )
+    /*
+    |--------------------------------------------------------------------------
+    | ITEM SCHEDULE
+    |--------------------------------------------------------------------------
+    */
+
+    public function itemSchedule(
+        $id
+    ) {
+
+        $item =
+            Item::with([
+                'category',
+            ])
+            ->findOrFail(
+                $id
+            );
+
+
+        $activeBookings =
+            OrderItem::where(
+                'item_id',
+                $id
+            )
             ->whereHas(
                 'order',
-                function ($query) {
+                function (
+                    $query
+                ) {
+
                     $query->whereNotIn(
                         'status',
                         [
@@ -226,6 +415,7 @@ class UserDashboardController extends Controller
                             'Cancelled',
                         ]
                     );
+
                 }
             )
             ->with([
@@ -233,12 +423,17 @@ class UserDashboardController extends Controller
             ])
             ->get()
             ->sortBy(
-                function ($orderItem) {
+                function (
+                    $orderItem
+                ) {
+
                     return optional(
                         $orderItem->order
                     )->start_date;
+
                 }
             );
+
 
         return view(
             'user.item_schedule',
@@ -249,22 +444,70 @@ class UserDashboardController extends Controller
         );
     }
 
-    public function checkStock($id)
-    {
-        $item = Item::findOrFail(
-            $id
-        );
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK STOCK
+    |--------------------------------------------------------------------------
+    |
+    | Dipanggil oleh dashboard melalui:
+    |
+    | /api/check-stock/{id}
+    |
+    */
+
+    public function checkStock(
+        $id
+    ) {
+
+        $item =
+            Item::findOrFail(
+                $id
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NON-RETURNABLE
+        |--------------------------------------------------------------------------
+        |
+        | Habis Pakai dan Merchandise tidak menggunakan
+        | calendar stock availability.
+        |
+        */
+
+        if (
+            !$item->requires_return
+        ) {
+
+            return response()->json(
+                []
+            );
+
+        }
+
 
         $totalStock =
             $item->stock_quantity;
 
-        $activeLoans = OrderItem::where(
-            'item_id',
-            $id
-        )
+
+        /*
+        |--------------------------------------------------------------------------
+        | ACTIVE LOANS
+        |--------------------------------------------------------------------------
+        */
+
+        $activeLoans =
+            OrderItem::where(
+                'item_id',
+                $id
+            )
             ->whereHas(
                 'order',
-                function ($query) {
+                function (
+                    $query
+                ) {
+
                     $query->whereNotIn(
                         'status',
                         [
@@ -275,63 +518,105 @@ class UserDashboardController extends Controller
                             'Cancelled',
                         ]
                     );
+
                 }
             )
-            ->with('order')
+            ->with(
+                'order'
+            )
             ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BUILD 90-DAY STOCK CALENDAR
+        |--------------------------------------------------------------------------
+        */
 
         $availability = [];
 
-        $startDate = Carbon::today()
-            ->subDays(7);
+
+        $startDate =
+            Carbon::today()
+                ->subDays(7);
+
 
         for (
             $i = 0;
             $i < 90;
             $i++
         ) {
-            $date = $startDate
-                ->copy()
-                ->addDays($i);
 
-            $bookedToday = 0;
+            $date =
+                $startDate
+                    ->copy()
+                    ->addDays($i);
 
-            foreach ($activeLoans as $loan) {
-                $order = $loan->order;
+
+            $bookedToday =
+                0;
+
+
+            foreach (
+                $activeLoans
+                as $loan
+            ) {
+
+                $order =
+                    $loan->order;
+
 
                 if (
                     !$order ||
                     !$order->start_date ||
                     !$order->end_date
                 ) {
+
                     continue;
+
                 }
 
-                $loanStart = Carbon::parse(
-                    $order->start_date
-                )->toDateString();
 
-                $loanEnd = Carbon::parse(
-                    $order->end_date
-                )->toDateString();
+                $loanStart =
+                    Carbon::parse(
+                        $order->start_date
+                    )
+                    ->toDateString();
+
+
+                $loanEnd =
+                    Carbon::parse(
+                        $order->end_date
+                    )
+                    ->toDateString();
+
 
                 if (
-                    $date->toDateString() >= $loanStart &&
-                    $date->toDateString() <= $loanEnd
+                    $date->toDateString() >=
+                        $loanStart &&
+                    $date->toDateString() <=
+                        $loanEnd
                 ) {
+
                     $bookedToday +=
                         $loan->quantity;
+
                 }
+
             }
+
 
             $availability[
                 $date->toDateString()
-            ] = max(
-                0,
-                $totalStock -
-                $bookedToday
-            );
+            ] =
+                max(
+                    0,
+                    $totalStock -
+                    $bookedToday
+                );
+
         }
+
 
         return response()->json(
             $availability

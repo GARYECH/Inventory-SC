@@ -22,12 +22,14 @@
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
                             >
+
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a3 3 0 016 0"
                                 />
+
                             </svg>
 
                         </div>
@@ -46,6 +48,7 @@
 
                     </div>
 
+
                     <a
                         href="{{ route('student.dashboard') }}"
                         class="inline-flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-700 transition hover:border-indigo-200 hover:text-indigo-600"
@@ -57,12 +60,14 @@
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                         >
+
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
                             />
+
                         </svg>
 
                         Kembali ke Katalog
@@ -74,6 +79,7 @@
             </div>
 
         </div>
+
 
 
         <!-- ========================================================= -->
@@ -113,6 +119,7 @@
             @endif
 
 
+
             <!-- ===================================================== -->
             <!-- ACTIVE -->
             <!-- ===================================================== -->
@@ -133,11 +140,13 @@
 
                     </div>
 
+
                     <span class="rounded-full bg-indigo-50 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-indigo-600">
                         {{ $activeLoans->count() }} Transaksi
                     </span>
 
                 </div>
+
 
 
                 @forelse($activeLoans as $order)
@@ -150,13 +159,18 @@
                         $mouDocuments =
                             $order->mouDocuments;
 
+                        $status =
+                            $order->status;
+
                     @endphp
 
 
                     <div class="mb-6 overflow-hidden rounded-[2rem] border border-gray-100 bg-white shadow-sm">
 
 
+                        <!-- ================================================= -->
                         <!-- HEADER ORDER -->
+                        <!-- ================================================= -->
 
                         <div class="border-b border-gray-100 bg-gray-50/60 px-6 py-5 sm:px-8">
 
@@ -192,16 +206,24 @@
                         </div>
 
 
+
+                        <!-- ================================================= -->
                         <!-- ORDER BODY -->
+                        <!-- ================================================= -->
 
                         <div class="grid grid-cols-1 gap-6 p-6 lg:grid-cols-12 sm:p-8">
 
 
+                            <!-- ================================================= -->
                             <!-- LEFT -->
+                            <!-- ================================================= -->
 
                             <div class="lg:col-span-7">
 
                                 <div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+
+                                    <!-- TRANSACTION TYPE -->
 
                                     <div class="rounded-2xl bg-gray-50 p-4">
 
@@ -216,6 +238,9 @@
                                     </div>
 
 
+
+                                    <!-- ORGANIZATION -->
+
                                     <div class="rounded-2xl bg-gray-50 p-4">
 
                                         <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">
@@ -229,6 +254,9 @@
                                     </div>
 
 
+
+                                    <!-- PROKER -->
+
                                     <div class="rounded-2xl bg-gray-50 p-4">
 
                                         <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">
@@ -241,6 +269,9 @@
 
                                     </div>
 
+
+
+                                    <!-- DATE -->
 
                                     <div class="rounded-2xl bg-gray-50 p-4">
 
@@ -277,7 +308,10 @@
                                 </div>
 
 
+
+                                <!-- ================================================= -->
                                 <!-- ITEMS -->
+                                <!-- ================================================= -->
 
                                 <div>
 
@@ -302,11 +336,15 @@
                                                 $item = $detail->item;
                                             @endphp
 
+
                                             @if($item)
 
                                                 <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4">
 
                                                     <div class="flex gap-4">
+
+
+                                                        <!-- ITEM PHOTO -->
 
                                                         <div class="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white">
 
@@ -323,6 +361,9 @@
                                                         </div>
 
 
+
+                                                        <!-- ITEM INFO -->
+
                                                         <div class="min-w-0 flex-1">
 
                                                             <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -334,8 +375,10 @@
                                                                     </p>
 
                                                                     <p class="mt-1 text-[9px] font-bold text-gray-400">
+
                                                                         Category:
                                                                         {{ optional($item->category)->name ?? '-' }}
+
                                                                     </p>
 
                                                                 </div>
@@ -351,8 +394,10 @@
                                                             @if($item->transaction_detail)
 
                                                                 <p class="mt-2 text-[9px] font-black uppercase tracking-widest text-indigo-500">
+
                                                                     Detail:
                                                                     {{ $item->transaction_detail }}
+
                                                                 </p>
 
                                                             @endif
@@ -361,8 +406,10 @@
                                                             @if($item->subcategory)
 
                                                                 <p class="mt-1 text-[9px] font-bold text-gray-500">
+
                                                                     Subcategory:
                                                                     {{ $item->subcategory }}
+
                                                                 </p>
 
                                                             @endif
@@ -371,8 +418,10 @@
                                                             @if($detail->size)
 
                                                                 <p class="mt-1 text-[9px] font-bold text-gray-500">
+
                                                                     Size:
                                                                     {{ $detail->size }}
+
                                                                 </p>
 
                                                             @endif
@@ -420,9 +469,17 @@
                             </div>
 
 
+
+                            <!-- ================================================= -->
                             <!-- RIGHT -->
+                            <!-- ================================================= -->
 
                             <div class="lg:col-span-5">
+
+
+                                <!-- ================================================= -->
+                                <!-- GRAND TOTAL -->
+                                <!-- ================================================= -->
 
                                 <div class="rounded-[1.75rem] bg-gray-950 p-6 text-white">
 
@@ -437,26 +494,37 @@
                                 </div>
 
 
-                                <!-- DOCUMENTS -->
 
-                                <div class="mt-5 space-y-3">
+                                <!-- ================================================= -->
+                                <!-- STEP 1 : MOU -->
+                                <!-- ================================================= -->
 
-                                    <a
-                                        href="{{ route('student.document.invoice', $order->id) }}"
-                                        target="_blank"
-                                        class="flex w-full items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-700 transition hover:border-indigo-200 hover:text-indigo-600"
-                                    >
-                                        Download Invoice
-                                    </a>
-
+                                @if(
+                                    $status === 'Waiting for MoU' ||
+                                    $status === 'Pending Review MoU'
+                                )
 
                                     @if($mouDocuments->count() > 0)
 
-                                        <div class="rounded-2xl border border-purple-100 bg-purple-50 p-4">
+                                        <div class="mt-5 rounded-2xl border border-purple-100 bg-purple-50 p-4">
 
-                                            <p class="mb-3 text-[9px] font-black uppercase tracking-widest text-purple-700">
-                                                MoU Documents
-                                            </p>
+
+                                            <div class="mb-4">
+
+                                                <p class="text-[9px] font-black uppercase tracking-widest text-purple-700">
+                                                    Step 1
+                                                </p>
+
+                                                <p class="mt-1 text-sm font-black text-gray-900">
+                                                    MoU Documents
+                                                </p>
+
+                                                <p class="mt-1 text-[9px] leading-relaxed text-purple-600">
+                                                    Lihat dan unduh MoU terlebih dahulu sebelum mengunggah dokumen yang sudah ditandatangani.
+                                                </p>
+
+                                            </div>
+
 
 
                                             <div class="space-y-3">
@@ -464,70 +532,108 @@
                                                 @foreach($mouDocuments as $document)
 
                                                     @php
-                                                        $mouLabel = match($document->mou_type) {
-                                                            'ht' => 'MoU Handy Talkie',
-                                                            'internal' => 'MoU Internal Rental',
-                                                            'vendor' => 'MoU Vendor Rental',
-                                                            'merch_baju' => 'MoU Baju',
-                                                            'merch_idcard' => 'MoU ID Card',
-                                                            default => 'MoU',
+
+                                                        $mouLabel = match(
+                                                            $document->mou_type
+                                                        ) {
+
+                                                            'ht' =>
+                                                                'MoU Handy Talkie',
+
+                                                            'internal' =>
+                                                                'MoU Internal Rental',
+
+                                                            'vendor' =>
+                                                                'MoU Vendor Rental',
+
+                                                            'merch_baju' =>
+                                                                'MoU Baju',
+
+                                                            'merch_idcard' =>
+                                                                'MoU ID Card',
+
+                                                            default =>
+                                                                'MoU',
+
                                                         };
+
                                                     @endphp
 
 
                                                     <div class="rounded-xl border border-purple-100 bg-white p-3">
 
-                                                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 
-                                                            <p class="text-[9px] font-black text-gray-800">
-                                                                {{ $mouLabel }}
-                                                            </p>
+                                                        <p class="text-[9px] font-black text-gray-800">
+                                                            {{ $mouLabel }}
+                                                        </p>
 
 
-                                                            <a
-                                                                href="{{ route('student.document.mou', [$order->id, $document->id]) }}"
-                                                                target="_blank"
-                                                                class="text-[9px] font-black text-purple-600 hover:underline"
-                                                            >
-                                                                Download
-                                                            </a>
 
-                                                        </div>
+                                                        <!-- DOWNLOAD MOU -->
+
+                                                        <a
+                                                            href="{{ route('student.document.mou', [$order->id, $document->id]) }}"
+                                                            target="_blank"
+                                                            class="mt-3 flex w-full items-center justify-center rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-purple-700 transition hover:bg-purple-100"
+                                                        >
+                                                            Download MoU
+                                                        </a>
+
 
 
                                                         @if($document->signed_file_path)
 
-                                                            <p class="mt-2 text-[9px] font-bold text-emerald-600">
-                                                                ✓ Signed MoU sudah diupload
-                                                            </p>
+                                                            <div class="mt-3 rounded-xl bg-emerald-50 px-3 py-2">
+
+                                                                <p class="text-[9px] font-black text-emerald-700">
+                                                                    ✓ Signed MoU sudah diupload
+                                                                </p>
+
+                                                            </div>
 
                                                         @else
 
-                                                            <form
-                                                                action="{{ route('student.orders.upload-mou', [$order->id, $document->id]) }}"
-                                                                method="POST"
-                                                                enctype="multipart/form-data"
-                                                                class="mt-3"
-                                                            >
+                                                            @if($status === 'Waiting for MoU')
 
-                                                                @csrf
-
-                                                                <input
-                                                                    type="file"
-                                                                    name="signed_mou"
-                                                                    accept=".pdf"
-                                                                    required
-                                                                    class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-[9px] font-semibold text-gray-600"
+                                                                <form
+                                                                    action="{{ route('student.orders.upload-mou', [$order->id, $document->id]) }}"
+                                                                    method="POST"
+                                                                    enctype="multipart/form-data"
+                                                                    class="mt-3"
                                                                 >
 
-                                                                <button
-                                                                    type="submit"
-                                                                    class="mt-2 w-full rounded-xl bg-purple-600 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-white hover:bg-purple-700"
-                                                                >
-                                                                    Upload Signed MoU
-                                                                </button>
+                                                                    @csrf
 
-                                                            </form>
+
+                                                                    <input
+                                                                        type="file"
+                                                                        name="signed_mou"
+                                                                        accept=".pdf"
+                                                                        required
+                                                                        class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-[9px] font-semibold text-gray-600"
+                                                                    >
+
+
+                                                                    <button
+                                                                        type="submit"
+                                                                        class="mt-2 w-full rounded-xl bg-purple-600 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-white transition hover:bg-purple-700"
+                                                                    >
+                                                                        Upload Signed MoU
+                                                                    </button>
+
+                                                                </form>
+
+                                                            @else
+
+                                                                <div class="mt-3 rounded-xl bg-yellow-50 px-3 py-2">
+
+                                                                    <p class="text-[9px] font-black text-yellow-700">
+                                                                        Menunggu pemeriksaan admin.
+                                                                    </p>
+
+                                                                </div>
+
+                                                            @endif
 
                                                         @endif
 
@@ -541,14 +647,53 @@
 
                                     @endif
 
+                                @endif
 
-                                    @if($order->status === 'Waiting for Payment')
 
-                                        <div class="rounded-2xl border border-orange-100 bg-orange-50 p-4">
+
+                                <!-- ================================================= -->
+                                <!-- STEP 2 : PAYMENT -->
+                                <!-- ================================================= -->
+
+                                @if(
+                                    $status === 'Waiting for Payment' ||
+                                    $status === 'Pending Review Payment'
+                                )
+
+                                    <div class="mt-5 rounded-2xl border border-orange-100 bg-orange-50 p-4">
+
+
+                                        <div class="mb-4">
 
                                             <p class="text-[9px] font-black uppercase tracking-widest text-orange-700">
+                                                Step 2
+                                            </p>
+
+                                            <p class="mt-1 text-sm font-black text-gray-900">
                                                 Payment
                                             </p>
+
+                                            <p class="mt-1 text-[9px] leading-relaxed text-orange-600">
+                                                Lihat invoice terlebih dahulu, kemudian unggah bukti pembayaran.
+                                            </p>
+
+                                        </div>
+
+
+
+                                        <!-- DOWNLOAD INVOICE -->
+
+                                        <a
+                                            href="{{ route('student.document.invoice', $order->id) }}"
+                                            target="_blank"
+                                            class="flex w-full items-center justify-center rounded-xl border border-orange-200 bg-white px-4 py-3 text-[9px] font-black uppercase tracking-widest text-orange-700 transition hover:bg-orange-100"
+                                        >
+                                            Download Invoice
+                                        </a>
+
+
+
+                                        @if($status === 'Waiting for Payment')
 
                                             <form
                                                 action="{{ route('student.orders.upload-payment', $order->id) }}"
@@ -559,6 +704,7 @@
 
                                                 @csrf
 
+
                                                 <input
                                                     type="file"
                                                     name="payment_receipt"
@@ -567,157 +713,358 @@
                                                     class="block w-full rounded-xl border border-orange-200 bg-white px-3 py-2 text-[9px] font-semibold text-gray-600"
                                                 >
 
+
                                                 <button
                                                     type="submit"
-                                                    class="mt-2 w-full rounded-xl bg-orange-500 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-white hover:bg-orange-600"
+                                                    class="mt-2 w-full rounded-xl bg-orange-500 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-white transition hover:bg-orange-600"
                                                 >
                                                     Upload Bukti Pembayaran
                                                 </button>
 
                                             </form>
 
-                                        </div>
+                                        @else
 
-                                    @endif
+                                            <div class="mt-3 rounded-xl bg-yellow-50 px-3 py-2">
 
+                                                <p class="text-[9px] font-black text-yellow-700">
+                                                    Bukti pembayaran sedang diperiksa admin.
+                                                </p>
 
-                                    @if($order->payment_receipt)
+                                            </div>
 
-                                        <a
-                                            href="{{ asset('storage/' . $order->payment_receipt) }}"
-                                            target="_blank"
-                                            class="flex w-full items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-orange-700"
-                                        >
-                                            Lihat Bukti Pembayaran
-                                        </a>
-
-                                    @endif
+                                        @endif
 
 
-                                    @if($order->status === 'Waiting for Kwitansi')
 
-                                        <form
-                                            action="{{ route('student.orders.upload-kwitansi', $order->id) }}"
-                                            method="POST"
-                                            enctype="multipart/form-data"
-                                            class="rounded-2xl border border-pink-100 bg-pink-50 p-4"
-                                        >
+                                        @if($order->payment_receipt)
 
-                                            @csrf
+                                            <a
+                                                href="{{ asset('storage/' . $order->payment_receipt) }}"
+                                                target="_blank"
+                                                class="mt-3 flex w-full items-center justify-center rounded-xl border border-orange-200 bg-white px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-orange-700 transition hover:bg-orange-100"
+                                            >
+                                                Lihat Bukti Pembayaran
+                                            </a>
+
+                                        @endif
+
+                                    </div>
+
+                                @endif
+
+
+
+                                <!-- ================================================= -->
+                                <!-- STEP 3 : KWITANSI -->
+                                <!-- ================================================= -->
+
+                                @if(
+                                    $status === 'Waiting for Kwitansi' ||
+                                    $status === 'Pending Review Kwitansi'
+                                )
+
+                                    <div class="mt-5 rounded-2xl border border-pink-100 bg-pink-50 p-4">
+
+
+                                        <div class="mb-4">
 
                                             <p class="text-[9px] font-black uppercase tracking-widest text-pink-700">
-                                                Signed Kwitansi
+                                                Step 3
                                             </p>
 
-                                            <input
-                                                type="file"
-                                                name="signed_kwitansi"
-                                                accept=".pdf"
-                                                required
-                                                class="mt-3 block w-full rounded-xl border border-pink-200 bg-white px-3 py-2 text-[9px] font-semibold text-gray-600"
-                                            >
+                                            <p class="mt-1 text-sm font-black text-gray-900">
+                                                Kwitansi
+                                            </p>
 
-                                            <button
-                                                type="submit"
-                                                class="mt-2 w-full rounded-xl bg-pink-600 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-white hover:bg-pink-700"
-                                            >
-                                                Upload Signed Kwitansi
-                                            </button>
+                                            <p class="mt-1 text-[9px] leading-relaxed text-pink-600">
+                                                Lihat kwitansi terlebih dahulu, lalu unggah kwitansi yang sudah ditandatangani.
+                                            </p>
 
-                                        </form>
-
-                                    @endif
+                                        </div>
 
 
-                                    @if($order->signed_kwitansi)
+
+                                        <!-- DOWNLOAD KWITANSI -->
 
                                         <a
-                                            href="{{ asset('storage/' . $order->signed_kwitansi) }}"
+                                            href="{{ route('student.document.kwitansi', $order->id) }}"
                                             target="_blank"
-                                            class="flex w-full items-center justify-center rounded-2xl border border-pink-200 bg-pink-50 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-pink-700"
+                                            class="flex w-full items-center justify-center rounded-xl border border-pink-200 bg-white px-4 py-3 text-[9px] font-black uppercase tracking-widest text-pink-700 transition hover:bg-pink-100"
                                         >
-                                            Lihat Signed Kwitansi
+                                            Download Kwitansi
                                         </a>
 
-                                    @endif
 
 
-                                    @if(in_array(
-                                        $transactionType,
-                                        ['Peralatan', 'Handy Talkie'],
-                                        true
-                                    ))
-
-                                        @if(in_array(
-                                            $order->status,
-                                            [
-                                                'Handed Over',
-                                                'Pending Return Review',
-                                            ],
-                                            true
-                                        ))
+                                        @if($status === 'Waiting for Kwitansi')
 
                                             <form
-                                                action="{{ route('student.orders.return-link', $order->id) }}"
+                                                action="{{ route('student.orders.upload-kwitansi', $order->id) }}"
                                                 method="POST"
-                                                class="rounded-2xl border border-cyan-100 bg-cyan-50 p-4"
+                                                enctype="multipart/form-data"
+                                                class="mt-3"
                                             >
 
                                                 @csrf
 
-                                                <p class="text-[9px] font-black uppercase tracking-widest text-cyan-700">
-                                                    Return Evidence
-                                                </p>
 
                                                 <input
-                                                    type="url"
-                                                    name="return_drive_link"
-                                                    value="{{ $order->return_drive_link }}"
-                                                    placeholder="https://drive.google.com/..."
+                                                    type="file"
+                                                    name="signed_kwitansi"
+                                                    accept=".pdf"
                                                     required
-                                                    class="mt-3 block w-full rounded-xl border border-cyan-200 bg-white px-3 py-3 text-xs font-semibold text-gray-700"
+                                                    class="block w-full rounded-xl border border-pink-200 bg-white px-3 py-2 text-[9px] font-semibold text-gray-600"
                                                 >
+
 
                                                 <button
                                                     type="submit"
-                                                    class="mt-2 w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-white hover:bg-cyan-700"
+                                                    class="mt-2 w-full rounded-xl bg-pink-600 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-white transition hover:bg-pink-700"
                                                 >
-                                                    Kirim Bukti Return
+                                                    Upload Signed Kwitansi
                                                 </button>
 
                                             </form>
 
+                                        @else
+
+                                            <div class="mt-3 rounded-xl bg-yellow-50 px-3 py-2">
+
+                                                <p class="text-[9px] font-black text-yellow-700">
+                                                    Signed kwitansi sedang diperiksa admin.
+                                                </p>
+
+                                            </div>
+
                                         @endif
 
+
+
+                                        @if($order->signed_kwitansi)
+
+                                            <a
+                                                href="{{ asset('storage/' . $order->signed_kwitansi) }}"
+                                                target="_blank"
+                                                class="mt-3 flex w-full items-center justify-center rounded-xl border border-pink-200 bg-white px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-pink-700 transition hover:bg-pink-100"
+                                            >
+                                                Lihat Signed Kwitansi
+                                            </a>
+
+                                        @endif
+
+                                    </div>
+
+                                @endif
+
+
+
+                                <!-- ================================================= -->
+                                <!-- STEP 4 : RETURN -->
+                                <!-- ================================================= -->
+
+                                @if(
+                                    in_array(
+                                        $transactionType,
+                                        [
+                                            'Peralatan',
+                                            'Handy Talkie'
+                                        ],
+                                        true
+                                    )
+                                )
+
+                                    @if(
+                                        $status === 'Handed Over' ||
+                                        $status === 'Pending Return Review'
+                                    )
+
+                                        <div class="mt-5 rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+
+
+                                            <div class="mb-4">
+
+                                                <p class="text-[9px] font-black uppercase tracking-widest text-cyan-700">
+                                                    Step 4
+                                                </p>
+
+                                                <p class="mt-1 text-sm font-black text-gray-900">
+                                                    Return Evidence
+                                                </p>
+
+                                                <p class="mt-1 text-[9px] leading-relaxed text-cyan-600">
+                                                    Kirim link bukti pengembalian barang.
+                                                </p>
+
+                                            </div>
+
+
+
+                                            @if($order->return_drive_link)
+
+                                                <a
+                                                    href="{{ $order->return_drive_link }}"
+                                                    target="_blank"
+                                                    class="flex w-full items-center justify-center rounded-xl border border-cyan-200 bg-white px-4 py-3 text-[9px] font-black uppercase tracking-widest text-cyan-700 transition hover:bg-cyan-100"
+                                                >
+                                                    Lihat Bukti Return
+                                                </a>
+
+                                            @endif
+
+
+
+                                            @if($status === 'Handed Over')
+
+                                                <form
+                                                    action="{{ route('student.orders.return-link', $order->id) }}"
+                                                    method="POST"
+                                                    class="{{ $order->return_drive_link ? 'mt-3' : '' }}"
+                                                >
+
+                                                    @csrf
+
+
+                                                    <input
+                                                        type="url"
+                                                        name="return_drive_link"
+                                                        value="{{ $order->return_drive_link }}"
+                                                        placeholder="https://drive.google.com/..."
+                                                        required
+                                                        class="block w-full rounded-xl border border-cyan-200 bg-white px-3 py-3 text-xs font-semibold text-gray-700"
+                                                    >
+
+
+                                                    <button
+                                                        type="submit"
+                                                        class="mt-2 w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-white transition hover:bg-cyan-700"
+                                                    >
+                                                        {{ $order->return_drive_link ? 'Update Bukti Return' : 'Kirim Bukti Return' }}
+                                                    </button>
+
+                                                </form>
+
+                                            @else
+
+                                                <div class="mt-3 rounded-xl bg-yellow-50 px-3 py-2">
+
+                                                    <p class="text-[9px] font-black text-yellow-700">
+                                                        Bukti return sedang diperiksa admin.
+                                                    </p>
+
+                                                </div>
+
+                                            @endif
+
+                                        </div>
+
                                     @endif
 
+                                @endif
 
-                                    @if($order->return_drive_link)
+
+
+                                <!-- ================================================= -->
+                                <!-- STEP 5 : BERITA ACARA -->
+                                <!-- ================================================= -->
+
+                                @if(
+                                    $status === 'Returned (Damaged)' ||
+                                    $status === 'Pending Review BA'
+                                )
+
+                                    <div class="mt-5 rounded-2xl border border-red-100 bg-red-50 p-4">
+
+
+                                        <div class="mb-4">
+
+                                            <p class="text-[9px] font-black uppercase tracking-widest text-red-700">
+                                                Step 5
+                                            </p>
+
+                                            <p class="mt-1 text-sm font-black text-gray-900">
+                                                Berita Acara
+                                            </p>
+
+                                            <p class="mt-1 text-[9px] leading-relaxed text-red-600">
+                                                Lihat Berita Acara terlebih dahulu, lalu unggah dokumen yang sudah ditandatangani.
+                                            </p>
+
+                                        </div>
+
+
+
+                                        <!-- DOWNLOAD BA -->
 
                                         <a
-                                            href="{{ $order->return_drive_link }}"
+                                            href="{{ route('student.document.berita-acara', $order->id) }}"
                                             target="_blank"
-                                            class="flex w-full items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-cyan-700"
+                                            class="flex w-full items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-3 text-[9px] font-black uppercase tracking-widest text-red-700 transition hover:bg-red-100"
                                         >
-                                            Lihat Bukti Return
+                                            Download Berita Acara
                                         </a>
 
-                                    @endif
 
 
-                                    @if($order->signed_ba_file)
+                                        @if($status === 'Returned (Damaged)')
 
-                                        <a
-                                            href="{{ asset('storage/' . $order->signed_ba_file) }}"
-                                            target="_blank"
-                                            class="flex w-full items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-emerald-700"
-                                        >
-                                            Lihat Signed BA
-                                        </a>
+                                            <form
+                                                action="{{ route('student.orders.upload-ba', $order->id) }}"
+                                                method="POST"
+                                                enctype="multipart/form-data"
+                                                class="mt-3"
+                                            >
 
-                                    @endif
+                                                @csrf
 
-                                </div>
+
+                                                <input
+                                                    type="file"
+                                                    name="signed_ba_file"
+                                                    accept=".pdf"
+                                                    required
+                                                    class="block w-full rounded-xl border border-red-200 bg-white px-3 py-2 text-[9px] font-semibold text-gray-600"
+                                                >
+
+
+                                                <button
+                                                    type="submit"
+                                                    class="mt-2 w-full rounded-xl bg-red-600 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-white transition hover:bg-red-700"
+                                                >
+                                                    Upload Signed BA
+                                                </button>
+
+                                            </form>
+
+                                        @else
+
+                                            <div class="mt-3 rounded-xl bg-yellow-50 px-3 py-2">
+
+                                                <p class="text-[9px] font-black text-yellow-700">
+                                                    Signed BA sedang diperiksa admin.
+                                                </p>
+
+                                            </div>
+
+                                        @endif
+
+
+
+                                        @if($order->signed_ba_file)
+
+                                            <a
+                                                href="{{ asset('storage/' . $order->signed_ba_file) }}"
+                                                target="_blank"
+                                                class="mt-3 flex w-full items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-red-700 transition hover:bg-red-100"
+                                            >
+                                                Lihat Signed BA
+                                            </a>
+
+                                        @endif
+
+                                    </div>
+
+                                @endif
 
                             </div>
 
@@ -744,6 +1091,7 @@
             </div>
 
 
+
             <!-- ===================================================== -->
             <!-- PAST -->
             <!-- ===================================================== -->
@@ -764,6 +1112,7 @@
 
                     </div>
 
+
                     <span class="rounded-full bg-gray-100 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-gray-500">
                         {{ $pastLoans->total() }} Transaksi
                     </span>
@@ -777,6 +1126,7 @@
 
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
+
                             <div>
 
                                 <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">
@@ -788,9 +1138,13 @@
                                 </h3>
 
                                 <p class="mt-1 text-[10px] font-bold text-gray-400">
+
                                     {{ $order->order_type }}
+
                                     •
+
                                     {{ $order->created_at->format('d M Y') }}
+
                                 </p>
 
                             </div>
@@ -802,9 +1156,11 @@
                                     {{ $order->status }}
                                 </span>
 
+
                                 <span class="text-sm font-black text-gray-900">
                                     Rp {{ number_format($order->total_price ?? 0, 0, ',', '.') }}
                                 </span>
+
 
                                 <a
                                     href="{{ route('student.document.invoice', $order->id) }}"

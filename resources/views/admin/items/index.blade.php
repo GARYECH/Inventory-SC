@@ -73,6 +73,17 @@
                             @endif
 
 
+                            @if(request('category'))
+
+                                <input
+                                    type="hidden"
+                                    name="category"
+                                    value="{{ request('category') }}"
+                                >
+
+                            @endif
+
+
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
 
                                 <svg
@@ -361,6 +372,116 @@
                 </div>
 
             </div>
+
+
+
+            <!-- ========================================================= -->
+            <!-- CATEGORY FILTER -->
+            <!-- ========================================================= -->
+
+            @if(isset($categories) && $categories->count() > 0)
+
+                <div class="mb-8">
+
+                    <div class="mb-2 flex items-center justify-between">
+
+                        <div>
+
+                            <p class="text-[8px] font-black uppercase tracking-[0.18em] text-gray-400">
+                                Kategori Barang
+                            </p>
+
+                            <p class="mt-0.5 text-[9px] font-semibold text-gray-400">
+                                Kategori dan jenis transaksi tidak harus sama
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="flex flex-nowrap overflow-x-auto gap-3 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+
+
+                        <!-- ALL CATEGORIES -->
+                        <a
+                            href="{{ route(
+                                'admin.items.index',
+                                request()->except([
+                                    'category',
+                                    'page'
+                                ])
+                            ) }}"
+                            class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                            {{
+                                !request('category')
+                                    ? 'border-gray-950 bg-gray-950 text-white shadow-lg'
+                                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900'
+                            }}"
+                        >
+
+                            <svg
+                                class="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                                />
+                            </svg>
+
+                            Semua
+
+                        </a>
+
+
+
+                        <!-- CATEGORY LIST -->
+                        @foreach($categories as $categoryItem)
+
+                            <a
+                                href="{{ route(
+                                    'admin.items.index',
+                                    array_merge(
+                                        request()->except('page'),
+                                        [
+                                            'category' => $categoryItem->slug
+                                        ]
+                                    )
+                                ) }}"
+                                class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
+                                {{
+                                    request('category') === $categoryItem->slug
+                                        ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                                        : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
+                                }}"
+                            >
+
+                                <span
+                                    class="h-2.5 w-2.5 rounded-full
+                                    {{
+                                        request('category') === $categoryItem->slug
+                                            ? 'bg-indigo-500'
+                                            : 'bg-gray-300'
+                                    }}"
+                                ></span>
+
+                                {{ $categoryItem->name }}
+
+                            </a>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+            @endif
 
 
 

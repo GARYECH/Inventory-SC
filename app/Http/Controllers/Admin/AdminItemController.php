@@ -89,6 +89,9 @@ class AdminItemController extends Controller
         $type =
             $request->input('type');
 
+        $category =
+            $request->input('category');
+
         $type = match ($type) {
             'HT' =>
                 'Handy Talkie',
@@ -191,15 +194,36 @@ class AdminItemController extends Controller
                         );
                     }
                 )
+                ->when(
+                    !empty($category),
+                    function ($query) use ($category) {
+                        $query->whereHas(
+                            'category',
+                            function ($categoryQuery) use ($category) {
+                                $categoryQuery->where(
+                                    'slug',
+                                    $category
+                                );
+                            }
+                        );
+                    }
+                )
                 ->latest()
                 ->paginate(12)
                 ->withQueryString();
+
+        $categories =
+            Category::withCount('items')
+                ->orderBy('name')
+                ->get();
 
         return view(
             'admin.items.index',
             compact(
                 'items',
-                'counts'
+                'counts',
+                'categories',
+                'category'
             )
         );
     }
@@ -795,43 +819,6 @@ class AdminItemController extends Controller
 
         $oldStatus =
             $order->status;
-
-        /*
-         |--------------------------------------------------------------------------
-         | APPROVAL FLOW SAFETY
-         |--------------------------------------------------------------------------
-         |
-         | Pending hanya boleh:
-         | - tetap Pending
-         | - Approved
-         | - Rejected
-         | - Cancelled
-         |
-         | Status proses setelah approval tidak boleh dilompati karena
-         | pengecekan booking/stok dilakukan saat Pending -> Approved.
-         |
-         */
-
-        $allowedPendingStatuses = [
-            'Pending',
-            'Approved',
-            'Rejected',
-            'Cancelled',
-        ];
-
-        if (
-            $oldStatus === 'Pending' &&
-            !in_array(
-                $newStatus,
-                $allowedPendingStatuses,
-                true
-            )
-        ) {
-            return back()->with(
-                'error',
-                'Transaksi harus di-Approve terlebih dahulu sebelum masuk ke proses berikutnya.'
-            );
-        }
 
         DB::beginTransaction();
 

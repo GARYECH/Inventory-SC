@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Item;
 use App\Models\Order;
 use App\Notifications\OrderStatusUpdated;
+use App\Services\InventoryAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -35,6 +36,7 @@ class AdminItemController extends Controller
 
     private const ORDER_STATUSES = [
         'Pending',
+        'Approved',
         'Waiting for MoU',
         'Pending Review MoU',
         'Waiting for Payment',
@@ -63,6 +65,15 @@ class AdminItemController extends Controller
         'Rejected',
         'Cancelled',
     ];
+
+    private InventoryAvailabilityService $availabilityService;
+
+    public function __construct(
+        InventoryAvailabilityService $availabilityService
+    ) {
+        $this->availabilityService =
+            $availabilityService;
+    }
 
     public function index(
         Request $request
@@ -785,9 +796,163 @@ class AdminItemController extends Controller
         $oldStatus =
             $order->status;
 
+        /*
+         |--------------------------------------------------------------------------
+         | APPROVAL FLOW SAFETY
+         |--------------------------------------------------------------------------
+         |
+         | Pending hanya boleh:
+         | - tetap Pending
+         | - Approved
+         | - Rejected
+         | - Cancelled
+         |
+         | Status proses setelah approval tidak boleh dilompati karena
+         | pengecekan booking/stok dilakukan saat Pending -> Approved.
+         |
+         */
+
+        $allowedPendingStatuses = [
+            'Pending',
+            'Approved',
+            'Rejected',
+            'Cancelled',
+        ];
+
+        if (
+            $oldStatus === 'Pending' &&
+            !in_array(
+                $newStatus,
+                $allowedPendingStatuses,
+                true
+            )
+        ) {
+            return back()->with(
+                'error',
+                'Transaksi harus di-Approve terlebih dahulu sebelum masuk ke proses berikutnya.'
+            );
+        }
+
         DB::beginTransaction();
 
         try {
+            /*
+            |--------------------------------------------------------------------------
+            | APPROVAL CHECK
+            |--------------------------------------------------------------------------
+            |
+            | Pending belum dianggap sebagai booking.
+            | Saat admin mengubah Pending -> Approved,
+            | cek ulang stok virtual berdasarkan tanggal + jam.
+            |
+            */
+
+            if (
+                $oldStatus === 'Pending' &&
+                $newStatus === 'Approved'
+            ) {
+                $order->load(
+                    'orderItems.item'
+                );
+
+                foreach (
+                    $order->orderItems
+                    as $detail
+                ) {
+                    $item =
+                        Item::lockForUpdate()
+                            ->find(
+                                $detail->item_id
+                            );
+
+                    if (!$item) {
+                        throw new \Exception(
+                            'Barang pada transaksi tidak ditemukan.'
+                        );
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NON-RETURNABLE
+                    |--------------------------------------------------------------------------
+                    |
+                    | Stock fisik sudah dikurangi saat checkout.
+                    | Tidak menggunakan virtual reservation.
+                    |
+                    */
+
+                    if (
+                        !$item->requires_return
+                    ) {
+                        continue;
+                    }
+
+                    if (
+                        !$order->start_date ||
+                        !$order->end_date ||
+                        !$order->start_time ||
+                        !$order->end_time
+                    ) {
+                        throw new \Exception(
+                            "Jadwal transaksi untuk '{$item->name}' belum lengkap."
+                        );
+                    }
+
+                    $startDate =
+                        $order->start_date->format(
+                            'Y-m-d'
+                        );
+
+                    $startTime =
+                        $order->start_time->format(
+                            'H:i:s'
+                        );
+
+                    $endDate =
+                        $order->end_date->format(
+                            'Y-m-d'
+                        );
+
+                    $endTime =
+                        $order->end_time->format(
+                            'H:i:s'
+                        );
+
+                    $overlappingQty =
+                        $this->availabilityService
+                            ->getOverlappingQuantity(
+                                $item->id,
+                                $startDate,
+                                $startTime,
+                                $endDate,
+                                $endTime,
+                                $order->id
+                            );
+
+                    $requestedQty =
+                        (int) $detail->quantity;
+
+                    if (
+                        $overlappingQty +
+                        $requestedQty
+                        >
+                        (int) $item->stock_quantity
+                    ) {
+                        $remaining =
+                            max(
+                                0,
+                                (int) $item->stock_quantity
+                                -
+                                $overlappingQty
+                            );
+
+                        throw new \Exception(
+                            "Tidak dapat Approve transaksi. Stok '{$item->name}' pada jadwal tersebut hanya tersisa {$remaining} unit."
+                        );
+                    }
+                }
+            }
+
             /*
             |--------------------------------------------------------------------------
             | REJECT / CANCEL
@@ -1145,7 +1310,7 @@ class AdminItemController extends Controller
                         $query->whereIn(
                             'status',
                             [
-                                'Pending',
+                                'Approved',
                                 'Waiting for MoU',
                                 'Pending Review MoU',
                                 'Waiting for Payment',
@@ -1178,24 +1343,49 @@ class AdminItemController extends Controller
                 continue;
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | SAFELY BUILD DATETIME
+            |--------------------------------------------------------------------------
+            |
+            | Order model casts date/time fields to Carbon.
+            | Therefore use format() first instead of concatenating
+            | Carbon objects directly.
+            |
+            */
+
+            $startDate =
+                $order->start_date->format(
+                    'Y-m-d'
+                );
+
+            $startTime =
+                $order->start_time
+                    ? $order->start_time->format(
+                        'H:i:s'
+                    )
+                    : '00:00:00';
+
+            $endDate =
+                $order->end_date->format(
+                    'Y-m-d'
+                );
+
+            $endTime =
+                $order->end_time
+                    ? $order->end_time->format(
+                        'H:i:s'
+                    )
+                    : '23:59:59';
+
             $start =
                 \Carbon\Carbon::parse(
-                    $order->start_date .
-                    ' ' .
-                    (
-                        $order->start_time
-                        ?? '00:00'
-                    )
+                    "{$startDate} {$startTime}"
                 );
 
             $end =
                 \Carbon\Carbon::parse(
-                    $order->end_date .
-                    ' ' .
-                    (
-                        $order->end_time
-                        ?? '23:59'
-                    )
+                    "{$endDate} {$endTime}"
                 );
 
             $events[] = [
@@ -1238,7 +1428,9 @@ class AdminItemController extends Controller
         $current = 0;
         $maximum = 0;
 
-        foreach ($events as $event) {
+        foreach (
+            $events as $event
+        ) {
             $current +=
                 $event['change'];
 

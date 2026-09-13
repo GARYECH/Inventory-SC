@@ -18,7 +18,7 @@ class InventoryAvailabilityService
     */
 
     private const ACTIVE_STATUSES = [
-        'Pending',
+        'Approved',
         'Waiting for MoU',
         'Pending Review MoU',
         'Waiting for Payment',

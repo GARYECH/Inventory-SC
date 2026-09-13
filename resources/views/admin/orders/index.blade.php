@@ -136,6 +136,9 @@
                             'Pending' =>
                                 'border-amber-200 bg-amber-50 text-amber-700',
 
+                            'Approved' =>
+                                'border-emerald-200 bg-emerald-50 text-emerald-700',
+
                             'Waiting for MoU' =>
                                 'border-purple-200 bg-purple-50 text-purple-700',
 
@@ -674,6 +677,7 @@
                                 >
 
                                     @csrf
+
                                     @method('PATCH')
 
 
@@ -698,6 +702,7 @@
 
                                             @foreach([
                                                 'Pending',
+                                                'Approved',
                                                 'Waiting for MoU',
                                                 'Pending Review MoU',
                                                 'Waiting for Payment',
@@ -951,6 +956,7 @@
                                 >
 
                                     @csrf
+
                                     @method('DELETE')
 
                                     <button
@@ -997,6 +1003,7 @@
                 {{ $orders->links() }}
 
             </div>
+
 
         </div>
 

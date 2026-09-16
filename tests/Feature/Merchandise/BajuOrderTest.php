@@ -48,8 +48,14 @@ it(
                 'description' =>
                     'Baju Panitia',
 
+                /*
+                |--------------------------------------------------------------------------
+                | item_photo wajib diisi
+                |--------------------------------------------------------------------------
+                */
+
                 'item_photo' =>
-                    null,
+                    'test-baju.jpg',
 
                 'stock_quantity' =>
                     100,
@@ -66,7 +72,7 @@ it(
                 ->actingAs($user)
                 ->get(
                     route(
-                        'student.baju.create',
+                        'student.cart.baju.create',
                         $item->id
                     )
                 );
@@ -76,8 +82,14 @@ it(
             ->assertViewIs(
                 'user.baju_order'
             )
-            ->assertSee('Size Breakdown')
-            ->assertSee('2XL')
-            ->assertSee('5XL');
+            ->assertSee(
+                'Size Breakdown'
+            )
+            ->assertSee(
+                '2XL'
+            )
+            ->assertSee(
+                '5XL'
+            );
     }
 );

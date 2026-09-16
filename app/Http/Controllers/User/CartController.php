@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderItemSize;
 use App\Models\OrderMouDocument;
 use App\Models\Setting;
 use App\Models\User;
@@ -32,42 +33,47 @@ class CartController extends Controller
         '19:00',
     ];
 
+    private const BAJU_SIZES = [
+        'S',
+        'M',
+        'L',
+        'XL',
+        '2XL',
+        '3XL',
+        '4XL',
+        '5XL',
+    ];
+
     private InventoryAvailabilityService $availabilityService;
 
     public function __construct(
         InventoryAvailabilityService $availabilityService
     ) {
-        $this->availabilityService =
-            $availabilityService;
+        $this->availabilityService = $availabilityService;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | VIEW CART
+    |--------------------------------------------------------------------------
+    */
 
     public function viewCart()
     {
-        $cart = session()->get(
-            'cart',
-            []
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | BAJU COLOR CHART
-        |--------------------------------------------------------------------------
-        */
+        $cart = session()->get('cart', []);
 
         $colorCharts = [];
 
-        $colorChartSetting =
-            Setting::where(
-                'key',
-                'baju_color_charts'
-            )->value('value');
+        $colorChartSetting = Setting::where(
+            'key',
+            'baju_color_charts'
+        )->value('value');
 
         if ($colorChartSetting) {
-            $decoded =
-                json_decode(
-                    $colorChartSetting,
-                    true
-                );
+            $decoded = json_decode(
+                $colorChartSetting,
+                true
+            );
 
             if (is_array($decoded)) {
                 $colorCharts = $decoded;
@@ -83,19 +89,16 @@ class CartController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | ADD TO CART
+    |--------------------------------------------------------------------------
+    */
+
     public function addToCart(
         Request $request,
         Item $item
     ) {
-        $cart = session()->get(
-            'cart',
-            []
-        );
-
-        $requestQuantity = (int) (
-            $request->quantity ?? 1
-        );
-
         if (
             !in_array(
                 $item->transaction_type,
@@ -109,30 +112,52 @@ class CartController extends Controller
             );
         }
 
-        $transactionType =
-            $item->transaction_type;
+        $transactionType = $item->transaction_type;
+
+        $cart = session()->get('cart', []);
+
+        /*
+        |--------------------------------------------------------------------------
+        | BAJU → DEDICATED PAGE
+        |--------------------------------------------------------------------------
+        */
 
         if (
             $transactionType === 'Merchandise' &&
             $item->subcategory === 'Baju'
         ) {
-            return redirect()
-                ->route(
-                    'student.cart.baju.create',
-                    $item->id
-                );
+            if (!empty($cart)) {
+                $firstItem = reset($cart);
+
+                if (
+                    ($firstItem['transaction_type'] ?? null)
+                    !== 'Merchandise'
+                ) {
+                    return back()->with(
+                        'error',
+                        'Satu transaksi hanya dapat berisi barang dengan Transaction Type yang sama.'
+                    );
+                }
+            }
+
+            return redirect()->route(
+                'student.cart.baju.create',
+                $item->id
+            );
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SAME TRANSACTION TYPE
+        |--------------------------------------------------------------------------
+        */
 
         if (!empty($cart)) {
             $firstItem = reset($cart);
 
-            $firstTransactionType =
-                $firstItem['transaction_type']
-                ?? null;
-
             if (
-                $firstTransactionType !==
-                $transactionType
+                ($firstItem['transaction_type'] ?? null)
+                !== $transactionType
             ) {
                 return back()->with(
                     'error',
@@ -141,83 +166,11 @@ class CartController extends Controller
             }
         }
 
-        $size = null;
-        $designLink = null;
-        $sizeAdditionalPrice = 0;
-
-        if (
-            $transactionType ===
-            'Merchandise'
-        ) {
-            $subcategory =
-                $item->subcategory;
-
-            if (
-                !in_array(
-                    $subcategory,
-                    [
-                        'Baju',
-                        'ID Card',
-                        'Lainnya',
-                    ],
-                    true
-                )
-            ) {
-                return back()->with(
-                    'error',
-                    'Subcategory Merchandise belum ditentukan.'
-                );
-            }
-
-            if (
-                $subcategory ===
-                'Baju'
-            ) {
-                $request->validate([
-                    'size' => [
-                        'required',
-                        'in:S-XL,2XL,3XL,4XL,5XL',
-                    ],
-
-                    'design_link' => [
-                        'required',
-                        'url',
-                        'max:2000',
-                    ],
-                ]);
-
-                $size =
-                    $request->size;
-
-                $designLink =
-                    trim(
-                        $request->design_link
-                    );
-
-                $sizeAdditionalPrice =
-                    $this->getSizeAdditionalPrice(
-                        $size
-                    );
-            }
-
-            if (
-                $subcategory ===
-                'ID Card'
-            ) {
-                $request->validate([
-                    'design_link' => [
-                        'required',
-                        'url',
-                        'max:2000',
-                    ],
-                ]);
-
-                $designLink =
-                    trim(
-                        $request->design_link
-                    );
-            }
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | BASIC VALIDATION
+        |--------------------------------------------------------------------------
+        */
 
         $request->validate([
             'quantity' => [
@@ -235,17 +188,8 @@ class CartController extends Controller
             'start_time' => [
                 'required',
                 'date_format:H:i',
-
-                function (
-                    $attribute,
-                    $value,
-                    $fail
-                ) {
-                    if (
-                        !$this->isValidTime(
-                            $value
-                        )
-                    ) {
+                function ($attribute, $value, $fail) {
+                    if (!$this->isValidTime($value)) {
                         $fail(
                             'Jam transaksi hanya boleh 17:00, 17:30, 18:00, 18:30, atau 19:00.'
                         );
@@ -254,19 +198,64 @@ class CartController extends Controller
             ],
         ]);
 
-        $startDate =
-            $request->start_date;
-
-        $startTime =
-            $request->start_time;
+        $quantity = (int) $request->quantity;
+        $startDate = $request->start_date;
+        $startTime = $request->start_time;
 
         $endDate = null;
         $endTime = null;
 
-        $isRental =
-            $this->requiresReturn(
-                $transactionType
-            );
+        /*
+        |--------------------------------------------------------------------------
+        | MERCHANDISE NON-BAJU
+        |--------------------------------------------------------------------------
+        */
+
+        $size = null;
+        $designLink = null;
+        $sizeAdditionalPrice = 0;
+
+        if ($transactionType === 'Merchandise') {
+            if (
+                !in_array(
+                    $item->subcategory,
+                    [
+                        'ID Card',
+                        'Lainnya',
+                    ],
+                    true
+                )
+            ) {
+                return back()->with(
+                    'error',
+                    'Subcategory Merchandise belum ditentukan.'
+                );
+            }
+
+            if ($item->subcategory === 'ID Card') {
+                $request->validate([
+                    'design_link' => [
+                        'required',
+                        'url',
+                        'max:2000',
+                    ],
+                ]);
+
+                $designLink = trim(
+                    $request->design_link
+                );
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RENTAL
+        |--------------------------------------------------------------------------
+        */
+
+        $isRental = $this->requiresReturn(
+            $transactionType
+        );
 
         if ($isRental) {
             $request->validate([
@@ -279,17 +268,8 @@ class CartController extends Controller
                 'end_time' => [
                     'required',
                     'date_format:H:i',
-
-                    function (
-                        $attribute,
-                        $value,
-                        $fail
-                    ) {
-                        if (
-                            !$this->isValidTime(
-                                $value
-                            )
-                        ) {
+                    function ($attribute, $value, $fail) {
+                        if (!$this->isValidTime($value)) {
                             $fail(
                                 'Jam pengembalian hanya boleh 17:00, 17:30, 18:00, 18:30, atau 19:00.'
                             );
@@ -298,21 +278,16 @@ class CartController extends Controller
                 ],
             ]);
 
-            $endDate =
-                $request->end_date;
+            $endDate = $request->end_date;
+            $endTime = $request->end_time;
 
-            $endTime =
-                $request->end_time;
+            $startDateTime = Carbon::parse(
+                "{$startDate} {$startTime}"
+            );
 
-            $startDateTime =
-                Carbon::parse(
-                    "{$startDate} {$startTime}"
-                );
-
-            $endDateTime =
-                Carbon::parse(
-                    "{$endDate} {$endTime}"
-                );
+            $endDateTime = Carbon::parse(
+                "{$endDate} {$endTime}"
+            );
 
             if (
                 $endDateTime->lessThanOrEqualTo(
@@ -326,13 +301,20 @@ class CartController extends Controller
             }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | SAME SCHEDULE
+        |--------------------------------------------------------------------------
+        */
+
         if (!empty($cart)) {
-            $existing = reset($cart);
+            $firstItem = reset($cart);
 
             if (
-                ($existing['start_date'] ?? null)
-                !== $startDate ||
-                ($existing['start_time'] ?? null)
+                ($firstItem['start_date'] ?? null)
+                !== $startDate
+                ||
+                ($firstItem['start_time'] ?? null)
                 !== $startTime
             ) {
                 return back()->with(
@@ -343,9 +325,10 @@ class CartController extends Controller
 
             if ($isRental) {
                 if (
-                    ($existing['end_date'] ?? null)
-                    !== $endDate ||
-                    ($existing['end_time'] ?? null)
+                    ($firstItem['end_date'] ?? null)
+                    !== $endDate
+                    ||
+                    ($firstItem['end_time'] ?? null)
                     !== $endTime
                 ) {
                     return back()->with(
@@ -356,28 +339,33 @@ class CartController extends Controller
             }
         }
 
-        $lineKey =
-            $this->buildLineKey(
-                $item,
-                $size,
-                $designLink
-            );
+        /*
+        |--------------------------------------------------------------------------
+        | LINE KEY
+        |--------------------------------------------------------------------------
+        */
 
-        $existingQuantity =
-            (int) (
-                $cart[$lineKey]['quantity']
-                ?? 0
-            );
+        $lineKey = $this->buildLineKey(
+            $item,
+            $size,
+            $designLink
+        );
 
-        $existingColor =
-            $cart[$lineKey]['color_number']
-            ?? null;
+        $existingQuantity = (int) (
+            $cart[$lineKey]['quantity'] ?? 0
+        );
 
         $cartQuantityForSameItem =
             $this->getCartQuantityForItem(
                 $cart,
                 $item->id
             );
+
+        /*
+        |--------------------------------------------------------------------------
+        | STOCK CHECK
+        |--------------------------------------------------------------------------
+        */
 
         if ($isRental) {
             $overlappingQty =
@@ -391,23 +379,25 @@ class CartController extends Controller
                     );
 
             $totalRequested =
-                $overlappingQty +
-                $cartQuantityForSameItem +
-                $requestQuantity;
+                $overlappingQty
+                +
+                $cartQuantityForSameItem
+                +
+                $quantity;
 
             if (
-                $totalRequested >
+                $totalRequested
+                >
                 (int) $item->stock_quantity
             ) {
-                $remaining =
-                    max(
-                        0,
-                        (int) $item->stock_quantity
-                        -
-                        $overlappingQty
-                        -
-                        $cartQuantityForSameItem
-                    );
+                $remaining = max(
+                    0,
+                    (int) $item->stock_quantity
+                    -
+                    $overlappingQty
+                    -
+                    $cartQuantityForSameItem
+                );
 
                 return back()->with(
                     'error',
@@ -416,20 +406,21 @@ class CartController extends Controller
             }
         } else {
             $totalRequested =
-                $cartQuantityForSameItem +
-                $requestQuantity;
+                $cartQuantityForSameItem
+                +
+                $quantity;
 
             if (
-                $totalRequested >
+                $totalRequested
+                >
                 (int) $item->stock_quantity
             ) {
-                $remaining =
-                    max(
-                        0,
-                        (int) $item->stock_quantity
-                        -
-                        $cartQuantityForSameItem
-                    );
+                $remaining = max(
+                    0,
+                    (int) $item->stock_quantity
+                    -
+                    $cartQuantityForSameItem
+                );
 
                 return back()->with(
                     'error',
@@ -438,17 +429,27 @@ class CartController extends Controller
             }
         }
 
-        $requiresMou =
-            (bool) $item->requires_mou;
+        /*
+        |--------------------------------------------------------------------------
+        | MOU
+        |--------------------------------------------------------------------------
+        */
+
+        $requiresMou = (bool) $item->requires_mou;
 
         if (
-            $transactionType ===
-            'Merchandise' &&
-            $item->subcategory ===
-            'Lainnya'
+            $transactionType === 'Merchandise'
+            &&
+            $item->subcategory === 'Lainnya'
         ) {
             $requiresMou = false;
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SAVE TO CART
+        |--------------------------------------------------------------------------
+        */
 
         $cart[$lineKey] = [
             'id' =>
@@ -461,8 +462,7 @@ class CartController extends Controller
                 (int) $item->price,
 
             'quantity' =>
-                $existingQuantity +
-                $requestQuantity,
+                $existingQuantity + $quantity,
 
             'transaction_type' =>
                 $item->transaction_type,
@@ -500,7 +500,9 @@ class CartController extends Controller
                 $size,
 
             'color_number' =>
-                $existingColor,
+                $cart[$lineKey][
+                    'color_number'
+                ] ?? null,
 
             'design_link' =>
                 $designLink,
@@ -509,7 +511,9 @@ class CartController extends Controller
                 $sizeAdditionalPrice,
 
             'size_breakdowns' =>
-                $cart[$lineKey]['size_breakdowns'] ?? [],
+                $cart[$lineKey][
+                    'size_breakdowns'
+                ] ?? [],
         ];
 
         session()->put(
@@ -523,30 +527,56 @@ class CartController extends Controller
         );
     }
 
-    public function bajuForm(Item $item)
-    {
+    /*
+    |--------------------------------------------------------------------------
+    | BAJU FORM
+    |--------------------------------------------------------------------------
+    */
+
+    public function bajuForm(
+        Item $item
+    ) {
         if (
-            $item->transaction_type !== 'Merchandise' ||
-            $item->subcategory !== 'Baju'
+            $item->transaction_type !==
+            'Merchandise'
+            ||
+            $item->subcategory !==
+            'Baju'
         ) {
             return redirect()
-                ->route('student.dashboard')
+                ->route(
+                    'student.dashboard'
+                )
                 ->with(
                     'error',
                     'Form ini hanya tersedia untuk Merchandise → Baju.'
                 );
         }
 
-        $cart = session()->get('cart', []);
+        $cart =
+            session()->get(
+                'cart',
+                []
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | SAME TRANSACTION TYPE
+        |--------------------------------------------------------------------------
+        */
 
         if (!empty($cart)) {
-            $firstItem = reset($cart);
+            $firstItem =
+                reset($cart);
 
             if (
-                ($firstItem['transaction_type'] ?? null) !== 'Merchandise'
+                ($firstItem['transaction_type'] ?? null)
+                !== 'Merchandise'
             ) {
                 return redirect()
-                    ->route('student.dashboard')
+                    ->route(
+                        'student.dashboard'
+                    )
                     ->with(
                         'error',
                         'Satu transaksi hanya dapat berisi barang dengan Transaction Type yang sama.'
@@ -554,22 +584,106 @@ class CartController extends Controller
             }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | PREFILL SCHEDULE
+        |--------------------------------------------------------------------------
+        */
+
+        $prefillStartDate = null;
+        $prefillStartTime = null;
+
+        if (!empty($cart)) {
+            $firstItem =
+                reset($cart);
+
+            $prefillStartDate =
+                $firstItem['start_date']
+                ?? null;
+
+            $prefillStartTime =
+                $firstItem['start_time']
+                ?? null;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | KEEP COLOR CHART EMPTY HERE
+        |--------------------------------------------------------------------------
+        |
+        | Warna Baju dipilih di Cart.
+        | Array tetap dikirim supaya view lama
+        | yang memakai variable ini tidak error.
+        |
+        */
+
+        $colorCharts = [];
+
+        /*
+        |--------------------------------------------------------------------------
+        | BAJU SIZES
+        |--------------------------------------------------------------------------
+        */
+
+        $sizeOptions =
+            self::BAJU_SIZES;
+
+        $sizePrices = [];
+
+        foreach (
+            $sizeOptions as $size
+        ) {
+            $sizePrices[$size] =
+                (int) $item->price
+                +
+                $this->getSizeAdditionalPrice(
+                    $size
+                );
+        }
+
         return view(
-            'user.baju_builder',
+            'user.baju_order',
             [
-                'item' => $item,
-                'timeOptions' => self::TIME_OPTIONS,
+                'item' =>
+                    $item,
+
+                'timeOptions' =>
+                    self::TIME_OPTIONS,
+
+                'colorCharts' =>
+                    $colorCharts,
+
+                'prefillStartDate' =>
+                    $prefillStartDate,
+
+                'prefillStartTime' =>
+                    $prefillStartTime,
+
+                'sizeOptions' =>
+                    $sizeOptions,
+
+                'sizePrices' =>
+                    $sizePrices,
             ]
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | STORE BAJU
+    |--------------------------------------------------------------------------
+    */
 
     public function storeBaju(
         Request $request,
         Item $item
     ) {
         if (
-            $item->transaction_type !== 'Merchandise' ||
-            $item->subcategory !== 'Baju'
+            $item->transaction_type !==
+            'Merchandise'
+            ||
+            $item->subcategory !==
+            'Baju'
         ) {
             return back()->with(
                 'error',
@@ -577,25 +691,23 @@ class CartController extends Controller
             );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
         $request->validate([
-            'design_link' => [
-                'required',
-                'url',
-                'max:2000',
-            ],
             'start_date' => [
                 'required',
                 'date',
                 'after_or_equal:today',
             ],
+
             'start_time' => [
                 'required',
                 'date_format:H:i',
-                function (
-                    $attribute,
-                    $value,
-                    $fail
-                ) {
+                function ($attribute, $value, $fail) {
                     if (!$this->isValidTime($value)) {
                         $fail(
                             'Jam transaksi hanya boleh 17:00, 17:30, 18:00, 18:30, atau 19:00.'
@@ -603,113 +715,300 @@ class CartController extends Controller
                     }
                 },
             ],
-            'breakdowns' => [
+
+            'design_link' => [
+                'required',
+                'url',
+                'max:2000',
+            ],
+
+            'sizes' => [
                 'required',
                 'array',
-                'min:1',
             ],
-            'breakdowns.*.size' => [
-                'required',
-                'in:S-XL,2XL,3XL,4XL,5XL',
-            ],
-            'breakdowns.*.division' => [
-                'required',
+
+            'sizes.*.division' => [
+                'nullable',
                 'string',
                 'max:255',
             ],
-            'breakdowns.*.quantity' => [
+
+            'sizes.*.quantity' => [
                 'required',
                 'integer',
-                'min:1',
+                'min:0',
             ],
         ]);
 
-        $cart = session()->get('cart', []);
+        $cart =
+            session()->get(
+                'cart',
+                []
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | SAME TRANSACTION TYPE
+        |--------------------------------------------------------------------------
+        */
 
         if (!empty($cart)) {
-            $firstItem = reset($cart);
+            $firstItem =
+                reset($cart);
 
             if (
                 ($firstItem['transaction_type'] ?? null)
                 !== 'Merchandise'
             ) {
-                return back()->with(
-                    'error',
-                    'Satu transaksi hanya dapat berisi barang dengan Transaction Type yang sama.'
-                );
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Satu transaksi hanya dapat berisi barang dengan Transaction Type yang sama.'
+                    );
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SAME START SCHEDULE
+            |--------------------------------------------------------------------------
+            */
 
             if (
                 ($firstItem['start_date'] ?? null)
-                !== $request->start_date ||
+                !== $request->start_date
+                ||
                 ($firstItem['start_time'] ?? null)
                 !== $request->start_time
             ) {
-                return back()->with(
-                    'error',
-                    'Semua barang dalam satu transaksi harus menggunakan tanggal dan jam pengambilan yang sama.'
-                );
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Semua barang dalam satu transaksi harus menggunakan tanggal dan jam pengambilan yang sama.'
+                    );
             }
         }
 
-        $designLink = trim($request->design_link);
-
-        $breakdowns = collect($request->breakdowns)
-            ->map(function (array $breakdown) use ($item) {
-                $quantity = (int) $breakdown['quantity'];
-                $size = $breakdown['size'];
-                $division = trim($breakdown['division']);
-
-                $additionalPrice =
-                    $this->getSizeAdditionalPrice($size);
-
-                $unitPrice =
-                    (int) $item->price +
-                    $additionalPrice;
-
-                return [
-                    'size' => $size,
-                    'division' => $division,
-                    'quantity' => $quantity,
-                    'unit_price' => $unitPrice,
-                    'subtotal_price' =>
-                        $unitPrice * $quantity,
-                ];
-            })
-            ->values()
-            ->all();
-
-        $totalQuantity = collect($breakdowns)
-            ->sum('quantity');
-
-        if ($totalQuantity < 1) {
-            return back()->with(
-                'error',
-                'Jumlah Baju harus lebih dari 0.'
+        $designLink =
+            trim(
+                $request->design_link
             );
+
+        /*
+        |--------------------------------------------------------------------------
+        | BUILD BREAKDOWNS
+        |--------------------------------------------------------------------------
+        */
+
+        $breakdowns = [];
+
+        foreach (
+            self::BAJU_SIZES as $size
+        ) {
+            $quantity =
+                (int) $request->input(
+                    "sizes.{$size}.quantity",
+                    0
+                );
+
+            $division =
+                trim(
+                    (string) $request->input(
+                        "sizes.{$size}.division",
+                        ''
+                    )
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | SKIP EMPTY SIZE
+            |--------------------------------------------------------------------------
+            */
+
+            if ($quantity === 0) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DIVISION REQUIRED
+            |--------------------------------------------------------------------------
+            */
+
+            if ($division === '') {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        "Divisi untuk ukuran {$size} wajib diisi jika jumlah lebih dari 0."
+                    );
+            }
+
+            $additionalPrice =
+                $this->getSizeAdditionalPrice(
+                    $size
+                );
+
+            $unitPrice =
+                (int) $item->price
+                +
+                $additionalPrice;
+
+            $breakdowns[] = [
+                'size' =>
+                    $size,
+
+                'division' =>
+                    $division,
+
+                'quantity' =>
+                    $quantity,
+
+                'unit_price' =>
+                    $unitPrice,
+
+                'size_additional_price' =>
+                    $additionalPrice,
+
+                'subtotal_price' =>
+                    $unitPrice *
+                    $quantity,
+            ];
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | AT LEAST ONE SIZE
+        |--------------------------------------------------------------------------
+        */
+
+        if (empty($breakdowns)) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Isi minimal satu ukuran Baju dengan jumlah lebih dari 0.'
+                );
+        }
+
+        $totalQuantity =
+            collect(
+                $breakdowns
+            )->sum(
+                'quantity'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND EXISTING SAME BAJU
+        |--------------------------------------------------------------------------
+        */
 
         $existingLineKey = null;
 
-        foreach ($cart as $lineKey => $cartItem) {
+        foreach (
+            $cart as $lineKey =>
+            $cartItem
+        ) {
             if (
-                (int) ($cartItem['id'] ?? 0) === (int) $item->id &&
-                ($cartItem['transaction_type'] ?? null) === 'Merchandise' &&
-                ($cartItem['subcategory'] ?? null) === 'Baju' &&
+                (int) (
+                    $cartItem['id']
+                    ?? 0
+                )
+                !==
+                (int) $item->id
+            ) {
+                continue;
+            }
+
+            if (
+                ($cartItem['transaction_type'] ?? null)
+                !== 'Merchandise'
+            ) {
+                continue;
+            }
+
+            if (
+                ($cartItem['subcategory'] ?? null)
+                !== 'Baju'
+            ) {
+                continue;
+            }
+
+            $existingDesign =
                 trim(
                     (string) (
-                        $cartItem['design_link'] ?? ''
+                        $cartItem[
+                            'design_link'
+                        ] ?? ''
                     )
-                ) === $designLink
+                );
+
+            if (
+                $existingDesign !==
+                $designLink
             ) {
-                $existingLineKey = $lineKey;
-                break;
+                continue;
             }
+
+            $existingLineKey =
+                $lineKey;
+
+            break;
         }
 
-        if ($existingLineKey !== null) {
+        /*
+        |--------------------------------------------------------------------------
+        | STOCK CHECK
+        |--------------------------------------------------------------------------
+        */
+
+        $otherCartQuantity =
+            $this->getCartQuantityForItem(
+                $cart,
+                $item->id,
+                $existingLineKey
+            );
+
+        if (
+            $otherCartQuantity +
+            $totalQuantity
+            >
+            (int) $item->stock_quantity
+        ) {
+            $remaining =
+                max(
+                    0,
+                    (int) $item->stock_quantity
+                    -
+                    $otherCartQuantity
+                );
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    "Gagal! Sisa stok '{$item->name}' hanya {$remaining} unit."
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | MERGE EXISTING BREAKDOWNS
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $existingLineKey !==
+            null
+        ) {
             $existingBreakdowns =
-                $cart[$existingLineKey]['size_breakdowns'] ?? [];
+                $cart[
+                    $existingLineKey
+                ][
+                    'size_breakdowns'
+                ] ?? [];
 
             $merged = [];
 
@@ -720,39 +1019,82 @@ class CartController extends Controller
                 ) as $breakdown
             ) {
                 $mergeKey =
-                    $breakdown['size'] . '|' .
+                    $breakdown['size']
+                    . '|'
+                    .
                     mb_strtolower(
-                        trim($breakdown['division'])
+                        trim(
+                            $breakdown['division']
+                        )
                     );
 
-                if (!isset($merged[$mergeKey])) {
-                    $merged[$mergeKey] = $breakdown;
+                if (
+                    !isset(
+                        $merged[$mergeKey]
+                    )
+                ) {
+                    $merged[$mergeKey] =
+                        $breakdown;
+
                     continue;
                 }
 
                 $merged[$mergeKey]['quantity'] +=
-                    (int) $breakdown['quantity'];
+                    (int) (
+                        $breakdown['quantity']
+                    );
 
                 $merged[$mergeKey]['subtotal_price'] =
-                    (int) $merged[$mergeKey]['unit_price'] *
-                    (int) $merged[$mergeKey]['quantity'];
+                    (int) (
+                        $merged[
+                            $mergeKey
+                        ]['unit_price']
+                    )
+                    *
+                    (int) (
+                        $merged[
+                            $mergeKey
+                        ]['quantity']
+                    );
             }
 
-            $breakdowns = array_values($merged);
+            $breakdowns =
+                array_values(
+                    $merged
+                );
         }
 
-        $lineKey = $existingLineKey
-            ?? $this->buildLineKey(
+        /*
+        |--------------------------------------------------------------------------
+        | LINE KEY
+        |--------------------------------------------------------------------------
+        */
+
+        $lineKey =
+            $existingLineKey
+            ??
+            $this->buildLineKey(
                 $item,
                 null,
                 $designLink
             );
 
-        $colorNumber =
-            $cart[$lineKey]['color_number'] ?? null;
+        /*
+        |--------------------------------------------------------------------------
+        | KEEP EXISTING COLOR
+        |--------------------------------------------------------------------------
+        */
 
-        $requiresMou =
-            (bool) $item->requires_mou;
+        $colorNumber =
+            $cart[$lineKey][
+                'color_number'
+            ] ?? null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | SAVE BAJU
+        |--------------------------------------------------------------------------
+        */
 
         $cart[$lineKey] = [
             'id' =>
@@ -765,7 +1107,11 @@ class CartController extends Controller
                 (int) $item->price,
 
             'quantity' =>
-                collect($breakdowns)->sum('quantity'),
+                collect(
+                    $breakdowns
+                )->sum(
+                    'quantity'
+                ),
 
             'transaction_type' =>
                 $item->transaction_type,
@@ -777,13 +1123,15 @@ class CartController extends Controller
                 $item->category_id,
 
             'category_name' =>
-                optional($item->category)->name,
+                optional(
+                    $item->category
+                )->name,
 
             'subcategory' =>
                 $item->subcategory,
 
             'requires_mou' =>
-                $requiresMou,
+                (bool) $item->requires_mou,
 
             'start_date' =>
                 $request->start_date,
@@ -798,7 +1146,7 @@ class CartController extends Controller
                 null,
 
             'size' =>
-                'S-XL',
+                null,
 
             'color_number' =>
                 $colorNumber,
@@ -813,19 +1161,32 @@ class CartController extends Controller
                 $breakdowns,
         ];
 
-        session()->put('cart', $cart);
+        session()->put(
+            'cart',
+            $cart
+        );
 
         return redirect()
-            ->route('student.cart.index')
+            ->route(
+                'student.cart.index'
+            )
             ->with(
                 'success',
                 'Detail ukuran Baju berhasil masuk keranjang.'
             );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | CLEAR CART
+    |--------------------------------------------------------------------------
+    */
+
     public function clearCart()
     {
-        session()->forget('cart');
+        session()->forget(
+            'cart'
+        );
 
         return back()->with(
             'success',
@@ -833,21 +1194,53 @@ class CartController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE NORMAL CART ITEM
+    |--------------------------------------------------------------------------
+    */
+
     public function updateCart(
         Request $request,
         $lineKey
     ) {
-        $cart = session()->get(
-            'cart',
-            []
-        );
+        $cart =
+            session()->get(
+                'cart',
+                []
+            );
 
         if (
-            !isset($cart[$lineKey])
+            !isset(
+                $cart[$lineKey]
+            )
         ) {
             return back()->with(
                 'error',
                 'Barang tidak ditemukan di keranjang.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | BAJU CANNOT USE NORMAL QUANTITY UPDATE
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            ($cart[$lineKey][
+                'transaction_type'
+            ] ?? null)
+            === 'Merchandise'
+            &&
+            ($cart[$lineKey][
+                'subcategory'
+            ] ?? null)
+            === 'Baju'
+        ) {
+            return back()->with(
+                'error',
+                'Untuk Baju, ubah jumlah melalui Detail Pesanan Baju.'
             );
         }
 
@@ -859,9 +1252,10 @@ class CartController extends Controller
             ],
         ]);
 
-        $item = Item::findOrFail(
-            $cart[$lineKey]['id']
-        );
+        $item =
+            Item::findOrFail(
+                $cart[$lineKey]['id']
+            );
 
         $quantity =
             (int) $request->quantity;
@@ -903,12 +1297,15 @@ class CartController extends Controller
                     );
 
             $totalRequested =
-                $overlappingQty +
-                $otherCartQuantity +
+                $overlappingQty
+                +
+                $otherCartQuantity
+                +
                 $quantity;
 
             if (
-                $totalRequested >
+                $totalRequested
+                >
                 (int) $item->stock_quantity
             ) {
                 $remaining =
@@ -928,11 +1325,13 @@ class CartController extends Controller
             }
         } else {
             $totalRequested =
-                $otherCartQuantity +
+                $otherCartQuantity
+                +
                 $quantity;
 
             if (
-                $totalRequested >
+                $totalRequested
+                >
                 (int) $item->stock_quantity
             ) {
                 $remaining =
@@ -950,8 +1349,9 @@ class CartController extends Controller
             }
         }
 
-        $cart[$lineKey]['quantity'] =
-            $quantity;
+        $cart[$lineKey][
+            'quantity'
+        ] = $quantity;
 
         session()->put(
             'cart',
@@ -964,22 +1364,31 @@ class CartController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE BAJU COLOR
+    |--------------------------------------------------------------------------
+    */
+
     public function updateColor(
         Request $request,
         $itemId
     ) {
-        $cart = session()->get(
-            'cart',
-            []
-        );
+        $cart =
+            session()->get(
+                'cart',
+                []
+            );
 
-        $item = Item::findOrFail(
-            $itemId
-        );
+        $item =
+            Item::findOrFail(
+                $itemId
+            );
 
         if (
             $item->transaction_type !==
-            'Merchandise' ||
+            'Merchandise'
+            ||
             $item->subcategory !==
             'Baju'
         ) {
@@ -1002,7 +1411,9 @@ class CartController extends Controller
                 $request->color_number
             );
 
-        if ($colorNumber === '') {
+        if (
+            $colorNumber === ''
+        ) {
             return back()->with(
                 'error',
                 'Warna Baju tidak boleh kosong.'
@@ -1012,34 +1423,42 @@ class CartController extends Controller
         $found = false;
 
         foreach (
-            $cart as $lineKey => $cartItem
+            $cart as $lineKey =>
+            $cartItem
         ) {
             if (
                 (int) (
-                    $cartItem['id']
-                    ?? 0
-                ) !==
+                    $cartItem[
+                        'id'
+                    ] ?? 0
+                )
+                !==
                 (int) $itemId
             ) {
                 continue;
             }
 
             if (
-                ($cartItem['transaction_type'] ?? null)
+                ($cartItem[
+                    'transaction_type'
+                ] ?? null)
                 !== 'Merchandise'
             ) {
                 continue;
             }
 
             if (
-                ($cartItem['subcategory'] ?? null)
+                ($cartItem[
+                    'subcategory'
+                ] ?? null)
                 !== 'Baju'
             ) {
                 continue;
             }
 
-            $cart[$lineKey]['color_number'] =
-                $colorNumber;
+            $cart[$lineKey][
+                'color_number'
+            ] = $colorNumber;
 
             $found = true;
         }
@@ -1062,16 +1481,25 @@ class CartController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVE CART ITEM
+    |--------------------------------------------------------------------------
+    */
+
     public function removeItem(
         $lineKey
     ) {
-        $cart = session()->get(
-            'cart',
-            []
-        );
+        $cart =
+            session()->get(
+                'cart',
+                []
+            );
 
         if (
-            isset($cart[$lineKey])
+            isset(
+                $cart[$lineKey]
+            )
         ) {
             unset(
                 $cart[$lineKey]
@@ -1089,13 +1517,20 @@ class CartController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | PROCESS CHECKOUT
+    |--------------------------------------------------------------------------
+    */
+
     public function processCheckout(
         Request $request
     ) {
-        $cart = session()->get(
-            'cart',
-            []
-        );
+        $cart =
+            session()->get(
+                'cart',
+                []
+            );
 
         if (empty($cart)) {
             return back()->with(
@@ -1103,6 +1538,12 @@ class CartController extends Controller
                 'Keranjangmu kosong!'
             );
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | CHECKOUT FORM
+        |--------------------------------------------------------------------------
+        */
 
         $request->validate([
             'full_name' =>
@@ -1136,11 +1577,13 @@ class CartController extends Controller
                 'required|accepted',
         ]);
 
-        $firstItem = reset($cart);
+        $firstItem =
+            reset($cart);
 
         $orderType =
-            $firstItem['transaction_type']
-            ?? null;
+            $firstItem[
+                'transaction_type'
+            ] ?? null;
 
         if (
             !in_array(
@@ -1155,9 +1598,23 @@ class CartController extends Controller
             );
         }
 
-        foreach ($cart as $cartItem) {
+        /*
+        |--------------------------------------------------------------------------
+        | CART CONSISTENCY
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (
+            $cart as $cartItem
+        ) {
+            /*
+            | Same transaction type
+            */
+
             if (
-                ($cartItem['transaction_type'] ?? null)
+                ($cartItem[
+                    'transaction_type'
+                ] ?? null)
                 !== $orderType
             ) {
                 return back()->with(
@@ -1166,14 +1623,26 @@ class CartController extends Controller
                 );
             }
 
+            /*
+            | Same start schedule
+            */
+
             if (
-                ($cartItem['start_date'] ?? null)
+                ($cartItem[
+                    'start_date'
+                ] ?? null)
                 !==
-                ($firstItem['start_date'] ?? null)
+                ($firstItem[
+                    'start_date'
+                ] ?? null)
                 ||
-                ($cartItem['start_time'] ?? null)
+                ($cartItem[
+                    'start_time'
+                ] ?? null)
                 !==
-                ($firstItem['start_time'] ?? null)
+                ($firstItem[
+                    'start_time'
+                ] ?? null)
             ) {
                 return back()->with(
                     'error',
@@ -1181,19 +1650,33 @@ class CartController extends Controller
                 );
             }
 
+            /*
+            | Same return schedule for returnable
+            */
+
             if (
                 $this->requiresReturn(
-                    $cartItem['transaction_type']
+                    $cartItem[
+                        'transaction_type'
+                    ]
                 )
             ) {
                 if (
-                    ($cartItem['end_date'] ?? null)
+                    ($cartItem[
+                        'end_date'
+                    ] ?? null)
                     !==
-                    ($firstItem['end_date'] ?? null)
+                    ($firstItem[
+                        'end_date'
+                    ] ?? null)
                     ||
-                    ($cartItem['end_time'] ?? null)
+                    ($cartItem[
+                        'end_time'
+                    ] ?? null)
                     !==
-                    ($firstItem['end_time'] ?? null)
+                    ($firstItem[
+                        'end_time'
+                    ] ?? null)
                 ) {
                     return back()->with(
                         'error',
@@ -1201,33 +1684,49 @@ class CartController extends Controller
                     );
                 }
             }
-        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | COLOR WAJIB UNTUK BAJU
-        |--------------------------------------------------------------------------
-        */
+            /*
+            |--------------------------------------------------------------------------
+            | BAJU VALIDATION
+            |--------------------------------------------------------------------------
+            */
 
-        foreach ($cart as $cartItem) {
             if (
-                ($cartItem['transaction_type'] ?? null)
-                === 'Merchandise' &&
-                ($cartItem['subcategory'] ?? null)
+                ($cartItem[
+                    'transaction_type'
+                ] ?? null)
+                === 'Merchandise'
+                &&
+                ($cartItem[
+                    'subcategory'
+                ] ?? null)
                 === 'Baju'
             ) {
-                $colorNumber =
-                    trim(
-                        (string) (
-                            $cartItem['color_number']
-                            ?? ''
-                        )
-                    );
-
-                if ($colorNumber === '') {
+                if (
+                    empty(
+                        $cartItem[
+                            'size_breakdowns'
+                        ] ?? []
+                    )
+                ) {
                     return back()->with(
                         'error',
-                        "Silakan pilih warna untuk Baju '{$cartItem['name']}' terlebih dahulu."
+                        "Detail ukuran Baju '{$cartItem['name']}' belum lengkap."
+                    );
+                }
+
+                if (
+                    trim(
+                        (string) (
+                            $cartItem[
+                                'color_number'
+                            ] ?? ''
+                        )
+                    ) === ''
+                ) {
+                    return back()->with(
+                        'error',
+                        "Warna Baju '{$cartItem['name']}' belum dipilih."
                     );
                 }
             }
@@ -1236,34 +1735,52 @@ class CartController extends Controller
         DB::beginTransaction();
 
         try {
+            /*
+            |--------------------------------------------------------------------------
+            | GROUP REQUESTED QUANTITY BY ITEM
+            |--------------------------------------------------------------------------
+            */
+
             $requestedQuantities = [];
 
-            foreach ($cart as $cartItem) {
+            foreach (
+                $cart as $cartItem
+            ) {
                 $itemId =
                     (int) $cartItem['id'];
 
-                if (
-                    !isset(
-                        $requestedQuantities[$itemId]
+                $requestedQuantities[
+                    $itemId
+                ] =
+                    (
+                        $requestedQuantities[
+                            $itemId
+                        ] ?? 0
                     )
-                ) {
-                    $requestedQuantities[$itemId] =
-                        0;
-                }
-
-                $requestedQuantities[$itemId] +=
-                    (int) $cartItem['quantity'];
+                    +
+                    (int) (
+                        $cartItem[
+                            'quantity'
+                        ] ?? 0
+                    );
             }
 
-            $lockedItems = [];
+            /*
+            |--------------------------------------------------------------------------
+            | LOCK ITEMS AND CHECK STOCK
+            |--------------------------------------------------------------------------
+            */
 
             foreach (
                 $requestedQuantities
-                as $itemId => $requestedQuantity
+                as $itemId =>
+                $requestedQuantity
             ) {
                 $dbItem =
                     Item::lockForUpdate()
-                        ->find($itemId);
+                        ->find(
+                            $itemId
+                        );
 
                 if (!$dbItem) {
                     throw new \Exception(
@@ -1283,12 +1800,11 @@ class CartController extends Controller
                     );
                 }
 
-                $lockedItems[$itemId] =
-                    $dbItem;
-
                 $sample = null;
 
-                foreach ($cart as $cartItem) {
+                foreach (
+                    $cart as $cartItem
+                ) {
                     if (
                         (int) $cartItem['id']
                         ===
@@ -1296,6 +1812,7 @@ class CartController extends Controller
                     ) {
                         $sample =
                             $cartItem;
+
                         break;
                     }
                 }
@@ -1321,14 +1838,23 @@ class CartController extends Controller
                         $this->availabilityService
                             ->getOverlappingQuantity(
                                 $dbItem->id,
-                                $sample['start_date'],
-                                $sample['start_time'],
-                                $sample['end_date'],
-                                $sample['end_time']
+                                $sample[
+                                    'start_date'
+                                ],
+                                $sample[
+                                    'start_time'
+                                ],
+                                $sample[
+                                    'end_date'
+                                ],
+                                $sample[
+                                    'end_time'
+                                ]
                             );
 
                     if (
-                        $overlappingQty +
+                        $overlappingQty
+                        +
                         $requestedQuantity
                         >
                         (int) $dbItem->stock_quantity
@@ -1347,17 +1873,15 @@ class CartController extends Controller
                     }
 
                     /*
-                     * TIDAK decrement physical stock.
-                     */
-                }
+                    | Jangan decrement physical stock.
+                    */
+                } else {
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NON-RETURNABLE
+                    |--------------------------------------------------------------------------
+                    */
 
-                /*
-                |--------------------------------------------------------------------------
-                | NON-RETURNABLE
-                |--------------------------------------------------------------------------
-                */
-
-                else {
                     if (
                         $requestedQuantity
                         >
@@ -1426,16 +1950,24 @@ class CartController extends Controller
                         $orderType,
 
                     'start_date' =>
-                        $firstItem['start_date'],
+                        $firstItem[
+                            'start_date'
+                        ],
 
                     'start_time' =>
-                        $firstItem['start_time'],
+                        $firstItem[
+                            'start_time'
+                        ],
 
                     'end_date' =>
-                        $firstItem['end_date'] ?? null,
+                        $firstItem[
+                            'end_date'
+                        ] ?? null,
 
                     'end_time' =>
-                        $firstItem['end_time'] ?? null,
+                        $firstItem[
+                            'end_time'
+                        ] ?? null,
 
                     'is_sop_accepted' =>
                         true,
@@ -1446,115 +1978,207 @@ class CartController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | ORDER ITEMS
+            | CREATE ORDER ITEMS
             |--------------------------------------------------------------------------
             */
 
-            foreach ($cart as $cartItem) {
-                $unitPrice =
+            foreach (
+                $cart as $cartItem
+            ) {
+                $sizeBreakdowns =
+                    $cartItem[
+                        'size_breakdowns'
+                    ] ?? [];
+
+                $isBaju =
+                    $orderType ===
+                    'Merchandise'
+                    &&
+                    (
+                        $cartItem[
+                            'subcategory'
+                        ] ?? null
+                    ) ===
+                    'Baju'
+                    &&
+                    !empty(
+                        $sizeBreakdowns
+                    );
+
+                $basePrice =
                     (int) (
-                        $cartItem['price']
-                        ?? 0
+                        $cartItem[
+                            'price'
+                        ] ?? 0
                     );
 
                 $sizeExtra =
                     (int) (
                         $cartItem[
                             'size_additional_price'
-                        ]
-                        ?? 0
+                        ] ?? 0
                     );
-
-                $unitPrice +=
-                    $sizeExtra;
 
                 /*
                 |--------------------------------------------------------------------------
-                | STUDENT COUNCIL FREE HABIS PAKAI
+                | BAJU
                 |--------------------------------------------------------------------------
                 */
 
-                if (
-                    $request->organization ===
-                    'Student Council' &&
-                    $orderType ===
-                    'Habis Pakai'
-                ) {
-                    $unitPrice = 0;
+                if ($isBaju) {
+                    $quantity =
+                        collect(
+                            $sizeBreakdowns
+                        )->sum(
+                            'quantity'
+                        );
+
+                    $subtotal =
+                        collect(
+                            $sizeBreakdowns
+                        )->sum(
+                            'subtotal_price'
+                        );
+
+                    $orderItemSize =
+                        null;
+
+                    $orderItemSizeExtra =
+                        0;
+                } else {
+                    /*
+                    |--------------------------------------------------------------------------
+                    | STUDENT COUNCIL FREE HABIS PAKAI
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $unitPrice =
+                        $basePrice;
+
+                    if (
+                        $request->organization ===
+                        'Student Council'
+                        &&
+                        $orderType ===
+                        'Habis Pakai'
+                    ) {
+                        $unitPrice = 0;
+                    }
+
+                    $unitPrice +=
+                        $sizeExtra;
+
+                    $quantity =
+                        (int) (
+                            $cartItem[
+                                'quantity'
+                            ] ?? 0
+                        );
+
+                    $subtotal =
+                        $unitPrice *
+                        $quantity;
+
+                    $orderItemSize =
+                        $cartItem[
+                            'size'
+                        ] ?? null;
+
+                    $orderItemSizeExtra =
+                        $sizeExtra;
                 }
 
-                $sizeBreakdowns =
-                    $cartItem['size_breakdowns'] ?? [];
+                /*
+                |--------------------------------------------------------------------------
+                | CREATE ORDER ITEM
+                |--------------------------------------------------------------------------
+                */
 
-                $isBaju =
-                    $orderType === 'Merchandise' &&
-                    ($cartItem['subcategory'] ?? null) === 'Baju' &&
-                    !empty($sizeBreakdowns);
+                $orderItem =
+                    OrderItem::create([
+                        'order_id' =>
+                            $order->id,
 
-                $quantity =
-                    $isBaju
-                        ? collect($sizeBreakdowns)->sum('quantity')
-                        : (int) $cartItem['quantity'];
+                        'item_id' =>
+                            $cartItem[
+                                'id'
+                            ],
 
-                $subtotal =
-                    $isBaju
-                        ? collect($sizeBreakdowns)->sum('subtotal_price')
-                        : $unitPrice * $quantity;
+                        'quantity' =>
+                            $quantity,
 
-                $orderItem = OrderItem::create([
-                    'order_id' =>
-                        $order->id,
+                        'size' =>
+                            $orderItemSize,
 
-                    'item_id' =>
-                        $cartItem['id'],
+                        'color_number' =>
+                            $cartItem[
+                                'color_number'
+                            ] ?? null,
 
-                    'quantity' =>
-                        $quantity,
+                        'design_link' =>
+                            $cartItem[
+                                'design_link'
+                            ] ?? null,
 
-                    'size' =>
-                        $isBaju
-                            ? 'S-XL'
-                            : ($cartItem['size'] ?? null),
+                        'size_additional_price' =>
+                            $orderItemSizeExtra,
 
-                    'color_number' =>
-                        $cartItem[
-                            'color_number'
-                        ]
-                        ?? null,
+                        'subtotal_price' =>
+                            $subtotal,
+                    ]);
 
-                    'design_link' =>
-                        $cartItem[
-                            'design_link'
-                        ]
-                        ?? null,
-
-                    'size_additional_price' =>
-                        $isBaju ? 0 : $sizeExtra,
-
-                    'subtotal_price' =>
-                        $subtotal,
-                ]);
+                /*
+                |--------------------------------------------------------------------------
+                | BAJU SIZE ROWS
+                |--------------------------------------------------------------------------
+                */
 
                 if ($isBaju) {
-                    foreach ($sizeBreakdowns as $breakdown) {
-                        OrderItemSizeBreakdown::create([
+                    foreach (
+                        $sizeBreakdowns
+                        as $breakdown
+                    ) {
+                        OrderItemSize::create([
                             'order_item_id' =>
                                 $orderItem->id,
 
                             'size' =>
-                                $breakdown['size'],
+                                $breakdown[
+                                    'size'
+                                ],
 
                             'division' =>
-                                $breakdown['division'],
+                                $breakdown[
+                                    'division'
+                                ],
 
                             'quantity' =>
-                                (int) $breakdown['quantity'],
+                                (int) (
+                                    $breakdown[
+                                        'quantity'
+                                    ]
+                                ),
 
                             'unit_price' =>
-                                (int) $breakdown['unit_price'],
+                                (int) (
+                                    $breakdown[
+                                        'unit_price'
+                                    ]
+                                ),
+
+                            'size_additional_price' =>
+                                (int) (
+                                    $breakdown[
+                                        'size_additional_price'
+                                    ] ?? 0
+                                ),
 
                             'subtotal_price' =>
-                                (int) $breakdown['subtotal_price'],
+                                (int) (
+                                    $breakdown[
+                                        'subtotal_price'
+                                    ] ?? 0
+                                ),
                         ]);
                     }
                 }
@@ -1568,21 +2192,25 @@ class CartController extends Controller
 
             $mouTypes = [];
 
-            foreach ($cart as $cartItem) {
+            foreach (
+                $cart as $cartItem
+            ) {
                 $mouType =
                     $this->getMouType(
                         $cartItem
                     );
 
                 if ($mouType) {
-                    $mouTypes[$mouType] =
-                        true;
+                    $mouTypes[
+                        $mouType
+                    ] = true;
                 }
             }
 
             foreach (
-                array_keys($mouTypes)
-                as $mouType
+                array_keys(
+                    $mouTypes
+                ) as $mouType
             ) {
                 OrderMouDocument::create([
                     'order_id' =>
@@ -1593,7 +2221,17 @@ class CartController extends Controller
                 ]);
             }
 
-            if (!empty($mouTypes)) {
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL STATUS
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !empty(
+                    $mouTypes
+                )
+            ) {
                 $order->update([
                     'status' =>
                         'Waiting for MoU',
@@ -1607,14 +2245,24 @@ class CartController extends Controller
 
             DB::commit();
 
-            session()->forget('cart');
+            session()->forget(
+                'cart'
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | ADMIN NOTIFICATION
+            |--------------------------------------------------------------------------
+            */
 
             $this->notifyAdmins(
                 "Transaksi baru masuk: {$order->order_number}"
             );
 
             return redirect()
-                ->route('student.loans')
+                ->route(
+                    'student.loans'
+                )
                 ->with(
                     'success',
                     'Pesanan berhasil dibuat!'
@@ -1631,6 +2279,12 @@ class CartController extends Controller
             );
         }
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
 
     private function requiresReturn(
         string $transactionType
@@ -1650,8 +2304,9 @@ class CartController extends Controller
     ): ?string {
         $requiresMou =
             filter_var(
-                $item['requires_mou']
-                ?? false,
+                $item[
+                    'requires_mou'
+                ] ?? false,
                 FILTER_VALIDATE_BOOLEAN
             );
 
@@ -1660,8 +2315,9 @@ class CartController extends Controller
         }
 
         $transactionType =
-            $item['transaction_type']
-            ?? null;
+            $item[
+                'transaction_type'
+            ] ?? null;
 
         if (
             $transactionType ===
@@ -1675,8 +2331,9 @@ class CartController extends Controller
             'Peralatan'
         ) {
             return match (
-                $item['transaction_detail']
-                ?? null
+                $item[
+                    'transaction_detail'
+                ] ?? null
             ) {
                 'Internal Rental' =>
                     'internal',
@@ -1694,8 +2351,9 @@ class CartController extends Controller
             'Merchandise'
         ) {
             return match (
-                $item['subcategory']
-                ?? null
+                $item[
+                    'subcategory'
+                ] ?? null
             ) {
                 'Baju' =>
                     'merch_baju',
@@ -1725,7 +2383,10 @@ class CartController extends Controller
         ?string $size
     ): int {
         return match ($size) {
-            'S-XL' =>
+            'S',
+            'M',
+            'L',
+            'XL' =>
                 0,
 
             '2XL' =>
@@ -1750,18 +2411,34 @@ class CartController extends Controller
         ?string $size,
         ?string $designLink = null
     ): string {
-        $designKey = 'none';
+        $designKey =
+            'none';
 
         if ($designLink) {
             $designKey =
                 md5(
-                    trim($designLink)
+                    trim(
+                        $designLink
+                    )
                 );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | BAJU
+        |--------------------------------------------------------------------------
+        |
+        | Satu line untuk item + design.
+        | Size disimpan di size_breakdowns.
+        |
+        */
+
         if (
-            $item->transaction_type === 'Merchandise' &&
-            $item->subcategory === 'Baju'
+            $item->transaction_type ===
+            'Merchandise'
+            &&
+            $item->subcategory ===
+            'Baju'
         ) {
             return implode(
                 '_',
@@ -1777,10 +2454,13 @@ class CartController extends Controller
             '_',
             [
                 $item->id,
+
                 $item->subcategory
                     ?? 'none',
+
                 $size
                     ?? 'none',
+
                 $designKey,
             ]
         );
@@ -1794,10 +2474,12 @@ class CartController extends Controller
         $total = 0;
 
         foreach (
-            $cart as $key => $cartItem
+            $cart as $key =>
+            $cartItem
         ) {
             if (
-                $exceptLineKey !== null &&
+                $exceptLineKey !== null
+                &&
                 $key === $exceptLineKey
             ) {
                 continue;
@@ -1805,15 +2487,18 @@ class CartController extends Controller
 
             if (
                 (int) (
-                    $cartItem['id']
-                    ?? 0
+                    $cartItem[
+                        'id'
+                    ] ?? 0
                 )
-                === $itemId
+                ===
+                $itemId
             ) {
                 $total +=
                     (int) (
-                        $cartItem['quantity']
-                        ?? 0
+                        $cartItem[
+                            'quantity'
+                        ] ?? 0
                     );
             }
         }
@@ -1824,12 +2509,15 @@ class CartController extends Controller
     private function notifyAdmins(
         string $message
     ): void {
-        $admins = User::where(
-            'role',
-            'admin'
-        )->get();
+        $admins =
+            User::where(
+                'role',
+                'admin'
+            )->get();
 
-        foreach ($admins as $admin) {
+        foreach (
+            $admins as $admin
+        ) {
             $admin->notify(
                 new AdminNotification(
                     $message

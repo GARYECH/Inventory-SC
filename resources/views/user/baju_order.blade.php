@@ -50,7 +50,7 @@
 
 
             <form
-                action="{{ route('student.baju.store', $item->id) }}"
+              action="{{ route('student.cart.baju.store', $item->id) }}"
                 method="POST"
                 class="space-y-6"
             >

@@ -1140,6 +1140,46 @@
 
                                 @if($item->stock_quantity > 0)
 
+                                    @if(
+                                        $isMerchandise &&
+                                        $item->subcategory === 'Baju'
+                                    )
+
+                                        <!-- ================================================= -->
+                                        <!-- BAJU: DEDICATED ORDER PAGE -->
+                                        <!-- ================================================= -->
+
+                                        <a
+                                            href="{{ route(
+                                                'student.cart.baju.create',
+                                                $item->id
+                                            ) }}"
+                                            class="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-950 px-4 py-3.5 text-[9px] font-black uppercase tracking-[0.16em] text-white shadow-lg transition-all hover:bg-emerald-600 active:scale-95"
+                                        >
+
+                                            <svg
+                                                class="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 8h6m-6 4h4"
+                                                />
+                                            </svg>
+
+                                            Detail Pesanan Baju
+
+                                        </a>
+
+                                        <p class="mt-2 text-center text-[8px] font-bold leading-relaxed text-gray-400">
+                                            Atur ukuran, divisi, jumlah, dan desain di halaman berikutnya.
+                                        </p>
+
+                                    @else
 
                                     <!-- VIEW BOOKING -->
                                     @if($isRental)
@@ -1460,191 +1500,9 @@
                                         <!-- MERCHANDISE -->
                                         <!-- ================================================= -->
 
+                                        <!-- Merchandise-specific fields -->
+
                                         @if(
-                                            $isMerchandise &&
-                                            $item->subcategory === 'Baju'
-                                        )
-
-                                            <!-- COLOR CHART REFERENCE -->
-                                            @if(isset($colorCharts) && count($colorCharts) > 0)
-
-                                                <div class="mt-4 rounded-2xl border border-emerald-100 bg-white p-3">
-
-                                                    <div class="flex items-start gap-2.5">
-
-                                                        <div class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-
-                                                            <svg
-                                                                class="h-3.5 w-3.5 text-emerald-600"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                                stroke="currentColor"
-                                                            >
-                                                                <path
-                                                                    stroke-linecap="round"
-                                                                    stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M4 5a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 0h10M7 9h10M7 13h5"
-                                                                />
-                                                            </svg>
-
-                                                        </div>
-
-
-                                                        <div class="min-w-0 flex-1">
-
-                                                            <p class="text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700">
-                                                                Color Chart Baju
-                                                            </p>
-
-                                                            <p class="mt-1 text-[8px] font-bold leading-relaxed text-gray-500">
-                                                                Lihat referensi warna di bawah ini. Warna akan kamu isi nanti di keranjang.
-                                                            </p>
-
-                                                        </div>
-
-                                                    </div>
-
-
-                                                    <div class="mt-3 grid grid-cols-2 gap-2">
-
-                                                        @foreach($colorCharts as $index => $colorChart)
-
-                                                            <a
-                                                                href="{{ asset('storage/' . $colorChart) }}"
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                class="group overflow-hidden rounded-xl border border-gray-100 bg-gray-50 transition hover:border-emerald-300 hover:shadow-sm"
-                                                            >
-
-                                                                <div class="aspect-[4/3] bg-white">
-
-                                                                    <img
-                                                                        src="{{ asset('storage/' . $colorChart) }}"
-                                                                        alt="Color Chart {{ $index + 1 }}"
-                                                                        class="h-full w-full object-contain transition duration-300 group-hover:scale-105"
-                                                                    >
-
-                                                                </div>
-
-                                                                <div class="border-t border-gray-100 px-2 py-1.5">
-
-                                                                    <p class="text-center text-[8px] font-black text-gray-500">
-                                                                        Color Chart {{ $index + 1 }}
-                                                                    </p>
-
-                                                                </div>
-
-                                                            </a>
-
-                                                        @endforeach
-
-                                                    </div>
-
-
-                                                    <p class="mt-2 text-center text-[7px] font-bold text-gray-400">
-                                                        Klik gambar untuk melihat ukuran penuh.
-                                                    </p>
-
-                                                </div>
-
-                                            @endif
-
-
-                                            <!-- SIZE -->
-                                            <div class="mt-4">
-
-                                                <div class="mb-2 flex items-center justify-between">
-
-                                                    <label class="text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
-                                                        Ukuran Baju
-                                                    </label>
-
-                                                    <span class="text-[8px] font-bold text-gray-400">
-                                                        Size
-                                                    </span>
-
-                                                </div>
-
-
-                                                <select
-                                                    name="size"
-                                                    class="shirt-size w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-black text-gray-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
-                                                    required
-                                                >
-
-                                                    <option value="">
-                                                        Pilih Ukuran
-                                                    </option>
-
-                                                    <option value="S-XL">
-                                                        S-XL
-                                                    </option>
-
-                                                    <option value="2XL">
-                                                        2XL (+Rp5.000)
-                                                    </option>
-
-                                                    <option value="3XL">
-                                                        3XL (+Rp10.000)
-                                                    </option>
-
-                                                    <option value="4XL">
-                                                        4XL (+Rp15.000)
-                                                    </option>
-
-                                                    <option value="5XL">
-                                                        5XL (+Rp20.000)
-                                                    </option>
-
-                                                </select>
-
-                                                <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-400">
-                                                    Detail ukuran S, M, L, dan XL mengikuti size guide pada Drive.
-                                                </p>
-
-                                            </div>
-
-
-                                            <!-- DESIGN DRIVE -->
-                                            <div class="mt-3">
-
-                                                <label class="mb-2 block text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
-                                                    Link Drive Desain
-                                                </label>
-
-
-                                                <input
-                                                    type="url"
-                                                    name="design_link"
-                                                    class="design-link w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-bold text-gray-900 outline-none placeholder:text-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
-                                                    placeholder="https://drive.google.com/..."
-                                                    required
-                                                >
-
-
-                                                <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-400">
-                                                    Pastikan file dapat diakses oleh Admin SC.
-                                                </p>
-
-                                            </div>
-
-
-                                            <!-- EXTRA SIZE -->
-                                            <div class="shirt-extra-price mt-3 hidden rounded-xl border border-amber-100 bg-amber-50 px-3 py-2">
-
-                                                <p class="text-[8px] font-black uppercase tracking-widest text-amber-600">
-                                                    Tambahan Ukuran
-                                                </p>
-
-                                                <p class="mt-0.5 text-[10px] font-black text-amber-700">
-                                                    +Rp0
-                                                </p>
-
-                                            </div>
-
-
-                                        @elseif(
                                             $isMerchandise &&
                                             $item->subcategory === 'ID Card'
                                         )
@@ -1744,6 +1602,8 @@
                                         </div>
 
                                     </form>
+
+                                    @endif
 
                                 @else
 

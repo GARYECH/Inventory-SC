@@ -236,20 +236,6 @@
 
                     /*
                     |--------------------------------------------------------------------------
-                    | FINAL TRANSACTION TYPES
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $allowedTransactionTypes = [
-                        'Peralatan',
-                        'Handy Talkie',
-                        'Habis Pakai',
-                        'Merchandise',
-                    ];
-
-
-                    /*
-                    |--------------------------------------------------------------------------
                     | SUMMARY
                     |--------------------------------------------------------------------------
                     */
@@ -292,7 +278,7 @@
 
                         /*
                         |--------------------------------------------------------------------------
-                        | TYPES
+                        | TRANSACTION TYPES
                         |--------------------------------------------------------------------------
                         */
 
@@ -419,13 +405,16 @@
                             );
 
                         $sizeBreakdowns =
-                            $details['size_breakdowns'] ?? [];
+                            $details[
+                                'size_breakdowns'
+                            ] ?? [];
 
                         $isBaju =
                             $transactionType ===
                             'Merchandise' &&
                             $subcategory ===
                             'Baju';
+
 
                         if (
                             $isBaju &&
@@ -551,7 +540,7 @@
 
                     /*
                     |--------------------------------------------------------------------------
-                    | TRACK BAJU ITEMS ALREADY SHOWN
+                    | BAJU COLOR TRACKER
                     |--------------------------------------------------------------------------
                     */
 
@@ -578,7 +567,9 @@
                         <div class="overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white shadow-sm">
 
 
+                            <!-- ================================================= -->
                             <!-- HEADER -->
+                            <!-- ================================================= -->
 
                             <div class="border-b border-gray-100 bg-gray-50/60 px-6 py-6 sm:px-8">
 
@@ -604,6 +595,7 @@
 
                                         @csrf
 
+
                                         <button
                                             type="submit"
                                             class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-50"
@@ -620,7 +612,7 @@
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 01-1 1v3M4 7h16"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v-6m1-3V4a1 1 0 011-1h2a2 2 0 012 2v1H4"
                                                 />
 
                                             </svg>
@@ -668,7 +660,7 @@
                                         </div>
 
 
-                                        <div>
+                                        <div class="min-w-0">
 
                                             <p class="text-[9px] font-black uppercase tracking-[0.15em] text-indigo-600">
                                                 Aturan Transaction Type
@@ -687,29 +679,37 @@
 
                                             <p class="mt-2 text-[9px] font-bold leading-relaxed text-indigo-600">
 
-                                                Peralatan + Peralatan ✅
+                                                Contoh:
+                                                <span class="font-black">
+                                                    Peralatan + Peralatan
+                                                </span>
+                                                ✅
 
                                                 <span class="mx-1">
                                                     •
                                                 </span>
 
-                                                Peralatan + Habis Pakai ❌
+                                                <span class="font-black">
+                                                    Peralatan + Habis Pakai
+                                                </span>
+                                                ❌
 
                                             </p>
 
 
                                             @if($transactionTypeCount > 1)
 
-                                                <div class="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2">
+                                                <div class="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2.5">
 
                                                     <p class="text-[9px] font-black uppercase tracking-widest text-red-600">
                                                         Perhatian
                                                     </p>
 
-                                                    <p class="mt-1 text-[9px] font-bold text-red-700">
+
+                                                    <p class="mt-1 text-[9px] font-bold leading-relaxed text-red-700">
 
                                                         Keranjang saat ini memiliki lebih dari satu Transaction Type.
-                                                        Silakan hapus barang dari type lain sebelum checkout.
+                                                        Hapus barang dari type lain sebelum checkout.
 
                                                     </p>
 
@@ -787,9 +787,7 @@
                                         </p>
 
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-indigo-800">
-
                                             Barang wajib dikembalikan sesuai jadwal yang telah dipilih.
-
                                         </p>
 
                                     </div>
@@ -807,9 +805,7 @@
                                         </p>
 
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-amber-800">
-
                                             HT wajib dikembalikan dan menggunakan MoU Handy Talkie.
-
                                         </p>
 
                                     </div>
@@ -829,7 +825,7 @@
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-rose-800">
 
                                             Barang tidak perlu dikembalikan.
-                                            Stok akan berkurang permanen setelah transaksi.
+                                            Stok akan berkurang setelah transaksi disetujui.
 
                                         </p>
 
@@ -886,11 +882,6 @@
                                         $subcategory =
                                             $details[
                                                 'subcategory'
-                                            ] ?? null;
-
-                                        $size =
-                                            $details[
-                                                'size'
                                             ] ?? null;
 
                                         $sizeExtra =
@@ -1067,7 +1058,9 @@
 
 
 
+                                    <!-- ================================================= -->
                                     <!-- ITEM -->
+                                    <!-- ================================================= -->
 
                                     <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-indigo-100 hover:shadow-md sm:p-5">
 
@@ -1111,7 +1104,7 @@
                                                 <div class="flex items-start justify-between gap-3">
 
 
-                                                    <div class="min-w-0">
+                                                    <div class="min-w-0 flex-1">
 
                                                         <h3 class="text-base font-black leading-tight text-gray-950 sm:text-lg">
                                                             {{ $details['name'] ?? 'Unnamed Item' }}
@@ -1119,57 +1112,102 @@
 
 
 
-                                                        <!-- TRANSACTION TYPE -->
+                                                        <!-- BADGES -->
 
-                                                        @if($transactionType === 'Peralatan')
-
-                                                            <span class="mt-2 inline-flex rounded-lg bg-indigo-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-indigo-700">
-                                                                Peralatan
-                                                            </span>
-
-                                                        @elseif($transactionType === 'Handy Talkie')
-
-                                                            <span class="mt-2 inline-flex rounded-lg bg-amber-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-amber-700">
-                                                                Handy Talkie
-                                                            </span>
-
-                                                        @elseif($transactionType === 'Habis Pakai')
-
-                                                            <span class="mt-2 inline-flex rounded-lg bg-rose-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-rose-700">
-                                                                Habis Pakai
-                                                            </span>
-
-                                                        @elseif($transactionType === 'Merchandise')
-
-                                                            <span class="mt-2 inline-flex rounded-lg bg-emerald-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-emerald-700">
-                                                                Merchandise
-                                                            </span>
-
-                                                        @endif
+                                                        <div class="mt-2 flex flex-wrap gap-1.5">
 
 
+                                                            @if($transactionType === 'Peralatan')
 
-                                                        <!-- DETAIL -->
+                                                                <span class="rounded-lg bg-indigo-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-indigo-700">
+                                                                    Peralatan
+                                                                </span>
 
-                                                        @if($transactionDetail)
+                                                            @elseif($transactionType === 'Handy Talkie')
 
-                                                            <span class="ml-1 mt-2 inline-flex rounded-lg bg-gray-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-gray-600">
-                                                                {{ $transactionDetail }}
-                                                            </span>
+                                                                <span class="rounded-lg bg-amber-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-amber-700">
+                                                                    Handy Talkie
+                                                                </span>
 
-                                                        @endif
+                                                            @elseif($transactionType === 'Habis Pakai')
+
+                                                                <span class="rounded-lg bg-rose-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-rose-700">
+                                                                    Habis Pakai
+                                                                </span>
+
+                                                            @elseif($transactionType === 'Merchandise')
+
+                                                                <span class="rounded-lg bg-emerald-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-emerald-700">
+                                                                    Merchandise
+                                                                </span>
+
+                                                            @endif
+
+
+                                                            @if($transactionDetail)
+
+                                                                <span class="rounded-lg bg-gray-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-gray-600">
+                                                                    {{ $transactionDetail }}
+                                                                </span>
+
+                                                            @endif
+
+
+                                                            @if($subcategory)
+
+                                                                <span class="rounded-lg bg-gray-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-gray-600">
+                                                                    {{ $subcategory }}
+                                                                </span>
+
+                                                            @endif
+
+                                                        </div>
 
 
 
-                                                        <!-- SUBCATEGORY -->
+                                                        <!-- PRICE -->
 
-                                                        @if($subcategory)
+                                                        <div class="mt-2">
 
-                                                            <span class="ml-1 mt-2 inline-flex rounded-lg bg-gray-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-gray-600">
-                                                                {{ $subcategory }}
-                                                            </span>
+                                                            @if($isBaju)
 
-                                                        @endif
+                                                                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+
+                                                                    Harga dasar:
+                                                                    <span class="font-black text-gray-600">
+                                                                        Rp {{ number_format($basePrice, 0, ',', '.') }}/pcs
+                                                                    </span>
+
+                                                                </p>
+
+                                                            @else
+
+                                                                <div class="flex flex-wrap items-center gap-2">
+
+                                                                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+
+                                                                        Rp
+                                                                        {{ number_format($basePrice, 0, ',', '.') }}
+
+                                                                    </span>
+
+
+                                                                    @if($sizeExtra > 0)
+
+                                                                        <span class="rounded-md bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700">
+
+                                                                            +Rp
+                                                                            {{ number_format($sizeExtra, 0, ',', '.') }}
+
+                                                                        </span>
+
+                                                                    @endif
+
+                                                                </div>
+
+                                                            @endif
+
+                                                        </div>
 
                                                     </div>
 
@@ -1190,12 +1228,12 @@
 
                                                         <button
                                                             type="submit"
-                                                            class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-300 transition-all hover:bg-red-50 hover:text-red-500"
+                                                            class="group flex h-10 w-10 items-center justify-center rounded-xl border border-gray-100 text-gray-300 transition-all hover:border-red-100 hover:bg-red-50 hover:text-red-500"
                                                             title="Hapus Barang"
                                                         >
 
                                                             <svg
-                                                                class="h-4 w-4"
+                                                                class="h-4 w-4 transition group-hover:scale-110"
                                                                 fill="none"
                                                                 stroke="currentColor"
                                                                 viewBox="0 0 24 24"
@@ -1205,7 +1243,7 @@
                                                                     stroke-linecap="round"
                                                                     stroke-linejoin="round"
                                                                     stroke-width="2"
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 01-1 1v3M4 7h16"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v-6m1-3V4a1 1 0 011-1h2a2 2 0 012 2v1H4"
                                                                 />
 
                                                             </svg>
@@ -1213,39 +1251,6 @@
                                                         </button>
 
                                                     </form>
-
-                                                </div>
-
-
-
-                                                <!-- PRICE -->
-
-                                                <div class="mt-2 flex flex-wrap items-center gap-2">
-
-                                                    @if($isBaju)
-
-                                                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                                                            Harga dasar:
-                                                            Rp {{ number_format($basePrice, 0, ',', '.') }}/pcs
-                                                        </span>
-
-                                                    @else
-
-                                                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                                                            Rp
-                                                            {{ number_format($basePrice, 0, ',', '.') }}
-                                                        </span>
-
-                                                        @if($sizeExtra > 0)
-
-                                                            <span class="rounded-md bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700">
-                                                                +Rp
-                                                                {{ number_format($sizeExtra, 0, ',', '.') }}
-                                                            </span>
-
-                                                        @endif
-
-                                                    @endif
 
                                                 </div>
 
@@ -1259,103 +1264,312 @@
                                         <!-- MERCHANDISE -->
                                         <!-- ================================================= -->
 
-                                        @if(
-                                            $transactionType ===
-                                            'Merchandise'
-                                        )
+                                        @if($transactionType === 'Merchandise')
+
+
+                                            <!-- ================================================= -->
+                                            <!-- BAJU -->
+                                            <!-- ================================================= -->
 
                                             @if($subcategory === 'Baju')
 
-                                                <div class="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+                                                <div class="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5">
 
-                                                    <div class="flex items-start justify-between gap-3">
 
-                                                        <div>
+                                                    <!-- BAJU HEADER -->
 
-                                                            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600">
-                                                                Detail Baju
-                                                            </p>
+                                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-                                                            <p class="mt-1 text-[10px] font-bold text-indigo-800">
-                                                                {{ $quantity }} pcs total
-                                                            </p>
+                                                        <div class="min-w-0">
+
+                                                            <div class="flex items-center gap-2">
+
+                                                                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
+
+                                                                    <svg
+                                                                        class="h-4 w-4"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        stroke="currentColor"
+                                                                    >
+
+                                                                        <path
+                                                                            stroke-linecap="round"
+                                                                            stroke-linejoin="round"
+                                                                            stroke-width="2"
+                                                                            d="M6 8l6-4 6 4v10l-6 4-6-4V8zM6 8l6 4 6-4"
+                                                                        />
+
+                                                                    </svg>
+
+                                                                </div>
+
+
+                                                                <div>
+
+                                                                    <p class="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600">
+                                                                        Detail Baju
+                                                                    </p>
+
+                                                                    <p class="mt-0.5 text-xs font-black text-indigo-950">
+                                                                        {{ $quantity }} pcs total
+                                                                    </p>
+
+                                                                </div>
+
+                                                            </div>
 
                                                         </div>
 
+
                                                         <a
                                                             href="{{ route('student.cart.baju.create', ['item' => $itemId, 'edit' => $id]) }}"
-                                                            class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[8px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700"
+                                                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-[8px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 sm:w-auto"
                                                         >
+
+                                                            <svg
+                                                                class="h-3.5 w-3.5"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+
+                                                                <path
+                                                                    stroke-linecap="round"
+                                                                    stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                                />
+
+                                                            </svg>
+
                                                             Edit Detail
+
                                                         </a>
 
                                                     </div>
 
+
+
+                                                    <!-- SIZE BREAKDOWN -->
+
                                                     @if(!empty($sizeBreakdowns))
 
-                                                        <div class="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
+                                                        <div class="mt-4 space-y-2">
 
-                                                            <div class="grid grid-cols-4 gap-2 border-b border-gray-100 bg-gray-50 px-3 py-2 text-[8px] font-black uppercase tracking-widest text-gray-400">
-                                                                <span>Size</span>
-                                                                <span>Divisi</span>
-                                                                <span class="text-center">Qty</span>
-                                                                <span class="text-right">Subtotal</span>
-                                                            </div>
 
-                                                            <div class="divide-y divide-gray-100">
+                                                            @foreach($sizeBreakdowns as $breakdown)
 
-                                                                @foreach($sizeBreakdowns as $breakdown)
+                                                                <div class="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
 
-                                                                    <div class="grid grid-cols-4 gap-2 px-3 py-2.5 text-[9px]">
 
-                                                                        <span class="font-black text-gray-900">
-                                                                            {{ $breakdown['size'] ?? '-' }}
-                                                                        </span>
+                                                                    <!-- DESKTOP -->
 
-                                                                        <span class="truncate font-bold text-gray-500">
-                                                                            {{ $breakdown['division'] ?? '-' }}
-                                                                        </span>
+                                                                    <div class="hidden items-center gap-3 sm:grid sm:grid-cols-[68px_minmax(0,1fr)_70px_minmax(110px,auto)]">
 
-                                                                        <span class="text-center font-black text-gray-900">
-                                                                            {{ (int) ($breakdown['quantity'] ?? 0) }}
-                                                                        </span>
 
-                                                                        <span class="text-right font-black text-indigo-600">
-                                                                            Rp {{ number_format((int) ($breakdown['subtotal_price'] ?? 0), 0, ',', '.') }}
-                                                                        </span>
+                                                                        <!-- SIZE -->
+
+                                                                        <div>
+
+                                                                            <span class="flex h-10 min-w-[52px] items-center justify-center rounded-lg bg-gray-950 px-2 text-[9px] font-black text-white">
+
+                                                                                {{ $breakdown['size'] ?? '-' }}
+
+                                                                            </span>
+
+                                                                        </div>
+
+
+                                                                        <!-- DIVISION -->
+
+                                                                        <div class="min-w-0">
+
+                                                                            <p class="text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                                                                Divisi
+                                                                            </p>
+
+                                                                            <p class="mt-0.5 truncate text-[10px] font-black text-gray-800">
+
+                                                                                {{ $breakdown['division'] ?? '-' }}
+
+                                                                            </p>
+
+                                                                        </div>
+
+
+                                                                        <!-- QTY -->
+
+                                                                        <div class="text-center">
+
+                                                                            <p class="text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                                                                Qty
+                                                                            </p>
+
+                                                                            <p class="mt-0.5 text-sm font-black text-gray-950">
+
+                                                                                {{ (int) ($breakdown['quantity'] ?? 0) }}
+
+                                                                            </p>
+
+                                                                        </div>
+
+
+                                                                        <!-- SUBTOTAL -->
+
+                                                                        <div class="text-right">
+
+                                                                            <p class="text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                                                                Subtotal
+                                                                            </p>
+
+                                                                            <p class="mt-0.5 text-sm font-black text-indigo-600">
+
+                                                                                Rp
+                                                                                {{ number_format((int) ($breakdown['subtotal_price'] ?? 0), 0, ',', '.') }}
+
+                                                                            </p>
+
+                                                                        </div>
 
                                                                     </div>
 
-                                                                @endforeach
 
-                                                            </div>
+
+                                                                    <!-- MOBILE -->
+
+                                                                    <div class="sm:hidden">
+
+
+                                                                        <div class="flex items-center justify-between gap-3">
+
+
+                                                                            <span class="flex h-10 min-w-[52px] items-center justify-center rounded-lg bg-gray-950 px-2 text-[9px] font-black text-white">
+
+                                                                                {{ $breakdown['size'] ?? '-' }}
+
+                                                                            </span>
+
+
+                                                                            <div class="min-w-0 flex-1">
+
+                                                                                <p class="truncate text-[10px] font-black text-gray-800">
+
+                                                                                    {{ $breakdown['division'] ?? '-' }}
+
+                                                                                </p>
+
+                                                                                <p class="mt-0.5 text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                                                                    Divisi
+                                                                                </p>
+
+                                                                            </div>
+
+
+                                                                            <div class="shrink-0 text-right">
+
+                                                                                <p class="text-sm font-black text-gray-950">
+
+                                                                                    {{ (int) ($breakdown['quantity'] ?? 0) }} pcs
+
+                                                                                </p>
+
+                                                                                <p class="mt-0.5 text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                                                                    Quantity
+                                                                                </p>
+
+                                                                            </div>
+
+                                                                        </div>
+
+
+                                                                        <div class="mt-3 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+
+                                                                            <span class="text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                                                                Subtotal
+                                                                            </span>
+
+
+                                                                            <span class="text-sm font-black text-indigo-600">
+
+                                                                                Rp
+                                                                                {{ number_format((int) ($breakdown['subtotal_price'] ?? 0), 0, ',', '.') }}
+
+                                                                            </span>
+
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                            @endforeach
 
                                                         </div>
+
 
                                                     @else
 
                                                         <div class="mt-4 rounded-xl border border-yellow-100 bg-yellow-50 px-3 py-3">
 
-                                                            <p class="text-[9px] font-bold text-yellow-700">
-                                                                Detail size Baju belum tersedia. Silakan klik "Edit Detail".
+                                                            <p class="text-[9px] font-bold leading-relaxed text-yellow-700">
+
+                                                                Detail size Baju belum tersedia.
+                                                                Silakan klik
+                                                                <span class="font-black">
+                                                                    Edit Detail
+                                                                </span>.
+
                                                             </p>
 
                                                         </div>
 
                                                     @endif
 
+
+
+                                                    <!-- BAJU TOTAL -->
+
+                                                    <div class="mt-4 flex items-center justify-between gap-3 rounded-xl border border-indigo-100 bg-white px-4 py-3.5 shadow-sm">
+
+                                                        <div>
+
+                                                            <p class="text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                                                Total Baju
+                                                            </p>
+
+                                                            <p class="mt-0.5 text-[10px] font-black text-gray-700">
+                                                                {{ $quantity }} pcs
+                                                            </p>
+
+                                                        </div>
+
+
+                                                        <p class="text-base font-black text-indigo-600 sm:text-lg">
+
+                                                            Rp
+                                                            {{ number_format($subtotal, 0, ',', '.') }}
+
+                                                        </p>
+
+                                                    </div>
+
                                                 </div>
 
 
+
+                                                <!-- ================================================= -->
+                                                <!-- BAJU COLOR -->
+                                                <!-- ================================================= -->
+
                                                 @if($showBajuColor)
 
-                                                    <!-- ================================================= -->
-                                                    <!-- BAJU COLOR -->
-                                                    <!-- ================================================= -->
-
-                                                    <div class="mt-4 rounded-2xl border border-purple-100 bg-purple-50/60 p-4">
+                                                    <div class="mt-4 rounded-2xl border border-purple-100 bg-purple-50/60 p-4 sm:p-5">
 
                                                         <div class="flex items-start gap-3">
+
+
+                                                            <!-- ICON -->
 
                                                             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white">
 
@@ -1378,6 +1592,9 @@
                                                             </div>
 
 
+
+                                                            <!-- CONTENT -->
+
                                                             <div class="min-w-0 flex-1">
 
                                                                 <p class="text-[9px] font-black uppercase tracking-[0.16em] text-purple-600">
@@ -1388,13 +1605,14 @@
                                                                 <p class="mt-1 text-[10px] font-bold leading-relaxed text-purple-800">
 
                                                                     Pilih warna berdasarkan Color Chart.
-                                                                    Warna ini akan digunakan untuk semua size
+                                                                    Warna ini akan digunakan untuk semua detail
                                                                     <span class="font-black">
                                                                         {{ $details['name'] ?? 'Baju' }}
                                                                     </span>
                                                                     di transaksi ini.
 
                                                                 </p>
+
 
 
                                                                 <!-- COLOR FORM -->
@@ -1426,7 +1644,7 @@
                                                                                 placeholder="Contoh: 47 / Navy / 47 Navy"
                                                                                 maxlength="100"
                                                                                 required
-                                                                                class="w-full rounded-xl border border-purple-100 bg-white px-4 py-3 text-xs font-black text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-400"
+                                                                                class="w-full rounded-xl border border-purple-100 bg-white px-4 py-3.5 text-xs font-black text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-400"
                                                                             >
 
                                                                         </div>
@@ -1436,7 +1654,7 @@
 
                                                                             <button
                                                                                 type="submit"
-                                                                                class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-purple-100 transition-all hover:bg-purple-700 sm:w-auto"
+                                                                                class="inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-purple-100 transition-all hover:bg-purple-700 sm:w-auto"
                                                                             >
 
                                                                                 <svg
@@ -1464,6 +1682,7 @@
                                                                     </div>
 
                                                                 </form>
+
 
 
                                                                 <!-- COLOR CHART -->
@@ -1543,6 +1762,10 @@
 
 
 
+                                            <!-- ================================================= -->
+                                            <!-- DESIGN LINK -->
+                                            <!-- ================================================= -->
+
                                             @if(
                                                 in_array(
                                                     $subcategory,
@@ -1560,16 +1783,16 @@
                                                         href="{{ $details['design_link'] }}"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        class="mt-3 flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3 transition-all hover:border-indigo-200 hover:bg-indigo-50"
+                                                        class="mt-4 flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3.5 transition-all hover:border-indigo-200 hover:bg-indigo-50"
                                                     >
 
-                                                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm">
+                                                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm">
 
                                                             <svg
                                                                 class="h-4 w-4"
                                                                 fill="none"
-                                                                viewBox="0 0 24 24"
                                                                 stroke="currentColor"
+                                                                viewBox="0 0 24 24"
                                                             >
 
                                                                 <path
@@ -1634,7 +1857,7 @@
                                                                     stroke-linecap="round"
                                                                     stroke-linejoin="round"
                                                                     stroke-width="2"
-                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
+                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12"
                                                                 />
 
                                                             </svg>
@@ -1645,9 +1868,7 @@
                                                         <div>
 
                                                             <p class="text-[8px] font-black uppercase tracking-widest text-indigo-400">
-
                                                                 {{ $isRental ? 'Pengambilan' : 'Transaksi' }}
-
                                                             </p>
 
 
@@ -1659,9 +1880,7 @@
 
 
                                                             <p class="mt-0.5 text-[9px] font-bold text-indigo-500">
-
                                                                 {{ $startTime }}
-
                                                             </p>
 
                                                         </div>
@@ -1693,7 +1912,7 @@
                                                                         stroke-linecap="round"
                                                                         stroke-linejoin="round"
                                                                         stroke-width="2"
-                                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9M20 20v-5h-.581m-15.357-2a8.001 8.001 0 01-15.356-2"
+                                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9M20 20v-5h-.581m-15.357-2A8.001 8.001 0 014.582 15"
                                                                     />
 
                                                                 </svg>
@@ -1716,9 +1935,7 @@
 
 
                                                                 <p class="mt-0.5 text-[9px] font-bold text-amber-500">
-
                                                                     {{ $endTime }}
-
                                                                 </p>
 
                                                             </div>
@@ -1736,19 +1953,37 @@
 
 
                                         <!-- ================================================= -->
-                                        <!-- QUANTITY -->
+                                        <!-- QUANTITY / EDIT -->
                                         <!-- ================================================= -->
 
-                                        <div class="mt-4 flex flex-col gap-4 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                                        <div class="mt-5 flex flex-col gap-4 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
 
 
                                             @if($isBaju)
 
                                                 <a
                                                     href="{{ route('student.cart.baju.create', ['item' => $itemId, 'edit' => $id]) }}"
-                                                    class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white"
+                                                    class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white sm:w-auto"
                                                 >
+
+                                                    <svg
+                                                        class="h-3.5 w-3.5"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                        />
+
+                                                    </svg>
+
                                                     Edit Detail Baju
+
                                                 </a>
 
                                             @else
@@ -1756,7 +1991,7 @@
                                                 <form
                                                     action="{{ route('student.cart.update', $id) }}"
                                                     method="POST"
-                                                    class="flex h-10 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                                                    class="flex h-10 w-full items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:w-auto"
                                                 >
 
                                                     @csrf
@@ -1800,7 +2035,7 @@
 
                                             <!-- SUBTOTAL -->
 
-                                            <div class="text-left sm:text-right">
+                                            <div class="rounded-xl bg-gray-50 px-4 py-3 sm:bg-transparent sm:px-0 sm:py-0">
 
                                                 <p class="text-[8px] font-black uppercase tracking-widest text-gray-400">
                                                     Subtotal
@@ -1840,8 +2075,8 @@
                                             Total
                                         </p>
 
-                                        <p class="mt-1 text-[10px] font-bold text-gray-500">
-                                            Total dihitung berdasarkan detail ukuran, divisi, dan harga masing-masing.
+                                        <p class="mt-1 text-[10px] font-bold leading-relaxed text-gray-500">
+                                            Total dihitung berdasarkan ukuran, divisi, quantity, dan harga masing-masing.
                                         </p>
 
                                     </div>
@@ -2254,8 +2489,8 @@
                                                 <svg
                                                     class="h-5 w-5"
                                                     fill="none"
-                                                    stroke="currentColor"
                                                     viewBox="0 0 24 24"
+                                                    stroke="currentColor"
                                                 >
 
                                                     <path
@@ -2278,9 +2513,7 @@
 
 
                                                 <p class="mt-1 text-xs font-bold leading-relaxed text-indigo-800">
-
                                                     Pengajuan ini membutuhkan dokumen MoU berikut:
-
                                                 </p>
 
 
@@ -2402,15 +2635,15 @@
                                                 <svg
                                                     class="h-5 w-5"
                                                     fill="none"
-                                                    viewBox="0 0 24 24"
                                                     stroke="currentColor"
+                                                    viewBox="0 0 24 24"
                                                 >
 
                                                     <path
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                         stroke-width="2"
-                                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c.98 0 1.54-1.06 1.05-1.91L13.05 4.91c-.47-.82-1.63-.82-2.1 0L3.89 16.09c-.49.85.07 1.91 1.05 1.91z"
+                                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c.98 0 1.54-1.06 1.05-1.91L13.05 4.91c-.47-.82-1.63-.82-2.1 0L3.89 16.09c-.49-.85.07-1.91 1.05-1.91z"
                                                     />
 
                                                 </svg>

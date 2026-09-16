@@ -21,6 +21,12 @@ class Order extends Model
         'is_sop_accepted' => 'boolean',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | USER
+    |--------------------------------------------------------------------------
+    */
+
     public function user()
     {
         return $this->belongsTo(
@@ -28,12 +34,29 @@ class Order extends Model
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | ORDER ITEMS
+    |--------------------------------------------------------------------------
+    */
+
     public function orderItems()
     {
         return $this->hasMany(
             OrderItem::class
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ITEMS
+    |--------------------------------------------------------------------------
+    |
+    | Relationship lama tetap dipertahankan
+    | supaya fitur yang masih memakai
+    | $order->items tetap aman.
+    |
+    */
 
     public function items()
     {
@@ -44,12 +67,19 @@ class Order extends Model
         ->withPivot(
             'quantity',
             'size',
+            'color_number',
             'design_link',
             'size_additional_price',
             'subtotal_price'
         )
         ->withTimestamps();
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | MOU DOCUMENTS
+    |--------------------------------------------------------------------------
+    */
 
     public function mouDocuments()
     {
@@ -58,14 +88,29 @@ class Order extends Model
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | TOTAL PRICE
+    |--------------------------------------------------------------------------
+    */
+
     public function getTotalPriceAttribute(): int
     {
         return (int) $this->orderItems()
-            ->sum('subtotal_price');
+            ->sum(
+                'subtotal_price'
+            );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | MOU CHECK
+    |--------------------------------------------------------------------------
+    */
 
     public function requiresMou(): bool
     {
-        return $this->mouDocuments()->exists();
+        return $this->mouDocuments()
+            ->exists();
     }
 }

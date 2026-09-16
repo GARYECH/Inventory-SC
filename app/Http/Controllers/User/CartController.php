@@ -113,7 +113,6 @@ class CartController extends Controller
         }
 
         $transactionType = $item->transaction_type;
-
         $cart = session()->get('cart', []);
 
         /*
@@ -123,7 +122,8 @@ class CartController extends Controller
         */
 
         if (
-            $transactionType === 'Merchandise' &&
+            $transactionType === 'Merchandise'
+            &&
             $item->subcategory === 'Baju'
         ) {
             if (!empty($cart)) {
@@ -365,6 +365,10 @@ class CartController extends Controller
         |--------------------------------------------------------------------------
         | STOCK CHECK
         |--------------------------------------------------------------------------
+        |
+        | Ini hanya pengecekan sebelum masuk Cart.
+        | Stock physical TIDAK dikurangi di sini.
+        |
         */
 
         if ($isRental) {
@@ -500,9 +504,8 @@ class CartController extends Controller
                 $size,
 
             'color_number' =>
-                $cart[$lineKey][
-                    'color_number'
-                ] ?? null,
+                $cart[$lineKey]['color_number']
+                ?? null,
 
             'design_link' =>
                 $designLink,
@@ -511,9 +514,8 @@ class CartController extends Controller
                 $sizeAdditionalPrice,
 
             'size_breakdowns' =>
-                $cart[$lineKey][
-                    'size_breakdowns'
-                ] ?? [],
+                $cart[$lineKey]['size_breakdowns']
+                ?? [],
         ];
 
         session()->put(
@@ -534,6 +536,7 @@ class CartController extends Controller
     */
 
     public function bajuForm(
+        Request $request,
         Item $item
     ) {
         if (
@@ -586,6 +589,45 @@ class CartController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | EDIT DATA
+        |--------------------------------------------------------------------------
+        */
+
+        $editLineKey =
+            $request->query('edit');
+
+        $editingCartItem = null;
+
+        if (
+            $editLineKey !== null
+            &&
+            isset(
+                $cart[$editLineKey]
+            )
+        ) {
+            $candidate =
+                $cart[$editLineKey];
+
+            if (
+                (int) (
+                    $candidate['id'] ?? 0
+                )
+                ===
+                (int) $item->id
+                &&
+                ($candidate['transaction_type'] ?? null)
+                === 'Merchandise'
+                &&
+                ($candidate['subcategory'] ?? null)
+                === 'Baju'
+            ) {
+                $editingCartItem =
+                    $candidate;
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | PREFILL SCHEDULE
         |--------------------------------------------------------------------------
         */
@@ -593,7 +635,15 @@ class CartController extends Controller
         $prefillStartDate = null;
         $prefillStartTime = null;
 
-        if (!empty($cart)) {
+        if ($editingCartItem !== null) {
+            $prefillStartDate =
+                $editingCartItem['start_date']
+                ?? null;
+
+            $prefillStartTime =
+                $editingCartItem['start_time']
+                ?? null;
+        } elseif (!empty($cart)) {
             $firstItem =
                 reset($cart);
 
@@ -608,13 +658,22 @@ class CartController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | KEEP COLOR CHART EMPTY HERE
+        | PREFILL BAJU DATA
         |--------------------------------------------------------------------------
-        |
-        | Warna Baju dipilih di Cart.
-        | Array tetap dikirim supaya view lama
-        | yang memakai variable ini tidak error.
-        |
+        */
+
+        $prefillDesignLink =
+            $editingCartItem['design_link']
+            ?? '';
+
+        $prefillBreakdowns =
+            $editingCartItem['size_breakdowns']
+            ?? [];
+
+        /*
+        |--------------------------------------------------------------------------
+        | COLOR IS SELECTED IN CART
+        |--------------------------------------------------------------------------
         */
 
         $colorCharts = [];
@@ -658,6 +717,15 @@ class CartController extends Controller
 
                 'prefillStartTime' =>
                     $prefillStartTime,
+
+                'prefillDesignLink' =>
+                    $prefillDesignLink,
+
+                'prefillBreakdowns' =>
+                    $prefillBreakdowns,
+
+                'editLineKey' =>
+                    $editLineKey,
 
                 'sizeOptions' =>
                     $sizeOptions,
@@ -738,6 +806,11 @@ class CartController extends Controller
                 'integer',
                 'min:0',
             ],
+
+            'edit_line_key' => [
+                'nullable',
+                'string',
+            ],
         ]);
 
         $cart =
@@ -768,12 +841,6 @@ class CartController extends Controller
                     );
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | SAME START SCHEDULE
-            |--------------------------------------------------------------------------
-            */
-
             if (
                 ($firstItem['start_date'] ?? null)
                 !== $request->start_date
@@ -794,6 +861,51 @@ class CartController extends Controller
             trim(
                 $request->design_link
             );
+
+        /*
+        |--------------------------------------------------------------------------
+        | EDIT LINE KEY
+        |--------------------------------------------------------------------------
+        */
+
+        $editLineKey =
+            $request->input(
+                'edit_line_key'
+            );
+
+        if (
+            $editLineKey !== null
+            &&
+            isset(
+                $cart[$editLineKey]
+            )
+        ) {
+            $editing =
+                $cart[$editLineKey];
+
+            if (
+                (int) (
+                    $editing['id'] ?? 0
+                )
+                !==
+                (int) $item->id
+                ||
+                ($editing['transaction_type'] ?? null)
+                !== 'Merchandise'
+                ||
+                ($editing['subcategory'] ?? null)
+                !== 'Baju'
+            ) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Data Baju yang akan diedit tidak valid.'
+                    );
+            }
+        } else {
+            $editLineKey = null;
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -820,21 +932,9 @@ class CartController extends Controller
                     )
                 );
 
-            /*
-            |--------------------------------------------------------------------------
-            | SKIP EMPTY SIZE
-            |--------------------------------------------------------------------------
-            */
-
             if ($quantity === 0) {
                 continue;
             }
-
-            /*
-            |--------------------------------------------------------------------------
-            | DIVISION REQUIRED
-            |--------------------------------------------------------------------------
-            */
 
             if ($division === '') {
                 return back()
@@ -901,7 +1001,7 @@ class CartController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | FIND EXISTING SAME BAJU
+        | EXISTING SAME ITEM / DESIGN
         |--------------------------------------------------------------------------
         */
 
@@ -912,9 +1012,16 @@ class CartController extends Controller
             $cartItem
         ) {
             if (
+                $editLineKey !== null
+                &&
+                $lineKey === $editLineKey
+            ) {
+                continue;
+            }
+
+            if (
                 (int) (
-                    $cartItem['id']
-                    ?? 0
+                    $cartItem['id'] ?? 0
                 )
                 !==
                 (int) $item->id
@@ -939,9 +1046,8 @@ class CartController extends Controller
             $existingDesign =
                 trim(
                     (string) (
-                        $cartItem[
-                            'design_link'
-                        ] ?? ''
+                        $cartItem['design_link']
+                        ?? ''
                     )
                 );
 
@@ -962,17 +1068,23 @@ class CartController extends Controller
         |--------------------------------------------------------------------------
         | STOCK CHECK
         |--------------------------------------------------------------------------
+        |
+        | Cart tidak reserve stock.
+        | Jadi di sini hanya memastikan request
+        | tidak melebihi current physical stock.
+        |
         */
 
         $otherCartQuantity =
             $this->getCartQuantityForItem(
                 $cart,
                 $item->id,
-                $existingLineKey
+                $editLineKey
             );
 
         if (
-            $otherCartQuantity +
+            $otherCartQuantity
+            +
             $totalQuantity
             >
             (int) $item->stock_quantity
@@ -995,89 +1107,24 @@ class CartController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | MERGE EXISTING BREAKDOWNS
+        | DETERMINE FINAL LINE KEY
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $existingLineKey !==
-            null
-        ) {
-            $existingBreakdowns =
-                $cart[
-                    $existingLineKey
-                ][
-                    'size_breakdowns'
-                ] ?? [];
-
-            $merged = [];
-
-            foreach (
-                array_merge(
-                    $existingBreakdowns,
-                    $breakdowns
-                ) as $breakdown
-            ) {
-                $mergeKey =
-                    $breakdown['size']
-                    . '|'
-                    .
-                    mb_strtolower(
-                        trim(
-                            $breakdown['division']
-                        )
-                    );
-
-                if (
-                    !isset(
-                        $merged[$mergeKey]
-                    )
-                ) {
-                    $merged[$mergeKey] =
-                        $breakdown;
-
-                    continue;
-                }
-
-                $merged[$mergeKey]['quantity'] +=
-                    (int) (
-                        $breakdown['quantity']
-                    );
-
-                $merged[$mergeKey]['subtotal_price'] =
-                    (int) (
-                        $merged[
-                            $mergeKey
-                        ]['unit_price']
-                    )
-                    *
-                    (int) (
-                        $merged[
-                            $mergeKey
-                        ]['quantity']
-                    );
-            }
-
-            $breakdowns =
-                array_values(
-                    $merged
+        if ($editLineKey !== null) {
+            $lineKey =
+                $editLineKey;
+        } elseif ($existingLineKey !== null) {
+            $lineKey =
+                $existingLineKey;
+        } else {
+            $lineKey =
+                $this->buildLineKey(
+                    $item,
+                    null,
+                    $designLink
                 );
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | LINE KEY
-        |--------------------------------------------------------------------------
-        */
-
-        $lineKey =
-            $existingLineKey
-            ??
-            $this->buildLineKey(
-                $item,
-                null,
-                $designLink
-            );
 
         /*
         |--------------------------------------------------------------------------
@@ -1086,9 +1133,8 @@ class CartController extends Controller
         */
 
         $colorNumber =
-            $cart[$lineKey][
-                'color_number'
-            ] ?? null;
+            $cart[$lineKey]['color_number']
+            ?? null;
 
         /*
         |--------------------------------------------------------------------------
@@ -1107,11 +1153,7 @@ class CartController extends Controller
                 (int) $item->price,
 
             'quantity' =>
-                collect(
-                    $breakdowns
-                )->sum(
-                    'quantity'
-                ),
+                $totalQuantity,
 
             'transaction_type' =>
                 $item->transaction_type,
@@ -1172,7 +1214,9 @@ class CartController extends Controller
             )
             ->with(
                 'success',
-                'Detail ukuran Baju berhasil masuk keranjang.'
+                $editLineKey !== null
+                    ? 'Detail ukuran Baju berhasil diubah.'
+                    : 'Detail ukuran Baju berhasil masuk keranjang.'
             );
     }
 
@@ -1223,19 +1267,15 @@ class CartController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | BAJU CANNOT USE NORMAL QUANTITY UPDATE
+        | BAJU USES DEDICATED EDIT PAGE
         |--------------------------------------------------------------------------
         */
 
         if (
-            ($cart[$lineKey][
-                'transaction_type'
-            ] ?? null)
+            ($cart[$lineKey]['transaction_type'] ?? null)
             === 'Merchandise'
             &&
-            ($cart[$lineKey][
-                'subcategory'
-            ] ?? null)
+            ($cart[$lineKey]['subcategory'] ?? null)
             === 'Baju'
         ) {
             return back()->with(
@@ -1349,9 +1389,8 @@ class CartController extends Controller
             }
         }
 
-        $cart[$lineKey][
-            'quantity'
-        ] = $quantity;
+        $cart[$lineKey]['quantity'] =
+            $quantity;
 
         session()->put(
             'cart',
@@ -1411,9 +1450,7 @@ class CartController extends Controller
                 $request->color_number
             );
 
-        if (
-            $colorNumber === ''
-        ) {
+        if ($colorNumber === '') {
             return back()->with(
                 'error',
                 'Warna Baju tidak boleh kosong.'
@@ -1428,9 +1465,7 @@ class CartController extends Controller
         ) {
             if (
                 (int) (
-                    $cartItem[
-                        'id'
-                    ] ?? 0
+                    $cartItem['id'] ?? 0
                 )
                 !==
                 (int) $itemId
@@ -1439,26 +1474,21 @@ class CartController extends Controller
             }
 
             if (
-                ($cartItem[
-                    'transaction_type'
-                ] ?? null)
+                ($cartItem['transaction_type'] ?? null)
                 !== 'Merchandise'
             ) {
                 continue;
             }
 
             if (
-                ($cartItem[
-                    'subcategory'
-                ] ?? null)
+                ($cartItem['subcategory'] ?? null)
                 !== 'Baju'
             ) {
                 continue;
             }
 
-            $cart[$lineKey][
-                'color_number'
-            ] = $colorNumber;
+            $cart[$lineKey]['color_number'] =
+                $colorNumber;
 
             $found = true;
         }
@@ -1767,7 +1797,7 @@ class CartController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | LOCK ITEMS AND CHECK STOCK
+            | LOCK ITEMS AND RE-CHECK STOCK
             |--------------------------------------------------------------------------
             */
 
@@ -1873,13 +1903,19 @@ class CartController extends Controller
                     }
 
                     /*
-                    | Jangan decrement physical stock.
+                    | Physical stock tidak dikurangi.
                     */
                 } else {
                     /*
                     |--------------------------------------------------------------------------
                     | NON-RETURNABLE
                     |--------------------------------------------------------------------------
+                    |
+                    | Physical stock juga TIDAK dikurangi di checkout.
+                    |
+                    | Stock hanya akan dikurangi ketika admin mengubah
+                    | status Pending → Approved.
+                    |
                     */
 
                     if (
@@ -1891,11 +1927,6 @@ class CartController extends Controller
                             "Stok '{$dbItem->name}' tidak mencukupi. Stok tersedia: {$dbItem->stock_quantity} unit."
                         );
                     }
-
-                    $dbItem->decrement(
-                        'stock_quantity',
-                        $requestedQuantity
-                    );
                 }
             }
 
@@ -1971,6 +2002,16 @@ class CartController extends Controller
 
                     'is_sop_accepted' =>
                         true,
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | IMPORTANT
+                    |--------------------------------------------------------------------------
+                    |
+                    | Checkout = application.
+                    | Admin approval dilakukan setelah ini.
+                    |
+                    */
 
                     'status' =>
                         'Pending',
@@ -2129,7 +2170,7 @@ class CartController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | BAJU SIZE ROWS
+                | CREATE BAJU SIZE ROWS
                 |--------------------------------------------------------------------------
                 */
 
@@ -2223,25 +2264,17 @@ class CartController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | FINAL STATUS
+            | KEEP PENDING
             |--------------------------------------------------------------------------
+            |
+            | Admin yang akan melanjutkan proses setelah approval.
+            |
             */
 
-            if (
-                !empty(
-                    $mouTypes
-                )
-            ) {
-                $order->update([
-                    'status' =>
-                        'Waiting for MoU',
-                ]);
-            } else {
-                $order->update([
-                    'status' =>
-                        'Waiting for Payment',
-                ]);
-            }
+            $order->update([
+                'status' =>
+                    'Pending',
+            ]);
 
             DB::commit();
 
@@ -2256,7 +2289,7 @@ class CartController extends Controller
             */
 
             $this->notifyAdmins(
-                "Transaksi baru masuk: {$order->order_number}"
+                "Pengajuan transaksi baru: {$order->order_number}"
             );
 
             return redirect()
@@ -2265,9 +2298,8 @@ class CartController extends Controller
                 )
                 ->with(
                     'success',
-                    'Pesanan berhasil dibuat!'
+                    'Pengajuan transaksi berhasil dibuat dan menunggu persetujuan admin.'
                 );
-
         } catch (
             \Throwable $e
         ) {
@@ -2428,8 +2460,10 @@ class CartController extends Controller
         | BAJU
         |--------------------------------------------------------------------------
         |
-        | Satu line untuk item + design.
-        | Size disimpan di size_breakdowns.
+        | Satu line untuk:
+        | item + design.
+        |
+        | Ukuran ada di size_breakdowns.
         |
         */
 

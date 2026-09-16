@@ -271,6 +271,11 @@ Route::middleware('auth')->group(function () {
                 [AdminItemController::class, 'orders']
             )->name('orders');
 
+            Route::get(
+                '/orders/export',
+                [AdminItemController::class, 'exportExcel']
+            )->name('orders.export');
+
             Route::patch(
                 '/orders/{order}/status',
                 [AdminItemController::class, 'updateStatus']
@@ -355,18 +360,6 @@ Route::middleware('auth')->group(function () {
                     'update',
                 ]
             )->name('settings.update');
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | EXPORT
-            |--------------------------------------------------------------------------
-            */
-
-            Route::get(
-                '/orders/export',
-                [AdminItemController::class, 'exportExcel']
-            )->name('orders.export');
 
         });
 
@@ -459,15 +452,32 @@ Route::middleware('auth')->group(function () {
                 ->name('cart.')
                 ->group(function () {
 
+                    /*
+                    | View Cart
+                    */
+
                     Route::get(
                         '/',
                         [CartController::class, 'viewCart']
                     )->name('index');
 
+
+                    /*
+                    | Add Regular Item
+                    */
+
                     Route::post(
                         '/add/{item}',
                         [CartController::class, 'addToCart']
                     )->name('add');
+
+
+                    /*
+                    | Baju
+                    |
+                    | GET  = form Baju
+                    | POST = simpan detail Baju
+                    */
 
                     Route::get(
                         '/baju/{item}',
@@ -479,25 +489,53 @@ Route::middleware('auth')->group(function () {
                         [CartController::class, 'storeBaju']
                     )->name('baju.store');
 
+
+                    /*
+                    | Clear Cart
+                    */
+
                     Route::post(
                         '/clear',
                         [CartController::class, 'clearCart']
                     )->name('clear');
+
+
+                    /*
+                    | Checkout
+                    */
 
                     Route::post(
                         '/checkout',
                         [CartController::class, 'processCheckout']
                     )->name('checkout');
 
+
+                    /*
+                    | Update Baju Color
+                    |
+                    | Warna dipilih satu kali untuk item Baju
+                    | dan berlaku untuk seluruh size.
+                    */
+
                     Route::patch(
                         '/{id}/color',
                         [CartController::class, 'updateColor']
                     )->name('color');
 
+
+                    /*
+                    | Update Regular Cart Quantity
+                    */
+
                     Route::patch(
                         '/{id}/update',
                         [CartController::class, 'updateCart']
                     )->name('update');
+
+
+                    /*
+                    | Remove Item
+                    */
 
                     Route::delete(
                         '/{id}/remove',
@@ -509,7 +547,7 @@ Route::middleware('auth')->group(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | DOCUMENT GENERATOR
+            | STUDENT DOCUMENT GENERATOR
             |--------------------------------------------------------------------------
             */
 

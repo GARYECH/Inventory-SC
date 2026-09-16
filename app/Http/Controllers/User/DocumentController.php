@@ -26,7 +26,6 @@ class DocumentController extends Controller
             $order
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | LOAD ORDER DATA
@@ -35,9 +34,9 @@ class DocumentController extends Controller
 
         $order->load([
             'orderItems.item.category',
+            'orderItems.sizeBreakdowns',
             'mouDocuments',
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -51,7 +50,6 @@ class DocumentController extends Controller
         */
 
         if ($documentId) {
-
             $document =
                 $order->mouDocuments
                     ->where(
@@ -59,25 +57,18 @@ class DocumentController extends Controller
                         (int) $documentId
                     )
                     ->first();
-
         } else {
-
             $document =
                 $order->mouDocuments
                     ->first();
-
         }
 
-
         if (!$document) {
-
             abort(
                 404,
                 'MoU untuk transaksi ini tidak ditemukan.'
             );
-
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -92,13 +83,11 @@ class DocumentController extends Controller
             match (
                 $document->mou_type
             ) {
-
                 /*
                  * Handy Talkie
                  */
                 'ht' =>
                     'admin.pdf.mou_HT',
-
 
                 /*
                  * Peralatan - Internal Rental
@@ -106,13 +95,11 @@ class DocumentController extends Controller
                 'internal' =>
                     'admin.pdf.mou_internal',
 
-
                 /*
                  * Peralatan - Vendor Rental
                  */
                 'vendor' =>
                     'admin.pdf.mou_vendor',
-
 
                 /*
                  * Merchandise - Baju
@@ -120,13 +107,11 @@ class DocumentController extends Controller
                 'merch_baju' =>
                     'admin.pdf.mou_merch_baju',
 
-
                 /*
                  * Merchandise - ID Card
                  */
                 'merch_idcard' =>
                     'admin.pdf.mou_merch_idcard',
-
 
                 default =>
                     abort(
@@ -134,7 +119,6 @@ class DocumentController extends Controller
                         'Template MoU tidak ditemukan.'
                     ),
             };
-
 
         /*
         |--------------------------------------------------------------------------
@@ -154,12 +138,10 @@ class DocumentController extends Controller
                 ]
             );
 
-
         $pdf->setPaper(
             'a4',
             'portrait'
         );
-
 
         /*
         |--------------------------------------------------------------------------
@@ -168,22 +150,15 @@ class DocumentController extends Controller
         */
 
         return $pdf->stream(
-
             'MoU_' .
-
             $this->formatMouName(
                 $document->mou_type
             ) .
-
             '_' .
-
             $order->order_number .
-
             '.pdf'
-
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -200,7 +175,6 @@ class DocumentController extends Controller
             $order
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | LOAD MOU DOCUMENTS
@@ -211,7 +185,6 @@ class DocumentController extends Controller
             'mouDocuments'
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | FIND DOCUMENT
@@ -219,7 +192,6 @@ class DocumentController extends Controller
         */
 
         if ($documentId) {
-
             $document =
                 $order->mouDocuments
                     ->where(
@@ -227,13 +199,12 @@ class DocumentController extends Controller
                         (int) $documentId
                     )
                     ->first();
-
         } else {
-
             /*
              * Backward compatibility:
              * old route may not send document ID.
              */
+
             $document =
                 $order->mouDocuments
                     ->whereNull(
@@ -245,26 +216,20 @@ class DocumentController extends Controller
              * Kalau semua sudah punya file,
              * ambil yang pertama.
              */
-            if (!$document) {
 
+            if (!$document) {
                 $document =
                     $order->mouDocuments
                         ->first();
-
             }
-
         }
 
-
         if (!$document) {
-
             return back()->with(
                 'error',
                 'MoU untuk transaksi ini tidak ditemukan.'
             );
-
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -281,7 +246,6 @@ class DocumentController extends Controller
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | DELETE OLD FILE
@@ -294,13 +258,10 @@ class DocumentController extends Controller
                 $document->signed_file_path
             )
         ) {
-
             Storage::disk('public')->delete(
                 $document->signed_file_path
             );
-
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -313,7 +274,6 @@ class DocumentController extends Controller
                 'signed_mou'
             );
 
-
         /*
         |--------------------------------------------------------------------------
         | FILE NAME
@@ -322,17 +282,11 @@ class DocumentController extends Controller
 
         $filename =
             'Signed_MoU_' .
-
             $order->order_number .
-
             '_' .
-
             $document->mou_type .
-
             '.' .
-
             $file->getClientOriginalExtension();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -347,7 +301,6 @@ class DocumentController extends Controller
                 'public'
             );
 
-
         /*
         |--------------------------------------------------------------------------
         | SAVE DOCUMENT
@@ -358,7 +311,6 @@ class DocumentController extends Controller
             'signed_file_path' =>
                 $path,
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -377,27 +329,18 @@ class DocumentController extends Controller
                 )
                 ->exists();
 
-
-        if (
-            $pendingMou
-        ) {
-
+        if ($pendingMou) {
             $successMessage =
                 'MoU berhasil diupload. Masih ada MoU lain yang perlu diunggah.';
-
         } else {
-
             $order->update([
                 'status' =>
                     'Waiting for Payment',
             ]);
 
-
             $successMessage =
                 'Semua MoU sudah diupload. Silakan lanjut ke pembayaran.';
-
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -406,28 +349,20 @@ class DocumentController extends Controller
         */
 
         $this->notifyAdmins(
-
             'MoU ' .
-
             $this->formatMouName(
                 $document->mou_type
             ) .
-
             ' untuk ' .
-
             $order->order_number .
-
             ' berhasil diunggah.'
-
         );
-
 
         return back()->with(
             'success',
             $successMessage
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -438,16 +373,14 @@ class DocumentController extends Controller
     public function downloadInvoice(
         Order $order
     ) {
-
         $this->authorizeOrder(
             $order
         );
 
-
         $order->load([
             'orderItems.item.category',
+            'orderItems.sizeBreakdowns',
         ]);
-
 
         $pdf =
             Pdf::loadView(
@@ -457,24 +390,17 @@ class DocumentController extends Controller
                 )
             );
 
-
         $pdf->setPaper(
             'a4',
             'portrait'
         );
 
-
         return $pdf->stream(
-
             'Invoice_' .
-
             $order->order_number .
-
             '.pdf'
-
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -485,16 +411,14 @@ class DocumentController extends Controller
     public function downloadKwitansi(
         Order $order
     ) {
-
         $this->authorizeOrder(
             $order
         );
 
-
         $order->load([
             'orderItems.item.category',
+            'orderItems.sizeBreakdowns',
         ]);
-
 
         $pdf =
             Pdf::loadView(
@@ -504,24 +428,17 @@ class DocumentController extends Controller
                 )
             );
 
-
         $pdf->setPaper(
             'a4',
             'landscape'
         );
 
-
         return $pdf->stream(
-
             'Kwitansi_' .
-
             $order->order_number .
-
             '.pdf'
-
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -532,16 +449,14 @@ class DocumentController extends Controller
     public function downloadBeritaAcara(
         Order $order
     ) {
-
         $this->authorizeOrder(
             $order
         );
 
-
         $order->load([
             'orderItems.item.category',
+            'orderItems.sizeBreakdowns',
         ]);
-
 
         $pdf =
             Pdf::loadView(
@@ -551,24 +466,17 @@ class DocumentController extends Controller
                 )
             );
 
-
         $pdf->setPaper(
             'a4',
             'portrait'
         );
 
-
         return $pdf->stream(
-
             'Berita_Acara_' .
-
             $order->order_number .
-
             '.pdf'
-
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -580,11 +488,9 @@ class DocumentController extends Controller
         Request $request,
         Order $order
     ) {
-
         $this->authorizeOrder(
             $order
         );
-
 
         $request->validate([
             'payment_receipt' => [
@@ -594,7 +500,6 @@ class DocumentController extends Controller
                 'max:5120',
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -608,13 +513,10 @@ class DocumentController extends Controller
                 $order->payment_receipt
             )
         ) {
-
             Storage::disk('public')->delete(
                 $order->payment_receipt
             );
-
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -630,7 +532,6 @@ class DocumentController extends Controller
                     'public'
                 );
 
-
         $order->update([
             'payment_receipt' =>
                 $path,
@@ -639,7 +540,6 @@ class DocumentController extends Controller
                 'Pending Review Payment',
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | NOTIFY ADMIN
@@ -647,18 +547,14 @@ class DocumentController extends Controller
         */
 
         $this->notifyAdmins(
-
             "Bukti pembayaran {$order->order_number} berhasil diunggah."
-
         );
-
 
         return back()->with(
             'success',
             'Bukti pembayaran berhasil diupload.'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -670,11 +566,9 @@ class DocumentController extends Controller
         Request $request,
         Order $order
     ) {
-
         $this->authorizeOrder(
             $order
         );
-
 
         $request->validate([
             'signed_kwitansi' => [
@@ -684,7 +578,6 @@ class DocumentController extends Controller
                 'max:5120',
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -698,13 +591,10 @@ class DocumentController extends Controller
                 $order->signed_kwitansi
             )
         ) {
-
             Storage::disk('public')->delete(
                 $order->signed_kwitansi
             );
-
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -720,7 +610,6 @@ class DocumentController extends Controller
                     'public'
                 );
 
-
         $order->update([
             'signed_kwitansi' =>
                 $path,
@@ -729,7 +618,6 @@ class DocumentController extends Controller
                 'Pending Review Kwitansi',
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | NOTIFY ADMIN
@@ -737,18 +625,14 @@ class DocumentController extends Controller
         */
 
         $this->notifyAdmins(
-
             "Kwitansi {$order->order_number} berhasil diunggah."
-
         );
-
 
         return back()->with(
             'success',
             'Kwitansi berhasil diupload.'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -760,11 +644,9 @@ class DocumentController extends Controller
         Request $request,
         Order $order
     ) {
-
         $this->authorizeOrder(
             $order
         );
-
 
         $request->validate([
             'return_drive_link' => [
@@ -774,7 +656,6 @@ class DocumentController extends Controller
             ],
         ]);
 
-
         $order->update([
             'return_drive_link' =>
                 $request->return_drive_link,
@@ -783,7 +664,6 @@ class DocumentController extends Controller
                 'Pending Return Review',
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | NOTIFY ADMIN
@@ -791,18 +671,14 @@ class DocumentController extends Controller
         */
 
         $this->notifyAdmins(
-
             "Link pengembalian {$order->order_number} berhasil dikirim."
-
         );
-
 
         return back()->with(
             'success',
             'Link pengembalian berhasil dikirim.'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -814,11 +690,9 @@ class DocumentController extends Controller
         Request $request,
         Order $order
     ) {
-
         $this->authorizeOrder(
             $order
         );
-
 
         $request->validate([
             'signed_ba_file' => [
@@ -828,7 +702,6 @@ class DocumentController extends Controller
                 'max:5120',
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -842,13 +715,10 @@ class DocumentController extends Controller
                 $order->signed_ba_file
             )
         ) {
-
             Storage::disk('public')->delete(
                 $order->signed_ba_file
             );
-
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -864,7 +734,6 @@ class DocumentController extends Controller
                     'public'
                 );
 
-
         $order->update([
             'signed_ba_file' =>
                 $path,
@@ -873,7 +742,6 @@ class DocumentController extends Controller
                 'Pending Review BA',
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | NOTIFY ADMIN
@@ -881,18 +749,14 @@ class DocumentController extends Controller
         */
 
         $this->notifyAdmins(
-
             "Berita Acara {$order->order_number} berhasil diunggah."
-
         );
-
 
         return back()->with(
             'success',
             'Dokumen penyelesaian berhasil diupload.'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -903,23 +767,18 @@ class DocumentController extends Controller
     private function authorizeOrder(
         Order $order
     ): void {
-
         if (
             auth()->id() !==
                 $order->user_id &&
             auth()->user()->role !==
                 'admin'
         ) {
-
             abort(
                 403,
                 'Unauthorized action.'
             );
-
         }
-
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -930,11 +789,9 @@ class DocumentController extends Controller
     private function formatMouName(
         string $type
     ): string {
-
         return match (
             $type
         ) {
-
             'ht' =>
                 'Handy_Talkie',
 
@@ -952,11 +809,8 @@ class DocumentController extends Controller
 
             default =>
                 'MOU',
-
         };
-
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -967,26 +821,21 @@ class DocumentController extends Controller
     private function notifyAdmins(
         string $message
     ): void {
-
         $admins =
             User::where(
                 'role',
                 'admin'
             )->get();
 
-
         foreach (
             $admins
             as $admin
         ) {
-
             $admin->notify(
                 new AdminNotification(
                     $message
                 )
             );
-
         }
-
     }
 }

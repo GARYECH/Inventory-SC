@@ -273,14 +273,9 @@
                     |--------------------------------------------------------------------------
                     | BAJU COLOR
                     |--------------------------------------------------------------------------
-                    |
-                    | Ambil warna pertama yang tersimpan untuk setiap item Baju.
-                    | Satu warna akan berlaku untuk semua size dari item yang sama.
-                    |
                     */
 
                     $bajuColorsByItem = [];
-
 
 
                     foreach ($cart as $details) {
@@ -432,17 +427,30 @@
                             $subcategory ===
                             'Baju';
 
-                        if ($isBaju && !empty($sizeBreakdowns)) {
-                            $subtotal = collect($sizeBreakdowns)
-                                ->sum(function ($breakdown) {
-                                    return (int) (
-                                        $breakdown['subtotal_price']
-                                        ?? 0
-                                    );
-                                });
+                        if (
+                            $isBaju &&
+                            !empty($sizeBreakdowns)
+                        ) {
 
-                            $unitPrice = 0;
+                            $subtotal =
+                                collect(
+                                    $sizeBreakdowns
+                                )->sum(
+                                    function (
+                                        $breakdown
+                                    ) {
+
+                                        return (int) (
+                                            $breakdown[
+                                                'subtotal_price'
+                                            ] ?? 0
+                                        );
+
+                                    }
+                                );
+
                         } else {
+
                             $unitPrice =
                                 $basePrice +
                                 $sizeExtra;
@@ -450,6 +458,7 @@
                             $subtotal =
                                 $unitPrice *
                                 $quantity;
+
                         }
 
 
@@ -539,6 +548,7 @@
                             $transactionTypes
                         );
 
+
                     /*
                     |--------------------------------------------------------------------------
                     | TRACK BAJU ITEMS ALREADY SHOWN
@@ -610,7 +620,7 @@
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 01-1 1v3M4 7h16"
                                                 />
 
                                             </svg>
@@ -878,12 +888,10 @@
                                                 'subcategory'
                                             ] ?? null;
 
-
                                         $size =
                                             $details[
                                                 'size'
                                             ] ?? null;
-
 
                                         $sizeExtra =
                                             (int) (
@@ -892,14 +900,12 @@
                                                 ] ?? 0
                                             );
 
-
                                         $basePrice =
                                             (int) (
                                                 $details[
                                                     'price'
                                                 ] ?? 0
                                             );
-
 
                                         $quantity =
                                             (int) (
@@ -908,50 +914,38 @@
                                                 ] ?? 1
                                             );
 
-
-                                        $unitPrice =
-                                            $basePrice +
-                                            $sizeExtra;
-
-
-                                        $subtotal =
-                                            $unitPrice *
-                                            $quantity;
-
+                                        $sizeBreakdowns =
+                                            $details[
+                                                'size_breakdowns'
+                                            ] ?? [];
 
                                         $startDate =
                                             $details[
                                                 'start_date'
                                             ] ?? null;
 
-
                                         $startTime =
                                             $details[
                                                 'start_time'
                                             ] ?? null;
-
 
                                         $endDate =
                                             $details[
                                                 'end_date'
                                             ] ?? null;
 
-
                                         $endTime =
                                             $details[
                                                 'end_time'
                                             ] ?? null;
 
-
                                         $hasStartSchedule =
                                             !empty($startDate) &&
                                             !empty($startTime);
 
-
                                         $hasEndSchedule =
                                             !empty($endDate) &&
                                             !empty($endTime);
-
 
                                         $isRental =
                                             in_array(
@@ -959,16 +953,15 @@
                                                 [
                                                     'Peralatan',
                                                     'Handy Talkie'
-                                                ]
+                                                ],
+                                                true
                                             );
-
 
                                         $isBaju =
                                             $transactionType ===
                                             'Merchandise' &&
                                             $subcategory ===
                                             'Baju';
-
 
                                         $itemId =
                                             (int) (
@@ -977,6 +970,70 @@
                                                 ] ?? 0
                                             );
 
+
+                                        /*
+                                        |--------------------------------------------------------------------------
+                                        | BAJU QUANTITY + SUBTOTAL
+                                        |--------------------------------------------------------------------------
+                                        */
+
+                                        if (
+                                            $isBaju &&
+                                            !empty($sizeBreakdowns)
+                                        ) {
+
+                                            $quantity =
+                                                collect(
+                                                    $sizeBreakdowns
+                                                )->sum(
+                                                    function (
+                                                        $breakdown
+                                                    ) {
+
+                                                        return (int) (
+                                                            $breakdown[
+                                                                'quantity'
+                                                            ] ?? 0
+                                                        );
+
+                                                    }
+                                                );
+
+                                            $subtotal =
+                                                collect(
+                                                    $sizeBreakdowns
+                                                )->sum(
+                                                    function (
+                                                        $breakdown
+                                                    ) {
+
+                                                        return (int) (
+                                                            $breakdown[
+                                                                'subtotal_price'
+                                                            ] ?? 0
+                                                        );
+
+                                                    }
+                                                );
+
+                                        } else {
+
+                                            $unitPrice =
+                                                $basePrice +
+                                                $sizeExtra;
+
+                                            $subtotal =
+                                                $unitPrice *
+                                                $quantity;
+
+                                        }
+
+
+                                        /*
+                                        |--------------------------------------------------------------------------
+                                        | BAJU COLOR
+                                        |--------------------------------------------------------------------------
+                                        */
 
                                         $showBajuColor =
                                             $isBaju &&
@@ -990,8 +1047,10 @@
                                         if (
                                             $showBajuColor
                                         ) {
+
                                             $shownBajuColorItems[] =
                                                 $itemId;
+
                                         }
 
 
@@ -1146,7 +1205,7 @@
                                                                     stroke-linecap="round"
                                                                     stroke-linejoin="round"
                                                                     stroke-width="2"
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 01-1 1v3M4 7h16"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 01-1 1v3M4 7h16"
                                                                 />
 
                                                             </svg>
@@ -1224,7 +1283,7 @@
                                                         </div>
 
                                                         <a
-                                                            href="{{ route('student.cart.baju.create', $itemId) }}"
+                                                            href="{{ route('student.cart.baju.create', ['item' => $itemId, 'edit' => $id]) }}"
                                                             class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[8px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700"
                                                         >
                                                             Edit Detail
@@ -1270,6 +1329,16 @@
                                                                 @endforeach
 
                                                             </div>
+
+                                                        </div>
+
+                                                    @else
+
+                                                        <div class="mt-4 rounded-xl border border-yellow-100 bg-yellow-50 px-3 py-3">
+
+                                                            <p class="text-[9px] font-bold text-yellow-700">
+                                                                Detail size Baju belum tersedia. Silakan klik "Edit Detail".
+                                                            </p>
 
                                                         </div>
 
@@ -1480,7 +1549,8 @@
                                                     [
                                                         'Baju',
                                                         'ID Card'
-                                                    ]
+                                                    ],
+                                                    true
                                                 )
                                             )
 
@@ -1675,7 +1745,7 @@
                                             @if($isBaju)
 
                                                 <a
-                                                    href="{{ route('student.cart.baju.create', $itemId) }}"
+                                                    href="{{ route('student.cart.baju.create', ['item' => $itemId, 'edit' => $id]) }}"
                                                     class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white"
                                                 >
                                                     Edit Detail Baju
@@ -2368,6 +2438,7 @@
                                             <a
                                                 href="{{ asset('storage/' . $sopPath) }}"
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white transition-all hover:bg-red-700"
                                             >
 

@@ -9,10 +9,20 @@ class OrderMouDocument extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $guarded = [
+        'id',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | ORDER
+    |--------------------------------------------------------------------------
+    */
 
     public function order()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(
+            Order::class
+        );
     }
 }

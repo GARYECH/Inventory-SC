@@ -20,6 +20,12 @@ class OrderItemSize extends Model
         'subtotal_price' => 'integer',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | ORDER ITEM
+    |--------------------------------------------------------------------------
+    */
+
     public function orderItem()
     {
         return $this->belongsTo(

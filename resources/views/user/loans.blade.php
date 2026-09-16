@@ -273,14 +273,9 @@
                     |--------------------------------------------------------------------------
                     | BAJU COLOR
                     |--------------------------------------------------------------------------
-                    |
-                    | Ambil warna pertama yang tersimpan untuk setiap item Baju.
-                    | Satu warna akan berlaku untuk semua size dari item yang sama.
-                    |
                     */
 
                     $bajuColorsByItem = [];
-
 
 
                     foreach ($cart as $details) {
@@ -293,6 +288,19 @@
 
                         $subcategory =
                             $details['subcategory'] ?? null;
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | BAJU FLAG
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $isBaju =
+                            $transactionType ===
+                            'Merchandise' &&
+                            $subcategory ===
+                            'Baju';
 
 
                         /*
@@ -360,10 +368,7 @@
                         */
 
                         if (
-                            $transactionType ===
-                            'Merchandise' &&
-                            $subcategory ===
-                            'Baju'
+                            $isBaju
                         ) {
 
                             $itemId =
@@ -423,42 +428,42 @@
                                 $details['quantity'] ?? 1
                             );
 
-                        $unitPrice =
-                            $basePrice +
-                            $sizeExtra;
+                        $sizeBreakdowns =
+                            $details['size_breakdowns'] ?? [];
 
-                        $subtotal =
-                            $unitPrice *
-                            $quantity;
 
                         if (
                             $isBaju &&
-                            isset($details['size_breakdowns']) &&
-                            is_array($details['size_breakdowns']) &&
-                            count($details['size_breakdowns']) > 0
+                            is_array($sizeBreakdowns) &&
+                            count($sizeBreakdowns) > 0
                         ) {
+
                             $subtotal = 0;
 
                             foreach (
-                                $details['size_breakdowns']
+                                $sizeBreakdowns
                                 as $breakdown
                             ) {
-                                $breakdownQuantity =
-                                    (int) (
-                                        $breakdown['quantity']
-                                        ?? 0
-                                    );
-
-                                $breakdownUnitPrice =
-                                    (int) (
-                                        $breakdown['unit_price']
-                                        ?? 0
-                                    );
 
                                 $subtotal +=
-                                    $breakdownQuantity *
-                                    $breakdownUnitPrice;
+                                    (int) (
+                                        $breakdown[
+                                            'subtotal_price'
+                                        ] ?? 0
+                                    );
+
                             }
+
+                        } else {
+
+                            $unitPrice =
+                                $basePrice +
+                                $sizeExtra;
+
+                            $subtotal =
+                                $unitPrice *
+                                $quantity;
+
                         }
 
 
@@ -548,6 +553,7 @@
                             $transactionTypes
                         );
 
+
                     /*
                     |--------------------------------------------------------------------------
                     | TRACK BAJU ITEMS ALREADY SHOWN
@@ -619,7 +625,7 @@
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1 1v3M4 7h16"
                                                 />
 
                                             </svg>
@@ -918,14 +924,10 @@
                                             );
 
 
-                                        $unitPrice =
-                                            $basePrice +
-                                            $sizeExtra;
-
-
-                                        $subtotal =
-                                            $unitPrice *
-                                            $quantity;
+                                        $sizeBreakdowns =
+                                            $details[
+                                                'size_breakdowns'
+                                            ] ?? [];
 
 
                                         $startDate =
@@ -968,7 +970,8 @@
                                                 [
                                                     'Peralatan',
                                                     'Handy Talkie'
-                                                ]
+                                                ],
+                                                true
                                             );
 
 
@@ -987,6 +990,76 @@
                                             );
 
 
+                                        /*
+                                        |--------------------------------------------------------------------------
+                                        | BAJU QUANTITY + SUBTOTAL
+                                        |--------------------------------------------------------------------------
+                                        */
+
+                                        if (
+                                            $isBaju &&
+                                            is_array(
+                                                $sizeBreakdowns
+                                            ) &&
+                                            count(
+                                                $sizeBreakdowns
+                                            ) > 0
+                                        ) {
+
+                                            $quantity = 0;
+
+                                            $subtotal = 0;
+
+
+                                            foreach (
+                                                $sizeBreakdowns
+                                                as $breakdown
+                                            ) {
+
+                                                $breakdownQuantity =
+                                                    (int) (
+                                                        $breakdown[
+                                                            'quantity'
+                                                        ] ?? 0
+                                                    );
+
+
+                                                $breakdownSubtotal =
+                                                    (int) (
+                                                        $breakdown[
+                                                            'subtotal_price'
+                                                        ] ?? 0
+                                                    );
+
+
+                                                $quantity +=
+                                                    $breakdownQuantity;
+
+
+                                                $subtotal +=
+                                                    $breakdownSubtotal;
+
+                                            }
+
+                                        } else {
+
+                                            $unitPrice =
+                                                $basePrice +
+                                                $sizeExtra;
+
+                                            $subtotal =
+                                                $unitPrice *
+                                                $quantity;
+
+                                        }
+
+
+                                        /*
+                                        |--------------------------------------------------------------------------
+                                        | BAJU COLOR
+                                        |--------------------------------------------------------------------------
+                                        */
+
                                         $showBajuColor =
                                             $isBaju &&
                                             !in_array(
@@ -999,8 +1072,10 @@
                                         if (
                                             $showBajuColor
                                         ) {
+
                                             $shownBajuColorItems[] =
                                                 $itemId;
+
                                         }
 
 
@@ -1155,7 +1230,7 @@
                                                                     stroke-linecap="round"
                                                                     stroke-linejoin="round"
                                                                     stroke-width="2"
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 01-1 1v3M4 7h16"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 01-1 1v3M4 7h16"
                                                                 />
 
                                                             </svg>
@@ -1172,22 +1247,36 @@
 
                                                 <div class="mt-2 flex flex-wrap items-center gap-2">
 
-                                                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                                    @if($isBaju)
 
-                                                        Rp
-                                                        {{ number_format($basePrice, 0, ',', '.') }}
+                                                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
 
-                                                    </span>
-
-
-                                                    @if($sizeExtra > 0)
-
-                                                        <span class="rounded-md bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700">
-
-                                                            +Rp
-                                                            {{ number_format($sizeExtra, 0, ',', '.') }}
+                                                            Harga dasar:
+                                                            Rp
+                                                            {{ number_format($basePrice, 0, ',', '.') }}/pcs
 
                                                         </span>
+
+                                                    @else
+
+                                                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+
+                                                            Rp
+                                                            {{ number_format($basePrice, 0, ',', '.') }}
+
+                                                        </span>
+
+
+                                                        @if($sizeExtra > 0)
+
+                                                            <span class="rounded-md bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700">
+
+                                                                +Rp
+                                                                {{ number_format($sizeExtra, 0, ',', '.') }}
+
+                                                            </span>
+
+                                                        @endif
 
                                                     @endif
 
@@ -1217,249 +1306,142 @@
 
                                                         @if(
 
-
                                                             $isBaju &&
-
 
                                                             isset($details['size_breakdowns']) &&
 
-
                                                             is_array($details['size_breakdowns']) &&
-
 
                                                             count($details['size_breakdowns']) > 0
 
-
                                                         )
-
-
-                                                        
-
 
                                                             <div class="mt-3 rounded-xl border border-indigo-100 bg-white p-3">
 
 
-                                                        
-
-
                                                                 <p class="mb-2 text-[8px] font-black uppercase tracking-widest text-gray-400">
-
 
                                                                     Size Breakdown
 
-
                                                                 </p>
-
-
-                                                        
 
 
                                                                 <div class="space-y-2">
 
 
-                                                        
-
-
                                                                     @foreach($details['size_breakdowns'] as $breakdown)
-
-
-                                                        
 
 
                                                                         @php
 
-
                                                                             $breakdownSize =
-
-
-                                                                                $breakdown['size'] ?? '-';
-
-
-                                                        
+                                                                                $breakdown[
+                                                                                    'size'
+                                                                                ] ?? '-';
 
 
                                                                             $breakdownDivision =
-
-
-                                                                                $breakdown['division'] ?? '-';
-
-
-                                                        
+                                                                                $breakdown[
+                                                                                    'division'
+                                                                                ] ?? '-';
 
 
                                                                             $breakdownQuantity =
-
-
-                                                                                (int) ($breakdown['quantity'] ?? 0);
-
-
-                                                        
+                                                                                (int) (
+                                                                                    $breakdown[
+                                                                                        'quantity'
+                                                                                    ] ?? 0
+                                                                                );
 
 
                                                                             $breakdownUnitPrice =
-
-
-                                                                                (int) ($breakdown['unit_price'] ?? 0);
-
-
-                                                        
+                                                                                (int) (
+                                                                                    $breakdown[
+                                                                                        'unit_price'
+                                                                                    ] ?? 0
+                                                                                );
 
 
                                                                             $breakdownSubtotal =
-
-
-                                                                                $breakdownQuantity *
-
-
-                                                                                $breakdownUnitPrice;
-
+                                                                                (int) (
+                                                                                    $breakdown[
+                                                                                        'subtotal_price'
+                                                                                    ] ??
+                                                                                    (
+                                                                                        $breakdownQuantity *
+                                                                                        $breakdownUnitPrice
+                                                                                    )
+                                                                                );
 
                                                                         @endphp
-
-
-                                                        
 
 
                                                                         <div class="rounded-lg bg-gray-50 px-3 py-2">
 
 
-                                                        
-
-
                                                                             <div class="flex items-center justify-between gap-3">
-
-
-                                                        
 
 
                                                                                 <div class="min-w-0">
 
-
-                                                        
-
-
                                                                                     <p class="text-[9px] font-black text-gray-900">
 
-
-                                                                                        { $breakdownSize }
-
+                                                                                        {{ $breakdownSize }}
 
                                                                                     </p>
-
-
-                                                        
 
 
                                                                                     <p class="mt-0.5 truncate text-[8px] font-bold text-gray-400">
 
-
-                                                                                        Divisi: { $breakdownDivision }
-
+                                                                                        Divisi:
+                                                                                        {{ $breakdownDivision }}
 
                                                                                     </p>
 
-
-                                                        
-
-
                                                                                 </div>
-
-
-                                                        
 
 
                                                                                 <div class="shrink-0 text-right">
 
-
-                                                        
-
-
                                                                                     <p class="text-[9px] font-black text-gray-900">
 
-
-                                                                                        { $breakdownQuantity } pcs
-
+                                                                                        {{ $breakdownQuantity }}
+                                                                                        pcs
 
                                                                                     </p>
-
-
-                                                        
 
 
                                                                                     <p class="mt-0.5 text-[8px] font-bold text-indigo-500">
 
-
-                                                                                        Rp { number_format($breakdownSubtotal, 0, ',', '.') }
-
+                                                                                        Rp
+                                                                                        {{ number_format($breakdownSubtotal, 0, ',', '.') }}
 
                                                                                     </p>
 
-
-                                                        
-
-
                                                                                 </div>
-
-
-                                                        
-
 
                                                                             </div>
 
-
-                                                        
-
-
                                                                         </div>
-
-
-                                                        
 
 
                                                                     @endforeach
 
 
-                                                        
-
-
                                                                 </div>
-
-
-                                                        
 
 
                                                             </div>
 
 
-                                                        
-
-
                                                         @elseif($size)
-
-
-                                                        
-
 
                                                             <p class="mt-1 text-[9px] font-bold text-gray-500">
 
-
-                                                        
-
-
                                                                 Size:
-
-
-                                                                { $size }
-
-
-                                                        
-
+                                                                {{ $size }}
 
                                                             </p>
-
-
-                                                        
-
 
                                                         @endif
 
@@ -1682,7 +1664,8 @@
                                                     [
                                                         'Baju',
                                                         'ID Card'
-                                                    ]
+                                                    ],
+                                                    true
                                                 )
                                             )
 
@@ -2373,8 +2356,8 @@
                                                 <svg
                                                     class="h-5 w-5"
                                                     fill="none"
-                                                    stroke="currentColor"
                                                     viewBox="0 0 24 24"
+                                                    stroke="currentColor"
                                                 >
 
                                                     <path
@@ -2529,7 +2512,7 @@
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                         stroke-width="2"
-                                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c.98 0 1.54-1.06 1.05-1.91L13.05 4.91c-.47-.82-1.63-.82-2.1 0L3.89 16.09c-.49.85.07 1.91 1.05 1.91z"
+                                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c.98 0 1.54-1.06 1.05-1.91L13.05 4.91c-.47-.82-1.63-.82-2.1 0L3.89 16.09c-.49-.85.07-1.91 1.05-1.91z"
                                                     />
 
                                                 </svg>
@@ -2557,6 +2540,7 @@
                                             <a
                                                 href="{{ asset('storage/' . $sopPath) }}"
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white transition-all hover:bg-red-700"
                                             >
 

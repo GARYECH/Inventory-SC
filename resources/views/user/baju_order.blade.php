@@ -1,28 +1,146 @@
-.<x-app-layout>
+<x-app-layout>
 
-    <div class="min-h-screen bg-[#f8f9fa] pb-12">
+    @php
 
-        <div class="border-b border-gray-100 bg-white shadow-sm">
+        /*
+        |--------------------------------------------------------------------------
+        | EXISTING SIZE DATA
+        |--------------------------------------------------------------------------
+        */
 
-            <div class="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
+        $existingSizeData = [];
 
-                <div class="flex items-center gap-4">
+        if (!empty($prefillBreakdowns)) {
+
+            foreach ($prefillBreakdowns as $breakdown) {
+
+                $size =
+                    $breakdown['size'] ?? null;
+
+                if (!$size) {
+                    continue;
+                }
+
+                $existingSizeData[$size] = [
+                    'division' =>
+                        $breakdown['division'] ?? '',
+
+                    'quantity' =>
+                        (int) (
+                            $breakdown['quantity'] ?? 0
+                        ),
+                ];
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION OLD INPUT
+        |--------------------------------------------------------------------------
+        */
+
+        $oldSizes =
+            old(
+                'sizes',
+                []
+            );
+
+        if (
+            is_array($oldSizes) &&
+            !empty($oldSizes)
+        ) {
+
+            $existingSizeData = [];
+
+            foreach (
+                $oldSizes as $size => $data
+            ) {
+
+                $existingSizeData[$size] = [
+                    'division' =>
+                        $data['division'] ?? '',
+
+                    'quantity' =>
+                        (int) (
+                            $data['quantity'] ?? 0
+                        ),
+                ];
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIZE PRICE FOR JAVASCRIPT
+        |--------------------------------------------------------------------------
+        */
+
+        $jsSizePrices = [];
+
+        foreach ($sizeOptions as $size) {
+
+            $jsSizePrices[$size] =
+                (int) (
+                    $sizePrices[$size]
+                    ??
+                    $item->price
+                );
+
+        }
+
+    @endphp
+
+
+    <div class="min-h-screen bg-[#f7f8fc] pb-12">
+
+
+        <!-- ========================================================= -->
+        <!-- HEADER -->
+        <!-- ========================================================= -->
+
+        <header class="border-b border-gray-200/70 bg-white">
+
+            <div class="mx-auto max-w-4xl px-4 py-5 sm:px-6 lg:px-8">
+
+                <div class="flex items-center gap-3">
 
                     <a
                         href="{{ route('student.dashboard') }}"
-                        class="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:text-indigo-600"
+                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
                     >
-                        ←
+
+                        <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 19l-7-7 7-7"
+                            />
+
+                        </svg>
+
                     </a>
 
-                    <div>
 
-                        <p class="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600">
-                            Merchandise
+                    <div class="min-w-0 flex-1">
+
+                        <p class="text-[8px] font-black uppercase tracking-[0.22em] text-indigo-600">
+                            Merchandise · Baju
                         </p>
 
-                        <h1 class="mt-1 text-2xl font-black text-gray-950">
-                            Detail Pesanan Baju
+                        <h1 class="mt-0.5 truncate text-xl font-black tracking-tight text-gray-950 sm:text-2xl">
+                            {{ $editLineKey ? 'Edit Detail Baju' : 'Detail Pesanan Baju' }}
                         </h1>
 
                     </div>
@@ -31,16 +149,75 @@
 
             </div>
 
-        </div>
+        </header>
 
 
-        <div class="mx-auto max-w-5xl px-4 pt-8 sm:px-6 lg:px-8">
+
+        <!-- ========================================================= -->
+        <!-- CONTENT -->
+        <!-- ========================================================= -->
+
+        <main class="mx-auto max-w-4xl px-4 pt-6 sm:px-6 lg:px-8">
+
+
+            <!-- ===================================================== -->
+            <!-- FLASH -->
+            <!-- ===================================================== -->
+
+            @if(session('success'))
+
+                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3.5">
+
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500">
+
+                        <svg
+                            class="h-4 w-4 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5 13l4 4L19 7"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <p class="text-xs font-bold text-emerald-800">
+                        {{ session('success') }}
+                    </p>
+
+                </div>
+
+            @endif
+
 
             @if(session('error'))
 
-                <div class="mb-6 rounded-2xl border border-red-100 bg-red-50 px-5 py-4">
+                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3.5">
 
-                    <p class="text-sm font-bold text-red-800">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500">
+
+                        <svg
+                            class="h-4 w-4 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c.98 0 1.54-1.06 1.05-1.91L13.05 4.91c-.47-.82-1.63-.82-2.1 0L3.89 16.09c-.49-.85.07-1.91 1.05-1.91z"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <p class="text-xs font-bold text-red-800">
                         {{ session('error') }}
                     </p>
 
@@ -49,22 +226,62 @@
             @endif
 
 
+            @if($errors->any())
+
+                <div class="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-4">
+
+                    <p class="text-[8px] font-black uppercase tracking-widest text-red-600">
+                        Periksa kembali data
+                    </p>
+
+                    <div class="mt-2 space-y-1">
+
+                        @foreach($errors->all() as $error)
+
+                            <p class="text-xs font-bold text-red-700">
+                                • {{ $error }}
+                            </p>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+            @endif
+
+
+
             <form
-              action="{{ route('student.cart.baju.store', $item->id) }}"
+                action="{{ route('student.cart.baju.store', $item->id) }}"
                 method="POST"
-                class="space-y-6"
+                class="space-y-4"
             >
 
                 @csrf
 
 
-                <!-- ITEM -->
+                @if($editLineKey)
 
-                <div class="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                    <input
+                        type="hidden"
+                        name="edit_line_key"
+                        value="{{ $editLineKey }}"
+                    >
 
-                    <div class="flex flex-col gap-5 sm:flex-row">
+                @endif
 
-                        <div class="h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+
+
+                <!-- ===================================================== -->
+                <!-- PRODUCT -->
+                <!-- ===================================================== -->
+
+                <section class="rounded-3xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-5">
+
+                    <div class="flex items-center gap-4">
+
+                        <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-gray-100 sm:h-20 sm:w-20">
 
                             @if($item->item_photo)
 
@@ -74,58 +291,132 @@
                                     class="h-full w-full object-cover"
                                 >
 
+                            @else
+
+                                <div class="flex h-full w-full items-center justify-center">
+
+                                    <svg
+                                        class="h-6 w-6 text-gray-300"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.5"
+                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                        />
+                                    </svg>
+
+                                </div>
+
                             @endif
 
                         </div>
 
 
-                        <div>
+                        <div class="min-w-0 flex-1">
 
-                            <p class="text-xs font-black uppercase tracking-widest text-gray-400">
-                                Baju
-                            </p>
+                            <div class="flex flex-wrap gap-1.5">
 
-                            <h2 class="mt-1 text-xl font-black text-gray-950">
+                                <span class="rounded-md bg-indigo-50 px-2 py-1 text-[7px] font-black uppercase tracking-widest text-indigo-600">
+                                    Baju
+                                </span>
+
+                                <span class="rounded-md bg-gray-100 px-2 py-1 text-[7px] font-black uppercase tracking-widest text-gray-500">
+                                    Merchandise
+                                </span>
+
+                            </div>
+
+
+                            <h2 class="mt-2 truncate text-base font-black text-gray-950 sm:text-lg">
                                 {{ $item->name }}
                             </h2>
 
-                            <p class="mt-2 text-sm text-gray-500">
-                                Harga dasar:
+
+                            <p class="mt-0.5 text-[10px] font-bold text-gray-400">
+
+                                Harga dasar
+
                                 <span class="font-black text-indigo-600">
-                                    Rp {{ number_format($item->price, 0, ',', '.') }}
+                                    Rp {{ number_format($item->price, 0, ',', '.') }}/pcs
                                 </span>
+
                             </p>
 
                         </div>
 
                     </div>
 
-                </div>
+                </section>
 
 
+
+                <!-- ===================================================== -->
                 <!-- SCHEDULE -->
+                <!-- ===================================================== -->
 
-                <div class="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                <section class="rounded-3xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-5">
 
-                    <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">
-                        Jadwal
-                    </p>
-
-                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="flex items-center justify-between">
 
                         <div>
 
-                            <label class="mb-2 block text-[9px] font-black uppercase tracking-widest text-gray-500">
-                                Tanggal Transaksi
+                            <p class="text-[8px] font-black uppercase tracking-[0.2em] text-indigo-600">
+                                Jadwal
+                            </p>
+
+                            <h2 class="mt-1 text-base font-black tracking-tight text-gray-950 sm:text-lg">
+                                Waktu transaksi
+                            </h2>
+
+                        </div>
+
+
+                        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-50">
+
+                            <svg
+                                class="h-4 w-4 text-gray-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="1.5"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12"
+                                />
+
+                            </svg>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+                        <div>
+
+                            <label
+                                for="start_date"
+                                class="mb-1.5 block text-[7px] font-black uppercase tracking-widest text-gray-400"
+                            >
+                                Tanggal
                             </label>
 
                             <input
+                                id="start_date"
                                 type="date"
                                 name="start_date"
                                 value="{{ old('start_date', $prefillStartDate) }}"
                                 min="{{ now()->format('Y-m-d') }}"
                                 required
-                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-bold"
+                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3 text-xs font-black text-gray-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
                             >
 
                         </div>
@@ -133,27 +424,25 @@
 
                         <div>
 
-                            <label class="mb-2 block text-[9px] font-black uppercase tracking-widest text-gray-500">
-                                Jam Transaksi
+                            <label
+                                for="start_time"
+                                class="mb-1.5 block text-[7px] font-black uppercase tracking-widest text-gray-400"
+                            >
+                                Jam
                             </label>
 
                             <select
+                                id="start_time"
                                 name="start_time"
                                 required
-                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-bold"
+                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3 text-xs font-black text-gray-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
                             >
 
                                 <option value="">
-                                    Pilih Jam
+                                    Pilih jam
                                 </option>
 
-                                @foreach([
-                                    '17:00',
-                                    '17:30',
-                                    '18:00',
-                                    '18:30',
-                                    '19:00',
-                                ] as $time)
+                                @foreach($timeOptions as $time)
 
                                     <option
                                         value="{{ $time }}"
@@ -170,155 +459,394 @@
 
                     </div>
 
-                </div>
+                </section>
 
 
-                <!-- SIZE BREAKDOWN -->
 
-                <div class="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                <!-- ===================================================== -->
+                <!-- SIZE -->
+                <!-- ===================================================== -->
 
-                    <div>
+                <section class="rounded-3xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-5">
 
-                        <p class="text-[9px] font-black uppercase tracking-widest text-indigo-600">
-                            Size Breakdown
+                    <!-- HEADER -->
+
+                    <div class="flex items-start justify-between gap-4">
+
+                        <div>
+
+                            <p class="text-[8px] font-black uppercase tracking-[0.2em] text-indigo-600">
+                                Ukuran
+                            </p>
+
+                            <h2 class="mt-1 text-base font-black tracking-tight text-gray-950 sm:text-lg">
+                                Rincian ukuran
+                            </h2>
+
+                            <p class="mt-1 text-[10px] font-medium leading-relaxed text-gray-400 sm:text-xs">
+                                Tambahkan hanya ukuran yang diperlukan.
+                            </p>
+
+                        </div>
+
+
+                        <div class="hidden rounded-xl bg-gray-950 px-3 py-2.5 text-right sm:block">
+
+                            <p class="text-[7px] font-black uppercase tracking-widest text-gray-500">
+                                Total
+                            </p>
+
+                            <p
+                                id="totalQuantityTop"
+                                class="mt-0.5 text-sm font-black text-white"
+                            >
+                                0 pcs
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- ADD SIZE -->
+
+                    <div class="mt-4 rounded-2xl bg-gray-50 p-3">
+
+                        <div class="flex flex-col gap-2 sm:flex-row">
+
+                            <div class="min-w-0 flex-1">
+
+                                <label
+                                    for="sizeSelector"
+                                    class="mb-1.5 block text-[7px] font-black uppercase tracking-widest text-gray-400"
+                                >
+                                    Pilih ukuran
+                                </label>
+
+                                <select
+                                    id="sizeSelector"
+                                    class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-xs font-black text-gray-800 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                >
+
+                                    <option value="">
+                                        Pilih ukuran...
+                                    </option>
+
+                                    @foreach($sizeOptions as $size)
+
+                                        <option value="{{ $size }}">
+
+                                            {{ $size }}
+
+                                            · Rp
+                                            {{ number_format($sizePrices[$size], 0, ',', '.') }}
+
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+                                id="addSizeButton"
+                                disabled
+                                class="inline-flex h-[45px] shrink-0 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-5 text-[8px] font-black uppercase tracking-widest text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:mt-[21px]"
+                            >
+
+                                <svg
+                                    class="h-3.5 w-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 4v16m8-8H4"
+                                    />
+
+                                </svg>
+
+                                Tambah
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- MOBILE SUMMARY -->
+
+                    <div class="mt-3 flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 sm:hidden">
+
+                        <span class="text-[7px] font-black uppercase tracking-widest text-gray-400">
+                            Total Quantity
+                        </span>
+
+                        <span
+                            id="totalQuantityTopMobile"
+                            class="text-xs font-black text-gray-900"
+                        >
+                            0 pcs
+                        </span>
+
+                    </div>
+
+
+
+                    <!-- EMPTY -->
+
+                    <div
+                        id="emptySizeState"
+                        class="mt-4 rounded-2xl border border-dashed border-gray-200 px-4 py-8 text-center"
+                    >
+
+                        <div class="mx-auto flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100">
+
+                            <svg
+                                class="h-4 w-4 text-gray-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 4v16m8-8H4"
+                                />
+
+                            </svg>
+
+                        </div>
+
+
+                        <p class="mt-2 text-[10px] font-black text-gray-500">
+                            Belum ada ukuran
                         </p>
 
-                        <h2 class="mt-1 text-xl font-black text-gray-950">
-                            Rincian Ukuran Baju
-                        </h2>
 
-                        <p class="mt-2 text-xs leading-relaxed text-gray-500">
-                            Isi divisi dan jumlah hanya untuk ukuran yang digunakan.
-                            Harga dan subtotal dihitung otomatis.
+                        <p class="mt-0.5 text-[9px] font-medium text-gray-400">
+                            Pilih ukuran di atas untuk menambahkan.
                         </p>
 
                     </div>
 
 
-                    <div class="mt-6 overflow-x-auto">
 
-                        <table class="w-full min-w-[760px] border-collapse">
+                    <!-- ================================================= -->
+                    <!-- SIZE LIST -->
+                    <!-- ================================================= -->
 
-                            <thead>
+                    <div
+                        id="sizeRows"
+                        class="mt-4 space-y-2.5"
+                    >
 
-                                <tr class="border-b border-gray-200">
+                        @foreach($existingSizeData as $existingSize => $existingData)
 
-                                    <th class="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-gray-400">
-                                        Size
-                                    </th>
+                            @php
 
-                                    <th class="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-gray-400">
-                                        Divisi
-                                    </th>
-
-                                    <th class="px-4 py-3 text-center text-[9px] font-black uppercase tracking-widest text-gray-400">
-                                        Jumlah
-                                    </th>
-
-                                    <th class="px-4 py-3 text-right text-[9px] font-black uppercase tracking-widest text-gray-400">
-                                        Harga Satuan
-                                    </th>
-
-                                    <th class="px-4 py-3 text-right text-[9px] font-black uppercase tracking-widest text-gray-400">
-                                        Subtotal
-                                    </th>
-
-                                </tr>
-
-                            </thead>
+                                $existingUnitPrice =
+                                    (int) (
+                                        $sizePrices[
+                                            $existingSize
+                                        ]
+                                        ??
+                                        $item->price
+                                    );
 
 
-                            <tbody>
+                                $existingAdditionalPrice =
+                                    $existingUnitPrice
+                                    -
+                                    (int) $item->price;
 
-                                @foreach($sizeOptions as $size)
+                            @endphp
 
-                                    @php
-                                        $additional =
-                                            $sizePrices[$size] -
-                                            (int) $item->price;
-                                    @endphp
 
-                                    <tr
-                                        class="border-b border-gray-100"
-                                        data-size-row="{{ $size }}"
-                                        data-unit-price="{{ $sizePrices[$size] }}"
-                                        data-additional="{{ $additional }}"
-                                    >
+                            <div
+                                class="size-row rounded-2xl border border-gray-200 bg-white px-3 py-3 transition hover:border-indigo-200 hover:bg-indigo-50/20 sm:px-4"
+                                data-size="{{ $existingSize }}"
+                                data-unit-price="{{ $existingUnitPrice }}"
+                            >
 
-                                        <td class="px-4 py-4">
+                                <!-- DESKTOP / TOP ROW -->
 
-                                            <span class="inline-flex min-w-[52px] justify-center rounded-xl bg-gray-950 px-3 py-2 text-xs font-black text-white">
-                                                {{ $size }}
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-[58px_minmax(0,1fr)_92px_125px_32px] sm:items-end">
+
+                                    <!-- SIZE -->
+
+                                    <div>
+
+                                        <p class="mb-1.5 text-[7px] font-black uppercase tracking-widest text-gray-300 sm:hidden">
+                                            Ukuran
+                                        </p>
+
+                                        <div class="flex items-center gap-2">
+
+                                            <span class="flex h-10 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-950 text-[9px] font-black text-white">
+                                                {{ $existingSize }}
                                             </span>
 
-                                            @if($additional > 0)
+                                        </div>
 
-                                                <p class="mt-1 text-[8px] font-bold text-orange-500">
-                                                    +Rp {{ number_format($additional, 0, ',', '.') }}
-                                                </p>
-
-                                            @endif
-
-                                        </td>
+                                    </div>
 
 
-                                        <td class="px-4 py-4">
 
-                                            <input
-                                                type="text"
-                                                name="sizes[{{ $size }}][division]"
-                                                value="{{ old("sizes.{$size}.division") }}"
-                                                placeholder="Contoh: Event"
-                                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs font-bold outline-none focus:border-indigo-400 focus:bg-white"
+                                    <!-- DIVISION -->
+
+                                    <div>
+
+                                        <label class="mb-1.5 block text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                            Divisi
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            name="sizes[{{ $existingSize }}][division]"
+                                            value="{{ $existingData['division'] }}"
+                                            placeholder="Contoh: Event"
+                                            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs font-bold text-gray-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                                        >
+
+                                    </div>
+
+
+
+                                    <!-- QUANTITY -->
+
+                                    <div>
+
+                                        <label class="mb-1.5 block text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                            Jumlah
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="sizes[{{ $existingSize }}][quantity]"
+                                            value="{{ $existingData['quantity'] }}"
+                                            min="0"
+                                            class="size-quantity w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-center text-xs font-black text-gray-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                                        >
+
+                                    </div>
+
+
+
+                                    <!-- SUBTOTAL -->
+
+                                    <div>
+
+                                        <label class="mb-3 block text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                            Subtotal
+                                        </label>
+
+                                       <div class="size-subtotal flex h-[50px] items-center justify-end rounded-xl bg-indigo-50 px-4 text-sm font-black tracking-tight text-indigo-600">
+    Rp 0
+</div>
+
+                                    </div>
+
+
+
+                                    <!-- REMOVE -->
+
+                                    <div class="flex items-end">
+
+                                        <button
+                                            type="button"
+                                            class="remove-size flex h-[42px] w-full items-center justify-center rounded-xl border border-gray-200 text-gray-300 transition hover:border-red-100 hover:bg-red-50 hover:text-red-500 sm:w-8"
+                                            title="Hapus ukuran"
+                                        >
+
+                                            <svg
+                                                class="h-3.5 w-3.5"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
                                             >
 
-                                        </td>
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 01-1 1v3M4 7h16"
+                                                />
+
+                                            </svg>
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
 
 
-                                        <td class="px-4 py-4">
+                                <!-- PRICE NOTE -->
 
-                                            <input
-                                                type="number"
-                                                name="sizes[{{ $size }}][quantity]"
-                                                value="{{ old("sizes.{$size}.quantity", 0) }}"
-                                                min="0"
-                                                class="size-quantity mx-auto block w-24 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-center text-xs font-black outline-none focus:border-indigo-400 focus:bg-white"
-                                            >
+                                <div class="mt-2 flex items-center justify-between gap-3 pl-0 sm:pl-[58px]">
 
-                                        </td>
+                                    <span class="text-[7px] font-bold text-gray-400">
+
+                                        @if($existingAdditionalPrice > 0)
+
+                                            Harga dasar
+                                            +
+                                            Rp {{ number_format($existingAdditionalPrice, 0, ',', '.') }}
+
+                                        @else
+
+                                            Harga dasar
+
+                                        @endif
+
+                                    </span>
 
 
-                                        <td class="size-unit-price px-4 py-4 text-right text-xs font-black text-gray-800">
-                                            Rp {{ number_format($sizePrices[$size], 0, ',', '.') }}
-                                        </td>
+                                    <span class="text-[7px] font-black text-gray-400">
 
+                                        Rp
+                                        {{ number_format($existingUnitPrice, 0, ',', '.') }}/pcs
 
-                                        <td class="size-subtotal px-4 py-4 text-right text-xs font-black text-gray-950">
-                                            Rp 0
-                                        </td>
+                                    </span>
 
-                                    </tr>
+                                </div>
 
-                                @endforeach
+                            </div>
 
-                            </tbody>
-
-                        </table>
+                        @endforeach
 
                     </div>
 
 
-                    <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
 
-                        <div class="rounded-2xl bg-gray-50 p-4">
+                    <!-- ================================================= -->
+                    <!-- TOTAL -->
+                    <!-- ================================================= -->
 
-                            <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                    <div class="mt-4 grid grid-cols-2 gap-2.5">
+
+                        <div class="rounded-2xl bg-gray-50 px-4 py-3.5">
+
+                            <p class="text-[7px] font-black uppercase tracking-widest text-gray-400">
                                 Total Quantity
                             </p>
 
                             <p
                                 id="totalQuantity"
-                                class="mt-1 text-2xl font-black text-gray-950"
+                                class="mt-1 text-lg font-black text-gray-950"
                             >
                                 0 pcs
                             </p>
@@ -326,15 +854,15 @@
                         </div>
 
 
-                        <div class="rounded-2xl bg-gray-950 p-4 text-white">
+                        <div class="rounded-2xl bg-gray-950 px-4 py-3.5">
 
-                            <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                            <p class="text-[7px] font-black uppercase tracking-widest text-gray-500">
                                 Grand Total
                             </p>
 
                             <p
                                 id="grandTotal"
-                                class="mt-1 text-2xl font-black"
+                                class="mt-1 text-lg font-black text-white"
                             >
                                 Rp 0
                             </p>
@@ -343,221 +871,743 @@
 
                     </div>
 
-                </div>
+                </section>
 
 
-                <!-- COLOR -->
 
-                <div class="rounded-[2rem] border border-purple-100 bg-purple-50 p-6">
-
-                    <p class="text-[9px] font-black uppercase tracking-widest text-purple-700">
-                        Warna Baju
-                    </p>
-
-                    <p class="mt-1 text-sm font-black text-gray-950">
-                        Pilih warna berdasarkan Color Chart
-                    </p>
-
-
-                    <div class="mt-4">
-
-                        @if(!empty($colorCharts))
-
-                            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-
-                                @foreach($colorCharts as $chart)
-
-                                    <a
-                                        href="{{ asset('storage/' . $chart) }}"
-                                        target="_blank"
-                                        class="overflow-hidden rounded-xl border border-purple-100 bg-white"
-                                    >
-
-                                        <img
-                                            src="{{ asset('storage/' . $chart) }}"
-                                            alt="Color Chart"
-                                            class="h-32 w-full object-cover"
-                                        >
-
-                                    </a>
-
-                                @endforeach
-
-                            </div>
-
-                        @else
-
-                            <div class="rounded-xl border border-purple-100 bg-white px-4 py-3">
-
-                                <p class="text-xs font-semibold text-gray-500">
-                                    Color Chart belum tersedia. Silakan hubungi admin.
-                                </p>
-
-                            </div>
-
-                        @endif
-
-                    </div>
-
-
-                    <div class="mt-5">
-
-                        <label class="mb-2 block text-[9px] font-black uppercase tracking-widest text-purple-700">
-                            Warna / Nomor Warna
-                        </label>
-
-                        <input
-                            type="text"
-                            name="color_number"
-                            value="{{ old('color_number') }}"
-                            placeholder="Contoh: 47 / Navy / 47 Navy"
-                            required
-                            class="w-full rounded-xl border border-purple-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-500/10"
-                        >
-
-                    </div>
-
-                </div>
-
-
+                <!-- ===================================================== -->
                 <!-- DESIGN -->
+                <!-- ===================================================== -->
 
-                <div class="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                <section class="rounded-3xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-5">
 
-                    <label class="mb-2 block text-[9px] font-black uppercase tracking-widest text-gray-500">
-                        Link Design
-                    </label>
+                    <div class="flex items-center gap-3">
+
+                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+
+                            <svg
+                                class="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13.828 10.172a4 4 0 010 5.656l-1.414 1.414a4 4 0 01-5.656-5.656l1.414-1.414m4.242-4.242a4 4 0 015.656 5.656l-1.414 1.414a4 4 0 01-5.656 0"
+                                />
+
+                            </svg>
+
+                        </div>
+
+
+                        <div>
+
+                            <p class="text-[7px] font-black uppercase tracking-[0.2em] text-indigo-600">
+                                Design
+                            </p>
+
+                            <h2 class="mt-0.5 text-base font-black text-gray-950">
+                                Link Design Baju
+                            </h2>
+
+                        </div>
+
+                    </div>
+
 
                     <input
+                        id="design_link"
                         type="url"
                         name="design_link"
-                        value="{{ old('design_link') }}"
+                        value="{{ old('design_link', $prefillDesignLink) }}"
                         placeholder="https://drive.google.com/..."
                         required
-                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400 focus:bg-white"
+                        class="mt-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3 text-xs font-bold text-gray-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
                     >
+
+                </section>
+
+
+
+                <!-- ===================================================== -->
+                <!-- INFORMATION -->
+                <!-- ===================================================== -->
+
+                <div class="flex items-start gap-3 rounded-2xl border border-purple-100 bg-purple-50 px-4 py-3.5">
+
+                    <svg
+                        class="mt-0.5 h-4 w-4 shrink-0 text-purple-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                        />
+
+                    </svg>
+
+
+                    <p class="text-[10px] font-bold leading-relaxed text-purple-800">
+
+                        Warna Baju dipilih setelah detail ini disimpan di halaman
+                        <span class="font-black">
+                            Cart
+                        </span>.
+
+                    </p>
 
                 </div>
 
 
-                <!-- SAVE -->
 
-                <button
-                    type="submit"
-                    class="w-full rounded-2xl bg-gray-950 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition hover:bg-indigo-600"
-                >
-                    Simpan Detail Baju ke Keranjang
-                </button>
+                <!-- ===================================================== -->
+                <!-- SUBMIT -->
+                <!-- ===================================================== -->
+
+                <div class="rounded-3xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-5">
+
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                        <div>
+
+                            <p class="text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                Total Pesanan
+                            </p>
+
+                            <p
+                                id="bottomGrandTotal"
+                                class="mt-1 text-2xl font-black tracking-tight text-gray-950"
+                            >
+                                Rp 0
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 px-6 py-4 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-lg transition hover:bg-indigo-600 sm:w-auto sm:min-w-[220px]"
+                        >
+
+                            {{ $editLineKey
+                                ? 'Simpan Perubahan'
+                                : 'Simpan ke Keranjang'
+                            }}
+
+
+                            <svg
+                                class="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                                />
+
+                            </svg>
+
+                        </button>
+
+                    </div>
+
+                </div>
 
             </form>
 
-        </div>
+        </main>
 
     </div>
 
 
+
+    <!-- ============================================================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ============================================================= -->
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
 
-            const rows =
-                document.querySelectorAll(
-                    '[data-size-row]'
-                );
+        document.addEventListener(
+            'DOMContentLoaded',
+            function () {
 
-            const totalQuantity =
-                document.getElementById(
-                    'totalQuantity'
-                );
-
-            const grandTotal =
-                document.getElementById(
-                    'grandTotal'
-                );
+                const sizePrices =
+                    @json($jsSizePrices);
 
 
-            function formatRupiah(number) {
-
-                return new Intl.NumberFormat(
-                    'id-ID'
-                ).format(number);
-
-            }
+                const sizeSelector =
+                    document.getElementById(
+                        'sizeSelector'
+                    );
 
 
-            function calculate() {
+                const addSizeButton =
+                    document.getElementById(
+                        'addSizeButton'
+                    );
 
-                let quantity = 0;
-                let total = 0;
 
-                rows.forEach(function (row) {
+                const sizeRows =
+                    document.getElementById(
+                        'sizeRows'
+                    );
 
-                    const input =
+
+                const emptySizeState =
+                    document.getElementById(
+                        'emptySizeState'
+                    );
+
+
+                const totalQuantity =
+                    document.getElementById(
+                        'totalQuantity'
+                    );
+
+
+                const totalQuantityTop =
+                    document.getElementById(
+                        'totalQuantityTop'
+                    );
+
+
+                const totalQuantityTopMobile =
+                    document.getElementById(
+                        'totalQuantityTopMobile'
+                    );
+
+
+                const grandTotal =
+                    document.getElementById(
+                        'grandTotal'
+                    );
+
+
+                const bottomGrandTotal =
+                    document.getElementById(
+                        'bottomGrandTotal'
+                    );
+
+
+                function formatRupiah(
+                    number
+                ) {
+
+                    return new Intl.NumberFormat(
+                        'id-ID'
+                    ).format(
+                        number
+                    );
+
+                }
+
+
+                function getSelectedSizes() {
+
+                    const rows =
+                        sizeRows.querySelectorAll(
+                            '.size-row'
+                        );
+
+
+                    const sizes = [];
+
+
+                    rows.forEach(
+                        function (row) {
+
+                            if (
+                                row.dataset.size
+                            ) {
+
+                                sizes.push(
+                                    row.dataset.size
+                                );
+
+                            }
+
+                        }
+                    );
+
+
+                    return sizes;
+
+                }
+
+
+                function updateSelector() {
+
+                    const selectedSizes =
+                        getSelectedSizes();
+
+
+                    Array.from(
+                        sizeSelector.options
+                    ).forEach(
+                        function (option) {
+
+                            if (!option.value) {
+                                return;
+                            }
+
+
+                            option.disabled =
+                                selectedSizes.includes(
+                                    option.value
+                                );
+
+                        }
+                    );
+
+
+                    if (
+                        selectedSizes.includes(
+                            sizeSelector.value
+                        )
+                    ) {
+
+                        sizeSelector.value = '';
+
+                    }
+
+
+                    addSizeButton.disabled =
+                        sizeSelector.value === '';
+
+                }
+
+
+                function calculate() {
+
+                    let quantityTotal = 0;
+
+                    let priceTotal = 0;
+
+
+                    const rows =
+                        sizeRows.querySelectorAll(
+                            '.size-row'
+                        );
+
+
+                    rows.forEach(
+                        function (row) {
+
+                            const quantityInput =
+                                row.querySelector(
+                                    '.size-quantity'
+                                );
+
+
+                            const subtotalElement =
+                                row.querySelector(
+                                    '.size-subtotal'
+                                );
+
+
+                            if (
+                                !quantityInput ||
+                                !subtotalElement
+                            ) {
+                                return;
+                            }
+
+
+                            const quantity =
+                                Math.max(
+                                    0,
+                                    parseInt(
+                                        quantityInput.value
+                                        ||
+                                        0,
+                                        10
+                                    )
+                                );
+
+
+                            const unitPrice =
+                                Number(
+                                    row.dataset.unitPrice
+                                    ||
+                                    0
+                                );
+
+
+                            const subtotal =
+                                quantity *
+                                unitPrice;
+
+
+                            quantityTotal +=
+                                quantity;
+
+
+                            priceTotal +=
+                                subtotal;
+
+
+                            subtotalElement.textContent =
+                                'Rp ' +
+                                formatRupiah(
+                                    subtotal
+                                );
+
+                        }
+                    );
+
+
+                    const quantityText =
+                        quantityTotal +
+                        ' pcs';
+
+
+                    const priceText =
+                        'Rp ' +
+                        formatRupiah(
+                            priceTotal
+                        );
+
+
+                    totalQuantity.textContent =
+                        quantityText;
+
+
+                    if (totalQuantityTop) {
+
+                        totalQuantityTop.textContent =
+                            quantityText;
+
+                    }
+
+
+                    if (totalQuantityTopMobile) {
+
+                        totalQuantityTopMobile.textContent =
+                            quantityText;
+
+                    }
+
+
+                    grandTotal.textContent =
+                        priceText;
+
+
+                    bottomGrandTotal.textContent =
+                        priceText;
+
+
+                    emptySizeState.classList.toggle(
+                        'hidden',
+                        rows.length > 0
+                    );
+
+                }
+
+
+                function attachRow(
+                    row
+                ) {
+
+                    const quantityInput =
                         row.querySelector(
                             '.size-quantity'
                         );
 
-                    const subtotalElement =
+
+                    const removeButton =
                         row.querySelector(
-                            '.size-subtotal'
+                            '.remove-size'
                         );
+
+
+                    if (quantityInput) {
+
+                        quantityInput.addEventListener(
+                            'input',
+                            calculate
+                        );
+
+                        quantityInput.addEventListener(
+                            'change',
+                            calculate
+                        );
+
+                    }
+
+
+                    if (removeButton) {
+
+                        removeButton.addEventListener(
+                            'click',
+                            function () {
+
+                                row.remove();
+
+                                updateSelector();
+
+                                calculate();
+
+                            }
+                        );
+
+                    }
+
+                }
+
+
+                function addSize(
+                    size
+                ) {
+
+                    if (!size) {
+                        return;
+                    }
+
+
+                    if (
+                        getSelectedSizes()
+                            .includes(size)
+                    ) {
+
+                        return;
+
+                    }
+
 
                     const unitPrice =
                         Number(
-                            row.dataset.unitPrice
+                            sizePrices[size]
+                            ||
+                            0
                         );
 
-                    const rowQuantity =
-                        Math.max(
-                            0,
-                            Number(
-                                input.value || 0
-                            )
+
+                    const basePrice =
+                        Number(
+                            {{ (int) $item->price }}
                         );
 
-                    const subtotal =
-                        unitPrice *
-                        rowQuantity;
 
-                    quantity += rowQuantity;
-                    total += subtotal;
+                    const additionalPrice =
+                        unitPrice -
+                        basePrice;
 
-                    subtotalElement.textContent =
-                        'Rp ' +
-                        formatRupiah(
-                            subtotal
+
+                    const row =
+                        document.createElement(
+                            'div'
                         );
-                });
 
 
-                totalQuantity.textContent =
-                    quantity +
-                    ' pcs';
+                    row.className =
+                        'size-row rounded-2xl border border-gray-200 bg-white px-3 py-3 transition hover:border-indigo-200 hover:bg-indigo-50/20 sm:px-4';
 
-                grandTotal.textContent =
-                    'Rp ' +
-                    formatRupiah(
-                        total
+
+                    row.dataset.size =
+                        size;
+
+
+                    row.dataset.unitPrice =
+                        unitPrice;
+
+
+                    row.innerHTML = `
+
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-[58px_minmax(0,1fr)_92px_125px_32px] sm:items-end">
+
+                            <div>
+
+                                <p class="mb-1.5 text-[7px] font-black uppercase tracking-widest text-gray-300 sm:hidden">
+                                    Ukuran
+                                </p>
+
+                                <span class="flex h-10 w-12 items-center justify-center rounded-xl bg-gray-950 text-[9px] font-black text-white">
+                                    ${size}
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <label class="mb-1.5 block text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                    Divisi
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="sizes[${size}][division]"
+                                    placeholder="Contoh: Event"
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs font-bold text-gray-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                                >
+
+                            </div>
+
+
+                            <div>
+
+                                <label class="mb-1.5 block text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                    Jumlah
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="sizes[${size}][quantity]"
+                                    value="0"
+                                    min="0"
+                                    class="size-quantity w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-center text-xs font-black text-gray-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                                >
+
+                            </div>
+
+
+                            <div>
+
+                                <label class="mb-1.5 block text-[7px] font-black uppercase tracking-widest text-gray-400">
+                                    Subtotal
+                                </label>
+
+                                <div class="size-subtotal flex h-[42px] items-center justify-end rounded-xl bg-indigo-50 px-3 text-[10px] font-black text-indigo-600">
+                                    Rp 0
+                                </div>
+
+                            </div>
+
+
+                            <div class="flex items-end">
+
+                                <button
+                                    type="button"
+                                    class="remove-size flex h-[42px] w-full items-center justify-center rounded-xl border border-gray-200 text-gray-300 transition hover:border-red-100 hover:bg-red-50 hover:text-red-500 sm:w-8"
+                                    title="Hapus ukuran"
+                                >
+
+                                    <svg
+                                        class="h-3.5 w-3.5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 01-1 1v3M4 7h16"
+                                        />
+
+                                    </svg>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="mt-2 flex items-center justify-between gap-3 sm:pl-[58px]">
+
+                            <span class="text-[7px] font-bold text-gray-400">
+
+                                ${
+                                    additionalPrice > 0
+                                        ? '+Rp ' +
+                                          formatRupiah(
+                                              additionalPrice
+                                          )
+                                        : 'Harga dasar'
+                                }
+
+                            </span>
+
+
+                            <span class="text-[7px] font-black text-gray-400">
+
+                                Rp
+                                ${formatRupiah(unitPrice)}/pcs
+
+                            </span>
+
+                        </div>
+
+                    `;
+
+
+                    sizeRows.appendChild(
+                        row
                     );
+
+
+                    attachRow(
+                        row
+                    );
+
+
+                    updateSelector();
+
+                    calculate();
+
+                }
+
+
+                addSizeButton.addEventListener(
+                    'click',
+                    function () {
+
+                        addSize(
+                            sizeSelector.value
+                        );
+
+                    }
+                );
+
+
+                sizeSelector.addEventListener(
+                    'change',
+                    function () {
+
+                        addSizeButton.disabled =
+                            sizeSelector.value === '';
+
+                    }
+                );
+
+
+                sizeRows
+                    .querySelectorAll(
+                        '.size-row'
+                    )
+                    .forEach(
+                        function (row) {
+
+                            attachRow(
+                                row
+                            );
+
+                        }
+                    );
+
+
+                updateSelector();
+
+                calculate();
+
             }
+        );
 
-
-            document
-                .querySelectorAll(
-                    '.size-quantity'
-                )
-                .forEach(function (input) {
-
-                    input.addEventListener(
-                        'input',
-                        calculate
-                    );
-
-                });
-
-
-            calculate();
-
-        });
     </script>
 
 </x-app-layout>

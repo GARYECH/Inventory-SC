@@ -20,6 +20,12 @@ class OrderItem extends Model
         'color_number' => 'string',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | ORDER
+    |--------------------------------------------------------------------------
+    */
+
     public function order()
     {
         return $this->belongsTo(
@@ -27,12 +33,38 @@ class OrderItem extends Model
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | ITEM
+    |--------------------------------------------------------------------------
+    */
+
     public function item()
     {
         return $this->belongsTo(
             Item::class
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | BAJU SIZE BREAKDOWNS
+    |--------------------------------------------------------------------------
+    |
+    | Khusus Baju:
+    |
+    | OrderItem
+    |     └── OrderItemSize
+    |             ├── S
+    |             ├── M
+    |             ├── L
+    |             ├── XL
+    |             ├── 2XL
+    |             ├── 3XL
+    |             ├── 4XL
+    |             └── 5XL
+    |
+    */
 
     public function sizeBreakdowns()
     {
@@ -53,10 +85,16 @@ class OrderItem extends Model
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK BAJU
+    |--------------------------------------------------------------------------
+    */
+
     public function isBaju(): bool
     {
-        return $this->item &&
-            $this->item->transaction_type === 'Merchandise' &&
-            $this->item->subcategory === 'Baju';
+        return $this->item !== null
+            && $this->item->transaction_type === 'Merchandise'
+            && $this->item->subcategory === 'Baju';
     }
 }

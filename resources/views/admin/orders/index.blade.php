@@ -448,6 +448,22 @@
                                                         @endif
 
 
+                                                        @if(
+                                                            $detail->color_number &&
+                                                            $item->transaction_type === 'Merchandise' &&
+                                                            $item->subcategory === 'Baju'
+                                                        )
+
+                                                            <p class="mt-1 text-[9px] font-bold text-gray-500">
+                                                                Warna:
+                                                                <span class="font-black text-purple-600">
+                                                                    {{ $detail->color_number }}
+                                                                </span>
+                                                            </p>
+
+                                                        @endif
+
+
                                                         @if($detail->design_link)
 
                                                             <a
@@ -570,6 +586,118 @@
                                             <p class="text-[9px] font-semibold text-gray-400">
                                                 Belum ada dokumen tambahan.
                                             </p>
+
+                                        @endif
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <!-- ================================================= -->
+                                <!-- GENERATED DOCUMENTS -->
+                                <!-- ================================================= -->
+
+                                <div class="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+
+                                    <p class="mb-1 text-[9px] font-black uppercase tracking-widest text-indigo-700">
+                                        Generated Documents
+                                    </p>
+
+                                    <p class="mb-4 text-[9px] leading-relaxed text-indigo-600">
+                                        Preview dokumen yang digenerate oleh sistem untuk transaksi ini.
+                                    </p>
+
+
+                                    <div class="space-y-2">
+
+
+                                        <!-- INVOICE -->
+
+                                        <a
+                                            href="{{ route('admin.orders.document.invoice', $order->id) }}"
+                                            target="_blank"
+                                            class="flex w-full items-center justify-center rounded-xl border border-indigo-200 bg-white px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-indigo-700 transition hover:bg-indigo-100"
+                                        >
+                                            View Generated Invoice
+                                        </a>
+
+
+                                        <!-- KWITANSI -->
+
+                                        <a
+                                            href="{{ route('admin.orders.document.kwitansi', $order->id) }}"
+                                            target="_blank"
+                                            class="flex w-full items-center justify-center rounded-xl border border-pink-200 bg-white px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-pink-700 transition hover:bg-pink-100"
+                                        >
+                                            View Generated Kwitansi
+                                        </a>
+
+
+                                        <!-- BERITA ACARA -->
+
+                                        <a
+                                            href="{{ route('admin.orders.document.berita-acara', $order->id) }}"
+                                            target="_blank"
+                                            class="flex w-full items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-red-700 transition hover:bg-red-100"
+                                        >
+                                            View Generated Berita Acara
+                                        </a>
+
+
+                                        <!-- MOU -->
+
+                                        @if($order->mouDocuments->count() > 0)
+
+                                            <div class="space-y-2 pt-1">
+
+                                                <p class="px-1 text-[8px] font-black uppercase tracking-widest text-purple-600">
+                                                    MoU
+                                                </p>
+
+                                                @foreach($order->mouDocuments as $document)
+
+                                                    @php
+
+                                                        $mouLabel = match(
+                                                            $document->mou_type
+                                                        ) {
+
+                                                            'ht' =>
+                                                                'MoU Handy Talkie',
+
+                                                            'internal' =>
+                                                                'MoU Internal Rental',
+
+                                                            'vendor' =>
+                                                                'MoU Vendor Rental',
+
+                                                            'merch_baju' =>
+                                                                'MoU Baju',
+
+                                                            'merch_idcard' =>
+                                                                'MoU ID Card',
+
+                                                            default =>
+                                                                'MoU',
+
+                                                        };
+
+                                                    @endphp
+
+
+                                                    <a
+                                                        href="{{ route('admin.orders.document.mou', [$order->id, $document->id]) }}"
+                                                        target="_blank"
+                                                        class="flex w-full items-center justify-center rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-purple-700 transition hover:bg-purple-100"
+                                                    >
+                                                        View Generated {{ $mouLabel }}
+                                                    </a>
+
+                                                @endforeach
+
+                                            </div>
 
                                         @endif
 

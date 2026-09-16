@@ -13,40 +13,128 @@ class SettingController extends Controller
     {
         // Ambil semua setting dan ubah jadi array [ 'key' => 'value' ]
         $settings = Setting::pluck('value', 'key')->toArray();
+
         return view('admin.settings.index', compact('settings'));
     }
 
-  public function update(Request $request)
+    public function update(Request $request)
     {
         // 1. Simpan Teks MoU
         if ($request->has('mou_internal')) {
-            Setting::updateOrCreate(['key' => 'mou_internal'], ['value' => $request->mou_internal]);
+            Setting::updateOrCreate(
+                ['key' => 'mou_internal'],
+                ['value' => $request->mou_internal]
+            );
         }
+
         if ($request->has('mou_vendor')) {
-            Setting::updateOrCreate(['key' => 'mou_vendor'], ['value' => $request->mou_vendor]);
+            Setting::updateOrCreate(
+                ['key' => 'mou_vendor'],
+                ['value' => $request->mou_vendor]
+            );
         }
 
         // 2. Simpan File PDF SOP
         if ($request->hasFile('sop_pdf')) {
-            $request->validate(['sop_pdf' => 'mimes:pdf|max:5120']); 
-            $path = $request->file('sop_pdf')->storeAs('documents', 'SOP_Student_Council.pdf', 'public');
-            Setting::updateOrCreate(['key' => 'sop_pdf_path'], ['value' => $path]);
+            $request->validate([
+                'sop_pdf' => 'mimes:pdf|max:5120',
+            ]);
+
+            $path = $request->file('sop_pdf')->storeAs(
+                'documents',
+                'SOP_Student_Council.pdf',
+                'public'
+            );
+
+            Setting::updateOrCreate(
+                ['key' => 'sop_pdf_path'],
+                ['value' => $path]
+            );
         }
 
-        // 🌟 3. SIMPAN LOGO SC (BARU)
+        // 3. Simpan Logo SC
         if ($request->hasFile('logo_sc')) {
-            $request->validate(['logo_sc' => 'image|mimes:png,jpg,jpeg|max:2048']); // Max 2MB
-            $path = $request->file('logo_sc')->storeAs('images', 'logo_sc.png', 'public');
-            Setting::updateOrCreate(['key' => 'logo_sc'], ['value' => $path]);
+            $request->validate([
+                'logo_sc' => 'image|mimes:png,jpg,jpeg|max:2048',
+            ]);
+
+            $path = $request->file('logo_sc')->storeAs(
+                'images',
+                'logo_sc.png',
+                'public'
+            );
+
+            Setting::updateOrCreate(
+                ['key' => 'logo_sc'],
+                ['value' => $path]
+            );
         }
 
-        // 🌟 4. SIMPAN TTD BENDAHARA (BARU)
+        // 4. Simpan TTD Bendahara
         if ($request->hasFile('ttd_bendahara')) {
-            $request->validate(['ttd_bendahara' => 'image|mimes:png,jpg,jpeg|max:2048']); // Max 2MB
-            $path = $request->file('ttd_bendahara')->storeAs('images', 'ttd_bendahara.png', 'public');
-            Setting::updateOrCreate(['key' => 'ttd_bendahara'], ['value' => $path]);
+            $request->validate([
+                'ttd_bendahara' => 'image|mimes:png,jpg,jpeg|max:2048',
+            ]);
+
+            $path = $request->file('ttd_bendahara')->storeAs(
+                'images',
+                'ttd_bendahara.png',
+                'public'
+            );
+
+            Setting::updateOrCreate(
+                ['key' => 'ttd_bendahara'],
+                ['value' => $path]
+            );
         }
 
-        return back()->with('success', 'System Settings berhasil diperbarui!');
+        // 5. Simpan Color Chart Baju
+        //
+        // Bisa upload banyak file sekaligus:
+        // color_charts[]
+        //
+        // Semua file disimpan secara global di System Settings.
+        // Tidak terikat ke item tertentu.
+        if ($request->hasFile('color_charts')) {
+            $request->validate([
+                'color_charts' => 'array|max:20',
+                'color_charts.*' => 'image|mimes:png,jpg,jpeg,webp|max:5120',
+            ]);
+
+            // Ambil file Color Chart yang sudah tersimpan sebelumnya
+            $existingColorCharts = Setting::where(
+                'key',
+                'baju_color_charts'
+            )->value('value');
+
+            $existingColorCharts = $existingColorCharts
+                ? json_decode($existingColorCharts, true)
+                : [];
+
+            if (!is_array($existingColorCharts)) {
+                $existingColorCharts = [];
+            }
+
+            // Simpan file baru satu per satu
+            foreach ($request->file('color_charts') as $file) {
+                $path = $file->store(
+                    'images/color-charts',
+                    'public'
+                );
+
+                $existingColorCharts[] = $path;
+            }
+
+            // Simpan semua path sebagai JSON
+            Setting::updateOrCreate(
+                ['key' => 'baju_color_charts'],
+                ['value' => json_encode($existingColorCharts)]
+            );
+        }
+
+        return back()->with(
+            'success',
+            'System Settings berhasil diperbarui!'
+        );
     }
 }

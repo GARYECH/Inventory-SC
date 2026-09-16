@@ -284,6 +284,58 @@ Route::middleware('auth')->group(function () {
 
             /*
             |--------------------------------------------------------------------------
+            | ADMIN GENERATED DOCUMENTS
+            |--------------------------------------------------------------------------
+            */
+
+            Route::prefix('orders/{order}/document')
+                ->name('orders.document.')
+                ->group(function () {
+
+                    /*
+                    | MoU
+                    */
+
+                    Route::get(
+                        '/mou/{documentId?}',
+                        [DocumentController::class, 'downloadMou']
+                    )->name('mou');
+
+
+                    /*
+                    | Invoice
+                    */
+
+                    Route::get(
+                        '/invoice',
+                        [DocumentController::class, 'downloadInvoice']
+                    )->name('invoice');
+
+
+                    /*
+                    | Kwitansi
+                    */
+
+                    Route::get(
+                        '/kwitansi',
+                        [DocumentController::class, 'downloadKwitansi']
+                    )->name('kwitansi');
+
+
+                    /*
+                    | Berita Acara
+                    */
+
+                    Route::get(
+                        '/berita-acara',
+                        [DocumentController::class, 'downloadBeritaAcara']
+                    )->name('berita-acara');
+
+                });
+
+
+            /*
+            |--------------------------------------------------------------------------
             | SETTINGS
             |--------------------------------------------------------------------------
             */
@@ -417,6 +469,16 @@ Route::middleware('auth')->group(function () {
                         [CartController::class, 'addToCart']
                     )->name('add');
 
+                    Route::get(
+                        '/baju/{item}',
+                        [CartController::class, 'bajuForm']
+                    )->name('baju.create');
+
+                    Route::post(
+                        '/baju/{item}',
+                        [CartController::class, 'storeBaju']
+                    )->name('baju.store');
+
                     Route::post(
                         '/clear',
                         [CartController::class, 'clearCart']
@@ -426,6 +488,11 @@ Route::middleware('auth')->group(function () {
                         '/checkout',
                         [CartController::class, 'processCheckout']
                     )->name('checkout');
+
+                    Route::patch(
+                        '/{id}/color',
+                        [CartController::class, 'updateColor']
+                    )->name('color');
 
                     Route::patch(
                         '/{id}/update',

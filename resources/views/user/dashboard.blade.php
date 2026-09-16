@@ -526,13 +526,6 @@
                              * =====================================================
                              * FINAL TRANSACTION TYPE
                              * =====================================================
-                             *
-                             * Hanya ada 4:
-                             * - Peralatan
-                             * - Handy Talkie
-                             * - Habis Pakai
-                             * - Merchandise
-                             *
                              */
 
                             $type = $item->transaction_type;
@@ -542,8 +535,6 @@
                              * =====================================================
                              * RENTAL
                              * =====================================================
-                             *
-                             * Hanya Peralatan dan Handy Talkie
                              */
 
                             $isRental = in_array(
@@ -919,37 +910,38 @@
                                             <!-- SIMPLE EXPLANATION -->
                                             <div class="mt-3 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2.5">
 
-    <div class="flex items-start gap-2">
+                                                <div class="flex items-start gap-2">
 
-        <svg
-            class="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
-            />
-        </svg>
+                                                    <svg
+                                                        class="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                                                        />
+                                                    </svg>
 
-        <p class="text-[8px] font-bold leading-relaxed text-indigo-600">
+                                                    <p class="text-[8px] font-bold leading-relaxed text-indigo-600">
 
-            <span class="font-black">
-                Penting:
-            </span>
+                                                        <span class="font-black">
+                                                            Penting:
+                                                        </span>
 
-            Dalam satu transaksi, semua barang harus memiliki
-            <span class="font-black">
-                Transaction Type yang sama.
-            </span>
+                                                        Dalam satu transaksi, semua barang harus memiliki
+                                                        <span class="font-black">
+                                                            Transaction Type yang sama.
+                                                        </span>
 
-        </p>
+                                                    </p>
 
-    </div>
+                                                </div>
 
+                                            </div>
 
                                         </div>
 
@@ -1272,7 +1264,7 @@
                                                             stroke-linecap="round"
                                                             stroke-linejoin="round"
                                                             stroke-width="2"
-                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002-2h14"
+                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
                                                         />
                                                     </svg>
 
@@ -1473,6 +1465,92 @@
                                             $item->subcategory === 'Baju'
                                         )
 
+                                            <!-- COLOR CHART REFERENCE -->
+                                            @if(isset($colorCharts) && count($colorCharts) > 0)
+
+                                                <div class="mt-4 rounded-2xl border border-emerald-100 bg-white p-3">
+
+                                                    <div class="flex items-start gap-2.5">
+
+                                                        <div class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+
+                                                            <svg
+                                                                class="h-3.5 w-3.5 text-emerald-600"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    stroke-linecap="round"
+                                                                    stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M4 5a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 0h10M7 9h10M7 13h5"
+                                                                />
+                                                            </svg>
+
+                                                        </div>
+
+
+                                                        <div class="min-w-0 flex-1">
+
+                                                            <p class="text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700">
+                                                                Color Chart Baju
+                                                            </p>
+
+                                                            <p class="mt-1 text-[8px] font-bold leading-relaxed text-gray-500">
+                                                                Lihat referensi warna di bawah ini. Warna akan kamu isi nanti di keranjang.
+                                                            </p>
+
+                                                        </div>
+
+                                                    </div>
+
+
+                                                    <div class="mt-3 grid grid-cols-2 gap-2">
+
+                                                        @foreach($colorCharts as $index => $colorChart)
+
+                                                            <a
+                                                                href="{{ asset('storage/' . $colorChart) }}"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                class="group overflow-hidden rounded-xl border border-gray-100 bg-gray-50 transition hover:border-emerald-300 hover:shadow-sm"
+                                                            >
+
+                                                                <div class="aspect-[4/3] bg-white">
+
+                                                                    <img
+                                                                        src="{{ asset('storage/' . $colorChart) }}"
+                                                                        alt="Color Chart {{ $index + 1 }}"
+                                                                        class="h-full w-full object-contain transition duration-300 group-hover:scale-105"
+                                                                    >
+
+                                                                </div>
+
+                                                                <div class="border-t border-gray-100 px-2 py-1.5">
+
+                                                                    <p class="text-center text-[8px] font-black text-gray-500">
+                                                                        Color Chart {{ $index + 1 }}
+                                                                    </p>
+
+                                                                </div>
+
+                                                            </a>
+
+                                                        @endforeach
+
+                                                    </div>
+
+
+                                                    <p class="mt-2 text-center text-[7px] font-bold text-gray-400">
+                                                        Klik gambar untuk melihat ukuran penuh.
+                                                    </p>
+
+                                                </div>
+
+                                            @endif
+
+
                                             <!-- SIZE -->
                                             <div class="mt-4">
 
@@ -1499,20 +1577,8 @@
                                                         Pilih Ukuran
                                                     </option>
 
-                                                    <option value="S">
-                                                        S
-                                                    </option>
-
-                                                    <option value="M">
-                                                        M
-                                                    </option>
-
-                                                    <option value="L">
-                                                        L
-                                                    </option>
-
-                                                    <option value="XL">
-                                                        XL
+                                                    <option value="S-XL">
+                                                        S-XL
                                                     </option>
 
                                                     <option value="2XL">
@@ -1532,6 +1598,10 @@
                                                     </option>
 
                                                 </select>
+
+                                                <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-400">
+                                                    Detail ukuran S, M, L, dan XL mengikuti size guide pada Drive.
+                                                </p>
 
                                             </div>
 
@@ -2722,6 +2792,9 @@
         ) {
 
             const prices = {
+
+                'S-XL':
+                    0,
 
                 '2XL':
                     5000,

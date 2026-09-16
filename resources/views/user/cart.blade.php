@@ -122,7 +122,7 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502 1.667 1.732 3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 1.707z"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c.98 0 1.54-1.06 1.05-1.91L13.05 4.91c-.47-.82-1.63-.82-2.1 0L3.89 16.09c-.49.85.07 1.91 1.05 1.91z"
                             />
 
                         </svg>
@@ -269,6 +269,20 @@
                     $mouTypes = [];
 
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | BAJU COLOR
+                    |--------------------------------------------------------------------------
+                    |
+                    | Ambil warna pertama yang tersimpan untuk setiap item Baju.
+                    | Satu warna akan berlaku untuk semua size dari item yang sama.
+                    |
+                    */
+
+                    $bajuColorsByItem = [];
+
+
+
                     foreach ($cart as $details) {
 
                         $transactionType =
@@ -341,6 +355,53 @@
 
                         /*
                         |--------------------------------------------------------------------------
+                        | BAJU COLOR
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            $transactionType ===
+                            'Merchandise' &&
+                            $subcategory ===
+                            'Baju'
+                        ) {
+
+                            $itemId =
+                                (int) (
+                                    $details['id'] ?? 0
+                                );
+
+                            $colorNumber =
+                                trim(
+                                    (string) (
+                                        $details[
+                                            'color_number'
+                                        ] ?? ''
+                                    )
+                                );
+
+                            if (
+                                $itemId > 0 &&
+                                $colorNumber !== '' &&
+                                !isset(
+                                    $bajuColorsByItem[
+                                        $itemId
+                                    ]
+                                )
+                            ) {
+
+                                $bajuColorsByItem[
+                                    $itemId
+                                ] =
+                                    $colorNumber;
+
+                            }
+
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
                         | PRICE
                         |--------------------------------------------------------------------------
                         */
@@ -362,13 +423,34 @@
                                 $details['quantity'] ?? 1
                             );
 
-                        $unitPrice =
-                            $basePrice +
-                            $sizeExtra;
+                        $sizeBreakdowns =
+                            $details['size_breakdowns'] ?? [];
 
-                        $subtotal =
-                            $unitPrice *
-                            $quantity;
+                        $isBaju =
+                            $transactionType ===
+                            'Merchandise' &&
+                            $subcategory ===
+                            'Baju';
+
+                        if ($isBaju && !empty($sizeBreakdowns)) {
+                            $subtotal = collect($sizeBreakdowns)
+                                ->sum(function ($breakdown) {
+                                    return (int) (
+                                        $breakdown['subtotal_price']
+                                        ?? 0
+                                    );
+                                });
+
+                            $unitPrice = 0;
+                        } else {
+                            $unitPrice =
+                                $basePrice +
+                                $sizeExtra;
+
+                            $subtotal =
+                                $unitPrice *
+                                $quantity;
+                        }
 
 
                         $totalPrice +=
@@ -456,6 +538,14 @@
                         count(
                             $transactionTypes
                         );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | TRACK BAJU ITEMS ALREADY SHOWN
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $shownBajuColorItems = [];
 
                 @endphp
 
@@ -872,6 +962,48 @@
                                                 ]
                                             );
 
+
+                                        $isBaju =
+                                            $transactionType ===
+                                            'Merchandise' &&
+                                            $subcategory ===
+                                            'Baju';
+
+
+                                        $itemId =
+                                            (int) (
+                                                $details[
+                                                    'id'
+                                                ] ?? 0
+                                            );
+
+
+                                        $showBajuColor =
+                                            $isBaju &&
+                                            !in_array(
+                                                $itemId,
+                                                $shownBajuColorItems,
+                                                true
+                                            );
+
+
+                                        if (
+                                            $showBajuColor
+                                        ) {
+                                            $shownBajuColorItems[] =
+                                                $itemId;
+                                        }
+
+
+                                        $currentBajuColor =
+                                            $itemId > 0
+                                                ? (
+                                                    $bajuColorsByItem[
+                                                        $itemId
+                                                    ] ?? ''
+                                                )
+                                                : '';
+
                                     @endphp
 
 
@@ -1014,7 +1146,7 @@
                                                                     stroke-linecap="round"
                                                                     stroke-linejoin="round"
                                                                     stroke-width="2"
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 01-1 1v3M4 7h16"
                                                                 />
 
                                                             </svg>
@@ -1031,22 +1163,28 @@
 
                                                 <div class="mt-2 flex flex-wrap items-center gap-2">
 
-                                                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                                    @if($isBaju)
 
-                                                        Rp
-                                                        {{ number_format($basePrice, 0, ',', '.') }}
-
-                                                    </span>
-
-
-                                                    @if($sizeExtra > 0)
-
-                                                        <span class="rounded-md bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700">
-
-                                                            +Rp
-                                                            {{ number_format($sizeExtra, 0, ',', '.') }}
-
+                                                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                                            Harga dasar:
+                                                            Rp {{ number_format($basePrice, 0, ',', '.') }}/pcs
                                                         </span>
+
+                                                    @else
+
+                                                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                                            Rp
+                                                            {{ number_format($basePrice, 0, ',', '.') }}
+                                                        </span>
+
+                                                        @if($sizeExtra > 0)
+
+                                                            <span class="rounded-md bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700">
+                                                                +Rp
+                                                                {{ number_format($sizeExtra, 0, ',', '.') }}
+                                                            </span>
+
+                                                        @endif
 
                                                     @endif
 
@@ -1069,37 +1207,268 @@
 
                                             @if($subcategory === 'Baju')
 
-                                                <div class="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3">
+                                                <div class="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
 
-                                                    <div class="flex flex-wrap gap-2">
+                                                    <div class="flex items-start justify-between gap-3">
 
+                                                        <div>
 
-                                                        @if($size)
+                                                            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600">
+                                                                Detail Baju
+                                                            </p>
 
-                                                            <span class="inline-flex items-center rounded-lg bg-white px-3 py-2 text-[9px] font-black text-indigo-700 shadow-sm">
+                                                            <p class="mt-1 text-[10px] font-bold text-indigo-800">
+                                                                {{ $quantity }} pcs total
+                                                            </p>
 
-                                                                Size:
-                                                                {{ $size }}
+                                                        </div>
 
-                                                            </span>
-
-                                                        @endif
-
-
-                                                        @if($sizeExtra > 0)
-
-                                                            <span class="inline-flex items-center rounded-lg bg-amber-100 px-3 py-2 text-[9px] font-black text-amber-700">
-
-                                                                +Rp
-                                                                {{ number_format($sizeExtra, 0, ',', '.') }}
-
-                                                            </span>
-
-                                                        @endif
+                                                        <a
+                                                            href="{{ route('student.cart.baju.create', $itemId) }}"
+                                                            class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[8px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700"
+                                                        >
+                                                            Edit Detail
+                                                        </a>
 
                                                     </div>
 
+                                                    @if(!empty($sizeBreakdowns))
+
+                                                        <div class="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
+
+                                                            <div class="grid grid-cols-4 gap-2 border-b border-gray-100 bg-gray-50 px-3 py-2 text-[8px] font-black uppercase tracking-widest text-gray-400">
+                                                                <span>Size</span>
+                                                                <span>Divisi</span>
+                                                                <span class="text-center">Qty</span>
+                                                                <span class="text-right">Subtotal</span>
+                                                            </div>
+
+                                                            <div class="divide-y divide-gray-100">
+
+                                                                @foreach($sizeBreakdowns as $breakdown)
+
+                                                                    <div class="grid grid-cols-4 gap-2 px-3 py-2.5 text-[9px]">
+
+                                                                        <span class="font-black text-gray-900">
+                                                                            {{ $breakdown['size'] ?? '-' }}
+                                                                        </span>
+
+                                                                        <span class="truncate font-bold text-gray-500">
+                                                                            {{ $breakdown['division'] ?? '-' }}
+                                                                        </span>
+
+                                                                        <span class="text-center font-black text-gray-900">
+                                                                            {{ (int) ($breakdown['quantity'] ?? 0) }}
+                                                                        </span>
+
+                                                                        <span class="text-right font-black text-indigo-600">
+                                                                            Rp {{ number_format((int) ($breakdown['subtotal_price'] ?? 0), 0, ',', '.') }}
+                                                                        </span>
+
+                                                                    </div>
+
+                                                                @endforeach
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    @endif
+
                                                 </div>
+
+
+                                                @if($showBajuColor)
+
+                                                    <!-- ================================================= -->
+                                                    <!-- BAJU COLOR -->
+                                                    <!-- ================================================= -->
+
+                                                    <div class="mt-4 rounded-2xl border border-purple-100 bg-purple-50/60 p-4">
+
+                                                        <div class="flex items-start gap-3">
+
+                                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white">
+
+                                                                <svg
+                                                                    class="h-5 w-5"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M7 21a4 4 0 01-4-4c0-1.657 1-3 2.5-3.5L10 12l1-5 3 2 4-3 2 5-2 3.5A4 4 0 0115 21H7z"
+                                                                    />
+
+                                                                </svg>
+
+                                                            </div>
+
+
+                                                            <div class="min-w-0 flex-1">
+
+                                                                <p class="text-[9px] font-black uppercase tracking-[0.16em] text-purple-600">
+                                                                    Warna Baju
+                                                                </p>
+
+
+                                                                <p class="mt-1 text-[10px] font-bold leading-relaxed text-purple-800">
+
+                                                                    Pilih warna berdasarkan Color Chart.
+                                                                    Warna ini akan digunakan untuk semua size
+                                                                    <span class="font-black">
+                                                                        {{ $details['name'] ?? 'Baju' }}
+                                                                    </span>
+                                                                    di transaksi ini.
+
+                                                                </p>
+
+
+                                                                <!-- COLOR FORM -->
+
+                                                                <form
+                                                                    action="{{ route('student.cart.color', $itemId) }}"
+                                                                    method="POST"
+                                                                    class="mt-4"
+                                                                >
+
+                                                                    @csrf
+
+                                                                    @method('PATCH')
+
+
+                                                                    <div class="flex flex-col gap-3 sm:flex-row">
+
+                                                                        <div class="min-w-0 flex-1">
+
+                                                                            <label class="mb-2 ml-1 block text-[8px] font-black uppercase tracking-[0.18em] text-purple-500">
+                                                                                Nomor / Nama Warna
+                                                                            </label>
+
+
+                                                                            <input
+                                                                                type="text"
+                                                                                name="color_number"
+                                                                                value="{{ old('color_number', $currentBajuColor) }}"
+                                                                                placeholder="Contoh: 47 / Navy / 47 Navy"
+                                                                                maxlength="100"
+                                                                                required
+                                                                                class="w-full rounded-xl border border-purple-100 bg-white px-4 py-3 text-xs font-black text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-400"
+                                                                            >
+
+                                                                        </div>
+
+
+                                                                        <div class="sm:self-end">
+
+                                                                            <button
+                                                                                type="submit"
+                                                                                class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-purple-100 transition-all hover:bg-purple-700 sm:w-auto"
+                                                                            >
+
+                                                                                <svg
+                                                                                    class="h-4 w-4"
+                                                                                    fill="none"
+                                                                                    viewBox="0 0 24 24"
+                                                                                    stroke="currentColor"
+                                                                                >
+
+                                                                                    <path
+                                                                                        stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M5 13l4 4L19 7"
+                                                                                    />
+
+                                                                                </svg>
+
+                                                                                Simpan Warna
+
+                                                                            </button>
+
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                </form>
+
+
+                                                                <!-- COLOR CHART -->
+
+                                                                @if(!empty($colorCharts))
+
+                                                                    <div class="mt-5 border-t border-purple-100 pt-4">
+
+                                                                        <div class="flex items-center justify-between gap-3">
+
+                                                                            <div>
+
+                                                                                <p class="text-[8px] font-black uppercase tracking-[0.18em] text-gray-500">
+                                                                                    Referensi
+                                                                                </p>
+
+                                                                                <p class="mt-1 text-[10px] font-black text-gray-800">
+                                                                                    Color Chart Baju
+                                                                                </p>
+
+                                                                            </div>
+
+
+                                                                            <span class="rounded-lg bg-white px-2.5 py-1.5 text-[8px] font-black uppercase tracking-widest text-purple-600 shadow-sm">
+                                                                                {{ count($colorCharts) }} Chart
+                                                                            </span>
+
+                                                                        </div>
+
+
+                                                                        <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+
+                                                                            @foreach($colorCharts as $chart)
+
+                                                                                <a
+                                                                                    href="{{ asset('storage/' . $chart) }}"
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    class="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:border-purple-300 hover:shadow-md"
+                                                                                >
+
+                                                                                    <img
+                                                                                        src="{{ asset('storage/' . $chart) }}"
+                                                                                        alt="Baju Color Chart"
+                                                                                        class="h-28 w-full object-cover transition-transform duration-300 group-hover:scale-105 sm:h-32"
+                                                                                    >
+
+                                                                                </a>
+
+                                                                            @endforeach
+
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                @else
+
+                                                                    <div class="mt-4 rounded-xl border border-yellow-100 bg-yellow-50 px-3 py-2.5">
+
+                                                                        <p class="text-[9px] font-bold text-yellow-700">
+                                                                            Color Chart belum tersedia. Silakan hubungi admin.
+                                                                        </p>
+
+                                                                    </div>
+
+                                                                @endif
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @endif
 
                                             @endif
 
@@ -1303,46 +1672,59 @@
                                         <div class="mt-4 flex flex-col gap-4 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
 
 
-                                            <form
-                                                action="{{ route('student.cart.update', $id) }}"
-                                                method="POST"
-                                                class="flex h-10 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
-                                            >
+                                            @if($isBaju)
 
-                                                @csrf
+                                                <a
+                                                    href="{{ route('student.cart.baju.create', $itemId) }}"
+                                                    class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white"
+                                                >
+                                                    Edit Detail Baju
+                                                </a>
 
-                                                @method('PATCH')
+                                            @else
 
-
-                                                <div class="flex h-full items-center border-r border-gray-200 bg-gray-50 px-3">
-
-                                                    <span class="text-[8px] font-black uppercase tracking-widest text-gray-400">
-                                                        QTY
-                                                    </span>
-
-                                                </div>
-
-
-                                                <input
-                                                    type="number"
-                                                    name="quantity"
-                                                    value="{{ $quantity }}"
-                                                    min="1"
-                                                    required
-                                                    class="h-full w-16 border-none bg-transparent px-2 text-center text-xs font-black text-gray-900 focus:ring-0"
+                                                <form
+                                                    action="{{ route('student.cart.update', $id) }}"
+                                                    method="POST"
+                                                    class="flex h-10 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                                                 >
 
+                                                    @csrf
 
-                                                <button
-                                                    type="submit"
-                                                    class="h-full border-l border-gray-200 bg-indigo-50 px-4 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white"
-                                                >
+                                                    @method('PATCH')
 
-                                                    Update
 
-                                                </button>
+                                                    <div class="flex h-full items-center border-r border-gray-200 bg-gray-50 px-3">
 
-                                            </form>
+                                                        <span class="text-[8px] font-black uppercase tracking-widest text-gray-400">
+                                                            QTY
+                                                        </span>
+
+                                                    </div>
+
+
+                                                    <input
+                                                        type="number"
+                                                        name="quantity"
+                                                        value="{{ $quantity }}"
+                                                        min="1"
+                                                        required
+                                                        class="h-full w-16 border-none bg-transparent px-2 text-center text-xs font-black text-gray-900 focus:ring-0"
+                                                    >
+
+
+                                                    <button
+                                                        type="submit"
+                                                        class="h-full border-l border-gray-200 bg-indigo-50 px-4 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white"
+                                                    >
+
+                                                        Update
+
+                                                    </button>
+
+                                                </form>
+
+                                            @endif
 
 
 
@@ -1389,7 +1771,7 @@
                                         </p>
 
                                         <p class="mt-1 text-[10px] font-bold text-gray-500">
-                                            Total dihitung berdasarkan harga barang dan tambahan ukuran.
+                                            Total dihitung berdasarkan detail ukuran, divisi, dan harga masing-masing.
                                         </p>
 
                                     </div>

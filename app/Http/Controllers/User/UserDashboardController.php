@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\Order;
+use App\Models\Setting;
 use App\Services\InventoryAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -151,6 +152,33 @@ class UserDashboardController extends Controller
 
         $cartCount = count($cart);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Color Chart Baju
+        |--------------------------------------------------------------------------
+        |
+        | Color Chart bersifat global.
+        | Hanya digunakan sebagai referensi untuk Merchandise -> Baju.
+        |
+        */
+        $colorCharts = [];
+
+        $colorChartSetting = Setting::where(
+            'key',
+            'baju_color_charts'
+        )->value('value');
+
+        if ($colorChartSetting) {
+            $decodedColorCharts = json_decode(
+                $colorChartSetting,
+                true
+            );
+
+            if (is_array($decodedColorCharts)) {
+                $colorCharts = $decodedColorCharts;
+            }
+        }
+
         return view(
             'user.dashboard',
             compact(
@@ -159,7 +187,8 @@ class UserDashboardController extends Controller
                 'category',
                 'search',
                 'cartCount',
-                'categories'
+                'categories',
+                'colorCharts'
             )
         );
     }

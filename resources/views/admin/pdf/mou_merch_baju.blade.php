@@ -2,6 +2,7 @@
 <html lang="id">
 
 <head>
+
     <meta charset="UTF-8">
 
     <title>
@@ -10,6 +11,7 @@
     </title>
 
     <style>
+
         body {
             font-family: "Times New Roman", Times, serif;
             font-size: 11pt;
@@ -62,7 +64,7 @@
         .items-table td {
             border: 1px solid #000;
             padding: 6px;
-            font-size: 10pt;
+            font-size: 9pt;
         }
 
         .items-table th {
@@ -77,12 +79,16 @@
         .right {
             text-align: right;
         }
+
     </style>
+
 </head>
+
 
 <body>
 
 @php
+
     $logoDb =
         \App\Models\Setting::where(
             'key',
@@ -96,23 +102,35 @@
             )
             : null;
 
-    $bajuItems =
-        $order->orderItems->filter(
-            function ($detail) {
-                return
-                    $detail->item &&
-                    $detail->item->transaction_type ===
-                        'Merchandise' &&
-                    $detail->item->subcategory ===
-                        'Baju';
-            }
-        );
 
-    $grandTotal =
-        $bajuItems->sum(
-            'subtotal_price'
-        );
+    $bajuItems =
+        $order->orderItems
+            ->filter(
+                function ($detail) {
+
+                    return
+                        $detail->item &&
+                        $detail->item->transaction_type ===
+                            'Merchandise' &&
+                        $detail->item->subcategory ===
+                            'Baju';
+
+                }
+            );
+
+
+    $grandTotal = 0;
+
+    foreach ($bajuItems as $detail) {
+
+        $grandTotal +=
+            $detail->sizeBreakdowns
+                ->sum('subtotal_price');
+
+    }
+
 @endphp
+
 
 <table class="kop-table">
 
@@ -124,13 +142,16 @@
                 $logoPath &&
                 file_exists($logoPath)
             )
+
                 <img
                     src="{{ $logoPath }}"
                     style="max-height:65px;"
                 >
+
             @endif
 
         </td>
+
 
         <td
             width="75%"
@@ -159,6 +180,7 @@
 
 </table>
 
+
 <div class="title">
 
     <h3>
@@ -180,12 +202,14 @@
 
 </div>
 
+
 <p>
     Nomor Order:
     <strong>
         {{ $order->order_number }}
     </strong>
 </p>
+
 
 <p>
     Nama:
@@ -194,6 +218,7 @@
     </strong>
 </p>
 
+
 <p>
     Organisasi:
     <strong>
@@ -201,137 +226,204 @@
     </strong>
 </p>
 
-<table class="items-table">
 
-    <thead>
+@if($bajuItems->count() > 0)
 
-        <tr>
+    @foreach($bajuItems as $detail)
 
-            <th>No.</th>
-            <th>Nama Barang</th>
-            <th>Ukuran</th>
-            <th>Jumlah</th>
-            <th>Harga Satuan</th>
-            <th>Subtotal</th>
+        <p style="margin-top: 18px;">
 
-        </tr>
+            <strong>
+                {{ $detail->item->name }}
+            </strong>
 
-    </thead>
+            @if($detail->color_number)
 
-    <tbody>
+                — Warna:
+                <strong>
+                    {{ $detail->color_number }}
+                </strong>
 
-        @foreach(
-            $bajuItems
-            as $index => $detail
+            @endif
+
+        </p>
+
+
+        <table class="items-table">
+
+            <thead>
+
+                <tr>
+
+                    <th width="6%">
+                        No.
+                    </th>
+
+                    <th width="13%">
+                        Ukuran
+                    </th>
+
+                    <th>
+                        Divisi
+                    </th>
+
+                    <th width="12%">
+                        Jumlah
+                    </th>
+
+                    <th width="15%">
+                        Satuan
+                    </th>
+
+                    <th width="18%">
+                        Harga Satuan
+                    </th>
+
+                    <th width="18%">
+                        Subtotal
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                @foreach(
+                    $detail->sizeBreakdowns
+                    as $index => $breakdown
+                )
+
+                    <tr>
+
+                        <td class="center">
+                            {{ $index + 1 }}
+                        </td>
+
+                        <td class="center">
+                            {{ $breakdown->size }}
+                        </td>
+
+                        <td>
+                            {{ $breakdown->division }}
+                        </td>
+
+                        <td class="center">
+                            {{ $breakdown->quantity }}
+                        </td>
+
+                        <td class="center">
+                            Pcs
+                        </td>
+
+                        <td class="right">
+
+                            Rp
+                            {{
+                                number_format(
+                                    $breakdown->unit_price,
+                                    0,
+                                    ',',
+                                    '.'
+                                )
+                            }}
+
+                        </td>
+
+                        <td class="right">
+
+                            Rp
+                            {{
+                                number_format(
+                                    $breakdown->subtotal_price,
+                                    0,
+                                    ',',
+                                    '.'
+                                )
+                            }}
+
+                        </td>
+
+                    </tr>
+
+                @endforeach
+
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        class="right"
+                    >
+
+                        <strong>
+                            Total
+                        </strong>
+
+                    </td>
+
+
+                    <td class="right">
+
+                        <strong>
+
+                            Rp
+                            {{
+                                number_format(
+                                    $detail->sizeBreakdowns
+                                        ->sum('subtotal_price'),
+                                    0,
+                                    ',',
+                                    '.'
+                                )
+                            }}
+
+                        </strong>
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+
+        <p style="margin-top: 12px;">
+
+            Detail desain:
+
+            <a href="{{ $detail->design_link }}">
+                {{ $detail->design_link }}
+            </a>
+
+        </p>
+
+    @endforeach
+
+@endif
+
+
+<p style="margin-top: 20px;">
+
+    <strong>
+        Grand Total:
+    </strong>
+
+    Rp
+    {{
+        number_format(
+            $grandTotal,
+            0,
+            ',',
+            '.'
         )
+    }}
 
-            @php
-                $quantity =
-                    (int) $detail->quantity;
-
-                $subtotal =
-                    (int) $detail->subtotal_price;
-
-                $unitPrice =
-                    $quantity > 0
-                        ? intdiv(
-                            $subtotal,
-                            $quantity
-                        )
-                        : 0;
-            @endphp
-
-            <tr>
-
-                <td class="center">
-                    {{ $index + 1 }}
-                </td>
-
-                <td>
-                    {{ $detail->item->name }}
-                </td>
-
-                <td class="center">
-                    {{ $detail->size ?? '-' }}
-                </td>
-
-                <td class="center">
-                    {{ $quantity }}
-                </td>
-
-                <td class="right">
-                    Rp
-                    {{ number_format(
-                        $unitPrice,
-                        0,
-                        ',',
-                        '.'
-                    ) }}
-                </td>
-
-                <td class="right">
-                    Rp
-                    {{ number_format(
-                        $subtotal,
-                        0,
-                        ',',
-                        '.'
-                    ) }}
-                </td>
-
-            </tr>
-
-        @endforeach
-
-        <tr>
-
-            <td
-                colspan="5"
-                class="right"
-            >
-                <strong>
-                    Total
-                </strong>
-            </td>
-
-            <td class="right">
-                <strong>
-                    Rp
-                    {{ number_format(
-                        $grandTotal,
-                        0,
-                        ',',
-                        '.'
-                    ) }}
-                </strong>
-            </td>
-
-        </tr>
-
-    </tbody>
-
-</table>
-
-<p style="margin-top:20px;">
-    Detail desain:
 </p>
 
-@foreach(
-    $bajuItems
-    as $detail
-)
-
-    <p>
-        {{ $detail->item->name }}
-        -
-        {{ $detail->size ?? '-' }}
-        -
-        <a href="{{ $detail->design_link }}">
-            {{ $detail->design_link }}
-        </a>
-    </p>
-
-@endforeach
 
 </body>
+
 </html>

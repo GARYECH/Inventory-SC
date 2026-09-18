@@ -1993,8 +1993,7 @@ class CartController extends Controller
             'notes' =>
                 'nullable|string',
 
-            'is_sop_accepted' =>
-                'required|accepted',
+            
         ]);
 
         $firstItem =
@@ -2432,8 +2431,7 @@ class CartController extends Controller
                             'end_time'
                         ] ?? null,
 
-                    'is_sop_accepted' =>
-                        true,
+            
 
                     'status' =>
                         'Pending',

@@ -18,7 +18,6 @@ class Order extends Model
         'end_date' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
-        'is_sop_accepted' => 'boolean',
     ];
 
     /*
@@ -51,11 +50,6 @@ class Order extends Model
     |--------------------------------------------------------------------------
     | ITEMS
     |--------------------------------------------------------------------------
-    |
-    | Relationship lama tetap dipertahankan
-    | supaya fitur yang masih memakai
-    | $order->items tetap aman.
-    |
     */
 
     public function items()

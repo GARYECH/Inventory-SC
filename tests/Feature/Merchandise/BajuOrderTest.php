@@ -745,8 +745,6 @@ it(
                         'notes' =>
                             'Testing duplicate size.',
 
-                        'is_sop_accepted' =>
-                            1,
                     ]
                 );
 

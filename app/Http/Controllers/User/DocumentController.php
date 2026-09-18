@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\AdminNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -12,6 +13,49 @@ use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | DOWNLOAD GUIDEBOOK
+    |--------------------------------------------------------------------------
+    */
+
+    public function downloadGuidebook()
+    {
+        $guidebookPath =
+            Setting::where(
+                'key',
+                'guidebook_pdf_path'
+            )->value(
+                'value'
+            );
+
+        if (
+            empty($guidebookPath)
+        ) {
+            return back()->with(
+                'error',
+                'Guidebook belum tersedia.'
+            );
+        }
+
+        if (
+            !Storage::disk('public')->exists(
+                $guidebookPath
+            )
+        ) {
+            return back()->with(
+                'error',
+                'File Guidebook tidak ditemukan.'
+            );
+        }
+
+        return response()->file(
+            Storage::disk('public')->path(
+                $guidebookPath
+            )
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | DOWNLOAD MOU
@@ -177,6 +221,22 @@ class DocumentController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | STATUS CHECK
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $order->status !==
+            'Waiting for MoU'
+        ) {
+            return back()->with(
+                'error',
+                'MoU belum dapat diunggah pada tahap ini.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | LOAD MOU DOCUMENTS
         |--------------------------------------------------------------------------
         */
@@ -318,7 +378,7 @@ class DocumentController extends Controller
         |--------------------------------------------------------------------------
         |
         | Kalau masih ada MoU yang belum diupload,
-        | jangan pindah ke payment dulu.
+        | jangan pindah ke tahap review.
         |
         */
 
@@ -335,11 +395,11 @@ class DocumentController extends Controller
         } else {
             $order->update([
                 'status' =>
-                    'Waiting for Payment',
+                    'Pending Review MoU',
             ]);
 
             $successMessage =
-                'Semua MoU sudah diupload. Silakan lanjut ke pembayaran.';
+                'Semua MoU sudah diupload. Menunggu pemeriksaan admin sebelum melanjutkan ke pembayaran.';
         }
 
         /*
@@ -492,6 +552,22 @@ class DocumentController extends Controller
             $order
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS CHECK
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $order->status !==
+            'Waiting for Payment'
+        ) {
+            return back()->with(
+                'error',
+                'Bukti pembayaran belum dapat diunggah pada tahap ini.'
+            );
+        }
+
         $request->validate([
             'payment_receipt' => [
                 'required',
@@ -569,6 +645,22 @@ class DocumentController extends Controller
         $this->authorizeOrder(
             $order
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS CHECK
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $order->status !==
+            'Waiting for Kwitansi'
+        ) {
+            return back()->with(
+                'error',
+                'Kwitansi belum dapat diunggah pada tahap ini.'
+            );
+        }
 
         $request->validate([
             'signed_kwitansi' => [
@@ -648,6 +740,22 @@ class DocumentController extends Controller
             $order
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS CHECK
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $order->status !==
+            'Handed Over'
+        ) {
+            return back()->with(
+                'error',
+                'Pengembalian belum dapat dikirim pada tahap ini.'
+            );
+        }
+
         $request->validate([
             'return_drive_link' => [
                 'required',
@@ -693,6 +801,28 @@ class DocumentController extends Controller
         $this->authorizeOrder(
             $order
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS CHECK
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !in_array(
+                $order->status,
+                [
+                    'Returned',
+                    'Returned (Damaged)',
+                ],
+                true
+            )
+        ) {
+            return back()->with(
+                'error',
+                'Berita Acara belum dapat diunggah pada tahap ini.'
+            );
+        }
 
         $request->validate([
             'signed_ba_file' => [

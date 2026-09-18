@@ -186,6 +186,22 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | GUIDEBOOK
+    |--------------------------------------------------------------------------
+    |
+    | Guidebook dapat diakses oleh user yang sudah login.
+    | Tidak terkait dengan proses checkout atau status transaksi.
+    |
+    */
+
+    Route::get(
+        '/guidebook',
+        [DocumentController::class, 'downloadGuidebook']
+    )->name('guidebook');
+
+
+    /*
+    |--------------------------------------------------------------------------
     | ADMIN
     |--------------------------------------------------------------------------
     */

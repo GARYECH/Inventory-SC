@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
@@ -75,6 +76,73 @@ class SettingController extends Controller
                         $request->input(
                             'mou_vendor'
                         ),
+                ]
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | GUIDEBOOK
+        |--------------------------------------------------------------------------
+        |
+        | Guidebook hanya menjadi dokumen referensi.
+        |
+        | Tidak wajib dibaca.
+        | Tidak terkait proses checkout.
+        | Tidak membutuhkan persetujuan mahasiswa.
+        |
+        */
+
+        if (
+            $request->hasFile(
+                'guidebook_pdf'
+            )
+        ) {
+            $request->validate([
+                'guidebook_pdf' => [
+                    'required',
+                    'file',
+                    'mimes:pdf',
+                    'max:5120',
+                ],
+            ]);
+
+            $oldGuidebookPath =
+                Setting::where(
+                    'key',
+                    'guidebook_pdf_path'
+                )->value(
+                    'value'
+                );
+
+            if (
+                !empty($oldGuidebookPath) &&
+                Storage::disk('public')->exists(
+                    $oldGuidebookPath
+                )
+            ) {
+                Storage::disk('public')->delete(
+                    $oldGuidebookPath
+                );
+            }
+
+            $path =
+                $request
+                    ->file('guidebook_pdf')
+                    ->storeAs(
+                        'documents',
+                        'Guidebook_Student_Council.pdf',
+                        'public'
+                    );
+
+            Setting::updateOrCreate(
+                [
+                    'key' =>
+                        'guidebook_pdf_path',
+                ],
+                [
+                    'value' =>
+                        $path,
                 ]
             );
         }

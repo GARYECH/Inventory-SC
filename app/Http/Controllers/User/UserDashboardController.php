@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Setting;
 use App\Services\InventoryAvailabilityService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class UserDashboardController extends Controller
 {
@@ -93,8 +94,63 @@ class UserDashboardController extends Controller
                     'Good'
                 )
                 ->with([
-                    'category',
-                    'orderItems.order',
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CATEGORY
+                    |--------------------------------------------------------------------------
+                    |
+                    | Dashboard hanya membutuhkan nama category.
+                    |
+                    */
+
+                    'category:id,name',
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | ACTIVE RENTAL BOOKINGS
+                    |--------------------------------------------------------------------------
+                    |
+                    | Hanya ambil order item yang masih aktif.
+                    | Order yang sudah selesai tidak perlu ikut diambil.
+                    |
+                    */
+
+                    'orderItems' => function ($orderItemQuery) {
+
+                        $orderItemQuery
+                            ->select([
+                                'id',
+                                'item_id',
+                                'order_id',
+                                'quantity',
+                            ])
+                            ->whereHas(
+                                'order',
+                                function ($orderQuery) {
+
+                                    $orderQuery->whereNotIn(
+                                        'status',
+                                        self::CLOSED_STATUSES
+                                    );
+
+                                }
+                            )
+                            ->with([
+                                'order' => function ($orderQuery) {
+
+                                    $orderQuery->select([
+                                        'id',
+                                        'status',
+                                        'start_date',
+                                        'end_date',
+                                        'start_time',
+                                        'end_time',
+                                    ]);
+
+                                },
+                            ]);
+
+                    },
                 ]);
 
         /*
@@ -123,15 +179,19 @@ class UserDashboardController extends Controller
         */
 
         if (!empty($category)) {
+
             $query->whereHas(
                 'category',
                 function ($categoryQuery) use ($category) {
+
                     $categoryQuery->where(
                         'slug',
                         $category
                     );
+
                 }
             );
+
         }
 
         /*
@@ -141,8 +201,10 @@ class UserDashboardController extends Controller
         */
 
         if ($search !== '') {
+
             $query->where(
                 function ($q) use ($search) {
+
                     $q
                         ->where(
                             'name',
@@ -172,15 +234,19 @@ class UserDashboardController extends Controller
                         ->orWhereHas(
                             'category',
                             function ($categoryQuery) use ($search) {
+
                                 $categoryQuery->where(
                                     'name',
                                     'like',
                                     "%{$search}%"
                                 );
+
                             }
                         );
+
                 }
             );
+
         }
 
         /*
@@ -199,16 +265,28 @@ class UserDashboardController extends Controller
         |--------------------------------------------------------------------------
         | CATEGORIES
         |--------------------------------------------------------------------------
+        |
+        | Categories tidak sering berubah.
+        | Cache selama 10 menit agar tidak query terus.
+        |
         */
 
         $categories =
-            Category::withCount(
-                'items'
-            )
-            ->orderBy(
-                'name'
-            )
-            ->get();
+            Cache::remember(
+                'user_dashboard_categories',
+                now()->addMinutes(10),
+                function () {
+
+                    return Category::withCount(
+                        'items'
+                    )
+                    ->orderBy(
+                        'name'
+                    )
+                    ->get();
+
+                }
+            );
 
         /*
         |--------------------------------------------------------------------------
@@ -235,34 +313,43 @@ class UserDashboardController extends Controller
         | Color chart hanya menjadi referensi.
         | Pemilihan warna dilakukan di Cart.
         |
+        | Cache 10 menit supaya tidak query Setting
+        | setiap kali user pindah filter.
+        |
         */
 
-        $colorCharts = [];
+        $colorCharts =
+            Cache::remember(
+                'user_dashboard_color_charts',
+                now()->addMinutes(10),
+                function () {
 
-        $colorChartSetting =
-            Setting::where(
-                'key',
-                'baju_color_charts'
-            )->value(
-                'value'
+                    $colorChartSetting =
+                        Setting::where(
+                            'key',
+                            'baju_color_charts'
+                        )->value(
+                            'value'
+                        );
+
+                    if (!$colorChartSetting) {
+                        return [];
+                    }
+
+                    $decodedColorCharts =
+                        json_decode(
+                            $colorChartSetting,
+                            true
+                        );
+
+                    return is_array(
+                        $decodedColorCharts
+                    )
+                        ? $decodedColorCharts
+                        : [];
+
+                }
             );
-
-        if ($colorChartSetting) {
-            $decodedColorCharts =
-                json_decode(
-                    $colorChartSetting,
-                    true
-                );
-
-            if (
-                is_array(
-                    $decodedColorCharts
-                )
-            ) {
-                $colorCharts =
-                    $decodedColorCharts;
-            }
-        }
 
         /*
         |--------------------------------------------------------------------------

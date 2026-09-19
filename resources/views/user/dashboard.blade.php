@@ -4,6 +4,54 @@
 
 
         <!-- ========================================================= -->
+        <!-- DASHBOARD LOADING -->
+        <!-- ========================================================= -->
+
+        <div
+            id="dashboardPageLoader"
+            class="pointer-events-none fixed inset-0 z-[9998] hidden items-center justify-center bg-white/20 backdrop-blur-[1px]"
+        >
+
+            <div class="rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-xl">
+
+                <div class="flex items-center gap-3">
+
+                    <svg
+                        class="h-4 w-4 animate-spin text-indigo-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle
+                            class="opacity-20"
+                            cx="12"
+                            cy="12"
+                            r="9"
+                            stroke="currentColor"
+                            stroke-width="3"
+                        ></circle>
+
+                        <path
+                            class="opacity-100"
+                            fill="currentColor"
+                            d="M21 12a9 9 0 00-9-9v3a6 6 0 016 6h3z"
+                        ></path>
+
+                    </svg>
+
+
+                    <span class="text-[9px] font-black uppercase tracking-widest text-gray-500">
+                        Loading...
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ========================================================= -->
         <!-- HEADER -->
         <!-- ========================================================= -->
 
@@ -161,7 +209,10 @@
         <!-- CONTENT -->
         <!-- ========================================================= -->
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div
+            id="dashboardContent"
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 transition-opacity duration-150"
+        >
 
 
             <!-- ===================================================== -->
@@ -278,9 +329,9 @@
                             class="h-4 w-4"
                             fill="none"
                             viewBox="0 0 24 24"
-                            stroke="currentColor"
                         >
                             <path
+                                stroke="currentColor"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
@@ -711,6 +762,8 @@
                                         <img
                                             src="{{ asset('storage/' . $item->item_photo) }}"
                                             alt="{{ $item->name }}"
+                                            loading="lazy"
+                                            decoding="async"
                                             class="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-105"
                                         >
 
@@ -727,6 +780,7 @@
                                                     stroke="currentColor"
                                                 >
                                                     <path
+                                                        stroke="currentColor"
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                         stroke-width="1.4"
@@ -1161,9 +1215,9 @@
                                                 class="h-4 w-4"
                                                 fill="none"
                                                 viewBox="0 0 24 24"
-                                                stroke="currentColor"
                                             >
                                                 <path
+                                                    stroke="currentColor"
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
@@ -1181,24 +1235,53 @@
 
                                     @else
 
-                                    <!-- VIEW BOOKING -->
-                                    @if($isRental)
+                                        <!-- VIEW BOOKING -->
+                                        @if($isRental)
 
-                                        <a
-                                            href="{{ route(
-                                                'student.item.schedule',
-                                                $item->id
-                                            ) }}"
-                                            class="mb-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white"
+                                            <a
+                                                href="{{ route(
+                                                    'student.item.schedule',
+                                                    $item->id
+                                                ) }}"
+                                                class="mb-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-600 hover:text-white"
+                                            >
+
+                                                <svg
+                                                    class="h-4 w-4"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        stroke="currentColor"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
+                                                    />
+                                                </svg>
+
+                                                Lihat Booking
+
+                                            </a>
+
+                                        @endif
+
+
+
+                                        <!-- OPEN SCHEDULE -->
+                                        <button
+                                            type="button"
+                                            class="schedule-toggle flex w-full items-center justify-center gap-2 rounded-xl bg-gray-950 px-4 py-3.5 text-[9px] font-black uppercase tracking-[0.16em] text-white shadow-lg transition-all hover:bg-indigo-600 active:scale-95"
+                                            data-item-id="{{ $item->id }}"
                                         >
 
                                             <svg
                                                 class="h-4 w-4"
                                                 fill="none"
                                                 viewBox="0 0 24 24"
-                                                stroke="currentColor"
                                             >
                                                 <path
+                                                    stroke="currentColor"
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
@@ -1206,257 +1289,187 @@
                                                 />
                                             </svg>
 
-                                            Lihat Booking
+                                            {{
+                                                $isRental
+                                                    ? 'Pilih Jadwal Sewa'
+                                                    : 'Pilih Jadwal Transaksi'
+                                            }}
 
-                                        </a>
-
-                                    @endif
+                                        </button>
 
 
 
-                                    <!-- OPEN SCHEDULE -->
-                                    <button
-                                        type="button"
-                                        class="schedule-toggle flex w-full items-center justify-center gap-2 rounded-xl bg-gray-950 px-4 py-3.5 text-[9px] font-black uppercase tracking-[0.16em] text-white shadow-lg transition-all hover:bg-indigo-600 active:scale-95"
-                                        data-item-id="{{ $item->id }}"
-                                    >
+                                        <!-- ================================================= -->
+                                        <!-- SCHEDULE FORM -->
+                                        <!-- ================================================= -->
 
-                                        <svg
-                                            class="h-4 w-4"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
+                                        <form
+                                            action="{{ route(
+                                                'student.cart.add',
+                                                $item->id
+                                            ) }}"
+                                            method="POST"
+                                            class="schedule-form mt-3 hidden rounded-2xl border border-indigo-100 bg-indigo-50/50 p-3"
+                                            data-item-id="{{ $item->id }}"
+                                            data-is-rental="{{ $isRental ? '1' : '0' }}"
+                                            data-subcategory="{{ $item->subcategory ?? '' }}"
                                         >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
-                                            />
-                                        </svg>
 
-                                        {{
-                                            $isRental
-                                                ? 'Pilih Jadwal Sewa'
-                                                : 'Pilih Jadwal Transaksi'
-                                        }}
-
-                                    </button>
+                                            @csrf
 
 
+                                            <!-- ================================================= -->
+                                            <!-- DATE -->
+                                            <!-- ================================================= -->
 
-                                    <!-- ================================================= -->
-                                    <!-- SCHEDULE FORM -->
-                                    <!-- ================================================= -->
+                                            <div>
 
-                                    <form
-                                        action="{{ route(
-                                            'student.cart.add',
-                                            $item->id
-                                        ) }}"
-                                        method="POST"
-                                        class="schedule-form mt-3 hidden rounded-2xl border border-indigo-100 bg-indigo-50/50 p-3"
-                                        data-item-id="{{ $item->id }}"
-                                        data-is-rental="{{ $isRental ? '1' : '0' }}"
-                                        data-subcategory="{{ $item->subcategory ?? '' }}"
-                                    >
+                                                <div class="mb-2 flex items-center justify-between gap-2">
 
-                                        @csrf
+                                                    <label class="text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
 
+                                                        {{
+                                                            $isRental
+                                                                ? 'Tanggal Sewa'
+                                                                : 'Tanggal Transaksi'
+                                                        }}
 
-                                        <!-- ================================================= -->
-                                        <!-- DATE -->
-                                        <!-- ================================================= -->
-
-                                        <div>
-
-                                            <div class="mb-2 flex items-center justify-between gap-2">
-
-                                                <label class="text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
-
-                                                    {{
-                                                        $isRental
-                                                            ? 'Tanggal Sewa'
-                                                            : 'Tanggal Transaksi'
-                                                    }}
-
-                                                </label>
+                                                    </label>
 
 
-                                                <span class="text-[8px] font-bold text-gray-400">
-                                                    Mulai hari ini
-                                                </span>
+                                                    <span class="text-[8px] font-bold text-gray-400">
+                                                        Mulai hari ini
+                                                    </span>
 
-                                            </div>
+                                                </div>
 
 
-                                            <div class="relative">
+                                                <div class="relative">
 
-                                                <div class="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2">
+                                                    <div class="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2">
 
-                                                    <svg
-                                                        class="h-4 w-4 text-indigo-500"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
+                                                        <svg
+                                                            class="h-4 w-4 text-indigo-500"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path
+                                                                stroke="currentColor"
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
+                                                            />
+                                                        </svg>
+
+                                                    </div>
+
+
+                                                    <input
+                                                        type="text"
+                                                        class="schedule-date-input w-full cursor-pointer rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-9 text-[11px] font-black text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
+                                                        placeholder="{{
+                                                            $isRental
+                                                                ? 'Pilih tanggal mulai - selesai'
+                                                                : 'Pilih tanggal transaksi'
+                                                        }}"
+                                                        readonly
+                                                        autocomplete="off"
                                                     >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
-                                                        />
-                                                    </svg>
+
+
+                                                    <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+
+                                                        <svg
+                                                            class="h-3.5 w-3.5 text-gray-400"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path
+                                                                stroke="currentColor"
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 9l-7 7-7-7"
+                                                            />
+                                                        </svg>
+
+                                                    </div>
 
                                                 </div>
 
 
                                                 <input
-                                                    type="text"
-                                                    class="schedule-date-input w-full cursor-pointer rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-9 text-[11px] font-black text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
-                                                    placeholder="{{
-                                                        $isRental
-                                                            ? 'Pilih tanggal mulai - selesai'
-                                                            : 'Pilih tanggal transaksi'
-                                                    }}"
-                                                    readonly
-                                                    autocomplete="off"
+                                                    type="hidden"
+                                                    name="start_date"
+                                                    class="start-date"
+                                                    required
                                                 >
 
 
-                                                <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-
-                                                    <svg
-                                                        class="h-3.5 w-3.5 text-gray-400"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 9l-7 7-7-7"
-                                                        />
-                                                    </svg>
-
-                                                </div>
+                                                <input
+                                                    type="hidden"
+                                                    name="end_date"
+                                                    class="end-date"
+                                                    {{ $isRental ? 'required' : '' }}
+                                                >
 
                                             </div>
 
 
-                                            <input
-                                                type="hidden"
-                                                name="start_date"
-                                                class="start-date"
-                                                required
-                                            >
+
+                                            <!-- ================================================= -->
+                                            <!-- TIME -->
+                                            <!-- ================================================= -->
+
+                                            <div class="mt-3">
+
+                                                <div class="mb-2 flex items-center justify-between gap-2">
+
+                                                    <label class="text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
+
+                                                        {{
+                                                            $isRental
+                                                                ? 'Waktu'
+                                                                : 'Jam Transaksi'
+                                                        }}
+
+                                                    </label>
 
 
-                                            <input
-                                                type="hidden"
-                                                name="end_date"
-                                                class="end-date"
-                                                {{ $isRental ? 'required' : '' }}
-                                            >
+                                                    <span class="text-[8px] font-black text-indigo-500">
+                                                        17:00 — 19:00
+                                                    </span>
 
-                                        </div>
+                                                </div>
 
 
-
-                                        <!-- ================================================= -->
-                                        <!-- TIME -->
-                                        <!-- ================================================= -->
-
-                                        <div class="mt-3">
-
-                                            <div class="mb-2 flex items-center justify-between gap-2">
-
-                                                <label class="text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
-
-                                                    {{
+                                                <div
+                                                    class="{{
                                                         $isRental
-                                                            ? 'Waktu'
-                                                            : 'Jam Transaksi'
-                                                    }}
-
-                                                </label>
-
-
-                                                <span class="text-[8px] font-black text-indigo-500">
-                                                    17:00 — 19:00
-                                                </span>
-
-                                            </div>
+                                                            ? 'grid grid-cols-2'
+                                                            : 'grid grid-cols-1'
+                                                    }} gap-2"
+                                                >
 
 
-                                            <div
-                                                class="{{
-                                                    $isRental
-                                                        ? 'grid grid-cols-2'
-                                                        : 'grid grid-cols-1'
-                                                }} gap-2"
-                                            >
-
-
-                                                <!-- START -->
-                                                <div>
-
-                                                    <select
-                                                        name="start_time"
-                                                        class="start-time w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-black text-gray-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
-                                                        required
-                                                    >
-
-                                                        <option value="">
-
-                                                            {{
-                                                                $isRental
-                                                                    ? 'Jam Pengambilan'
-                                                                    : 'Pilih Jam'
-                                                            }}
-
-                                                        </option>
-
-                                                        <option value="17:00">
-                                                            17:00
-                                                        </option>
-
-                                                        <option value="17:30">
-                                                            17:30
-                                                        </option>
-
-                                                        <option value="18:00">
-                                                            18:00
-                                                        </option>
-
-                                                        <option value="18:30">
-                                                            18:30
-                                                        </option>
-
-                                                        <option value="19:00">
-                                                            19:00
-                                                        </option>
-
-                                                    </select>
-
-                                                </div>
-
-
-
-                                                <!-- END -->
-                                                @if($isRental)
-
+                                                    <!-- START -->
                                                     <div>
 
                                                         <select
-                                                            name="end_time"
-                                                            class="end-time w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-black text-gray-900 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-500/10"
+                                                            name="start_time"
+                                                            class="start-time w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-black text-gray-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
                                                             required
                                                         >
 
                                                             <option value="">
-                                                                Jam Pengembalian
+
+                                                                {{
+                                                                    $isRental
+                                                                        ? 'Jam Pengambilan'
+                                                                        : 'Pilih Jam'
+                                                                }}
+
                                                             </option>
 
                                                             <option value="17:00">
@@ -1483,125 +1496,164 @@
 
                                                     </div>
 
-                                                @endif
-
-                                            </div>
 
 
-                                            <p class="mt-2 text-center text-[8px] font-bold text-indigo-500">
-                                                Jam transaksi tersedia pukul 17:00–19:00.
-                                            </p>
+                                                    <!-- END -->
+                                                    @if($isRental)
 
-                                        </div>
+                                                        <div>
+
+                                                            <select
+                                                                name="end_time"
+                                                                class="end-time w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-black text-gray-900 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-500/10"
+                                                                required
+                                                            >
+
+                                                                <option value="">
+                                                                    Jam Pengembalian
+                                                                </option>
+
+                                                                <option value="17:00">
+                                                                    17:00
+                                                                </option>
+
+                                                                <option value="17:30">
+                                                                    17:30
+                                                                </option>
+
+                                                                <option value="18:00">
+                                                                    18:00
+                                                                </option>
+
+                                                                <option value="18:30">
+                                                                    18:30
+                                                                </option>
+
+                                                                <option value="19:00">
+                                                                    19:00
+                                                                </option>
+
+                                                            </select>
+
+                                                        </div>
+
+                                                    @endif
+
+                                                </div>
 
 
-
-                                        <!-- ================================================= -->
-                                        <!-- MERCHANDISE -->
-                                        <!-- ================================================= -->
-
-                                        <!-- Merchandise-specific fields -->
-
-                                        @if(
-                                            $isMerchandise &&
-                                            $item->subcategory === 'ID Card'
-                                        )
-
-                                            <!-- ID CARD DRIVE -->
-                                            <div class="mt-4">
-
-                                                <label class="mb-2 block text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
-                                                    Link Drive Desain
-                                                </label>
-
-
-                                                <input
-                                                    type="url"
-                                                    name="design_link"
-                                                    class="design-link w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-bold text-gray-900 outline-none placeholder:text-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
-                                                    placeholder="https://drive.google.com/..."
-                                                    required
-                                                >
-
-
-                                                <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-400">
-                                                    Pastikan file dapat diakses oleh Admin SC.
+                                                <p class="mt-2 text-center text-[8px] font-bold text-indigo-500">
+                                                    Jam transaksi tersedia pukul 17:00–19:00.
                                                 </p>
 
                                             </div>
 
-                                        @endif
+
+
+                                            <!-- ================================================= -->
+                                            <!-- MERCHANDISE -->
+                                            <!-- ================================================= -->
+
+                                            @if(
+                                                $isMerchandise &&
+                                                $item->subcategory === 'ID Card'
+                                            )
+
+                                                <!-- ID CARD DRIVE -->
+                                                <div class="mt-4">
+
+                                                    <label class="mb-2 block text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
+                                                        Link Drive Desain
+                                                    </label>
+
+
+                                                    <input
+                                                        type="url"
+                                                        name="design_link"
+                                                        class="design-link w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-bold text-gray-900 outline-none placeholder:text-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
+                                                        placeholder="https://drive.google.com/..."
+                                                        required
+                                                    >
+
+
+                                                    <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-400">
+                                                        Pastikan file dapat diakses oleh Admin SC.
+                                                    </p>
+
+                                                </div>
+
+                                            @endif
 
 
 
-                                        <!-- ================================================= -->
-                                        <!-- SUMMARY -->
-                                        <!-- ================================================= -->
+                                            <!-- ================================================= -->
+                                            <!-- SUMMARY -->
+                                            <!-- ================================================= -->
 
-                                        <div class="schedule-summary mt-3 hidden rounded-xl bg-white px-3 py-2.5 shadow-sm">
+                                            <div class="schedule-summary mt-3 hidden rounded-xl bg-white px-3 py-2.5 shadow-sm">
 
-                                            <p class="text-[8px] font-black uppercase tracking-widest text-gray-400">
-                                                Jadwal Dipilih
-                                            </p>
+                                                <p class="text-[8px] font-black uppercase tracking-widest text-gray-400">
+                                                    Jadwal Dipilih
+                                                </p>
 
-                                            <p class="summary-text mt-1 text-[10px] font-black text-gray-800">
-                                            </p>
-
-                                        </div>
-
-
-
-                                        <!-- ================================================= -->
-                                        <!-- QUANTITY -->
-                                        <!-- ================================================= -->
-
-                                        <div class="mt-3 flex gap-2">
-
-                                            <div class="w-20 shrink-0">
-
-                                                <input
-                                                    type="number"
-                                                    name="quantity"
-                                                    value="1"
-                                                    min="1"
-                                                    max="{{ $item->stock_quantity }}"
-                                                    required
-                                                    class="w-full rounded-xl border border-gray-200 bg-white px-2 py-3 text-center text-[10px] font-black text-gray-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
-                                                >
+                                                <p class="summary-text mt-1 text-[10px] font-black text-gray-800">
+                                                </p>
 
                                             </div>
 
 
-                                            <button
-                                                type="submit"
-                                                class="flex-1 rounded-xl bg-indigo-600 px-3 py-3 text-[9px] font-black uppercase tracking-[0.12em] text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 active:scale-95"
-                                            >
 
-                                                <span class="inline-flex items-center justify-center gap-1.5">
+                                            <!-- ================================================= -->
+                                            <!-- QUANTITY -->
+                                            <!-- ================================================= -->
 
-                                                    <svg
-                                                        class="h-4 w-4"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
+                                            <div class="mt-3 flex gap-2">
+
+                                                <div class="w-20 shrink-0">
+
+                                                    <input
+                                                        type="number"
+                                                        name="quantity"
+                                                        value="1"
+                                                        min="1"
+                                                        max="{{ $item->stock_quantity }}"
+                                                        required
+                                                        class="w-full rounded-xl border border-gray-200 bg-white px-2 py-3 text-center text-[10px] font-black text-gray-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10"
                                                     >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M12 4v16m8-8H4"
-                                                        />
-                                                    </svg>
 
-                                                    Ke Keranjang
+                                                </div>
 
-                                                </span>
 
-                                            </button>
+                                                <button
+                                                    type="submit"
+                                                    class="flex-1 rounded-xl bg-indigo-600 px-3 py-3 text-[9px] font-black uppercase tracking-[0.12em] text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 active:scale-95"
+                                                >
 
-                                        </div>
+                                                    <span class="inline-flex items-center justify-center gap-1.5">
 
-                                    </form>
+                                                        <svg
+                                                            class="h-4 w-4"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path
+                                                                stroke="currentColor"
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 4v16m8-8H4"
+                                                            />
+                                                        </svg>
+
+                                                        Ke Keranjang
+
+                                                    </span>
+
+                                                </button>
+
+                                            </div>
+
+                                        </form>
 
                                     @endif
 
@@ -1664,9 +1716,9 @@
                             class="h-9 w-9 text-gray-300"
                             fill="none"
                             viewBox="0 0 24 24"
-                            stroke="currentColor"
                         >
                             <path
+                                stroke="currentColor"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="1.5"
@@ -1828,32 +1880,142 @@
     <script>
 
         /* ============================================================
-         * SEARCH
+         * GLOBAL STATE
          * ============================================================
          */
 
         let searchTimeout = null;
 
 
-        const searchInput =
-            document.getElementById(
-                'searchInput'
-            );
+        /* ============================================================
+         * LOADING
+         * ============================================================
+         */
+
+        function showDashboardLoader() {
+
+            const loader =
+                document.getElementById(
+                    'dashboardPageLoader'
+                );
 
 
-        const searchForm =
-            document.getElementById(
-                'searchForm'
-            );
+            const content =
+                document.getElementById(
+                    'dashboardContent'
+                );
 
 
-        if (
-            searchInput &&
-            searchForm
-        ) {
+            if (loader) {
+
+                loader.classList.remove(
+                    'hidden'
+                );
+
+                loader.classList.add(
+                    'flex'
+                );
+
+            }
+
+
+            if (content) {
+
+                content.classList.add(
+                    'opacity-60',
+                    'pointer-events-none'
+                );
+
+            }
+
+        }
+
+
+        function hideDashboardLoader() {
+
+            const loader =
+                document.getElementById(
+                    'dashboardPageLoader'
+                );
+
+
+            const content =
+                document.getElementById(
+                    'dashboardContent'
+                );
+
+
+            if (loader) {
+
+                loader.classList.add(
+                    'hidden'
+                );
+
+                loader.classList.remove(
+                    'flex'
+                );
+
+            }
+
+
+            if (content) {
+
+                content.classList.remove(
+                    'opacity-60',
+                    'pointer-events-none'
+                );
+
+            }
+
+        }
+
+
+
+        /* ============================================================
+         * DASHBOARD SEARCH
+         * ============================================================
+         */
+
+        function initializeDashboardSearch() {
+
+            const searchInput =
+                document.getElementById(
+                    'searchInput'
+                );
+
+
+            const searchForm =
+                document.getElementById(
+                    'searchForm'
+                );
+
+
+            if (
+                !searchInput ||
+                !searchForm
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+             * Prevent duplicate listener
+             */
+
+            if (
+                searchInput.dataset.initialized ===
+                'true'
+            ) {
+
+                return;
+
+            }
+
 
             searchInput.addEventListener(
-                'keyup',
+                'input',
                 function () {
 
                     clearTimeout(
@@ -1865,7 +2027,7 @@
                         setTimeout(
                             function () {
 
-                                searchForm.submit();
+                                searchForm.requestSubmit();
 
                             },
                             700
@@ -1874,20 +2036,345 @@
                 }
             );
 
+
+            searchForm.addEventListener(
+                'submit',
+                function (event) {
+
+                    event.preventDefault();
+
+
+                    const formData =
+                        new FormData(
+                            searchForm
+                        );
+
+
+                    const params =
+                        new URLSearchParams(
+                            formData
+                        );
+
+
+                    const url =
+                        new URL(
+                            searchForm.action,
+                            window.location.origin
+                        );
+
+
+                    url.search =
+                        params.toString();
+
+
+                    navigateDashboard(
+                        url.toString(),
+                        true
+                    );
+
+                }
+            );
+
+
+            searchInput.dataset.initialized =
+                'true';
+
         }
 
 
 
         /* ============================================================
-         * DOM READY
+         * DASHBOARD LINK CHECK
+         * ============================================================
+         */
+
+        function isDashboardLink(
+            url
+        ) {
+
+            const dashboardUrl =
+                new URL(
+                    '{{ route('student.dashboard') }}',
+                    window.location.origin
+                );
+
+
+            return (
+                url.origin ===
+                    window.location.origin
+                &&
+                url.pathname ===
+                    dashboardUrl.pathname
+            );
+
+        }
+
+
+
+        /* ============================================================
+         * DASHBOARD NAVIGATION
+         * ============================================================
+         */
+
+        async function navigateDashboard(
+            url,
+            updateHistory = true
+        ) {
+
+            const content =
+                document.getElementById(
+                    'dashboardContent'
+                );
+
+
+            if (!content) {
+
+                window.location.href =
+                    url;
+
+                return;
+
+            }
+
+
+            showDashboardLoader();
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            method: 'GET',
+
+                            headers: {
+                                'X-Requested-With':
+                                    'XMLHttpRequest',
+
+                                'Accept':
+                                    'text/html',
+
+                                'Cache-Control':
+                                    'no-cache'
+                            },
+
+                            credentials:
+                                'same-origin'
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        'Dashboard request failed.'
+                    );
+
+                }
+
+
+                const html =
+                    await response.text();
+
+
+                /*
+                 * Parse response
+                 */
+
+                const parser =
+                    new DOMParser();
+
+
+                const parsedDocument =
+                    parser.parseFromString(
+                        html,
+                        'text/html'
+                    );
+
+
+                const newContent =
+                    parsedDocument.getElementById(
+                        'dashboardContent'
+                    );
+
+
+                if (!newContent) {
+
+                    throw new Error(
+                        'Dashboard content not found.'
+                    );
+
+                }
+
+
+                /*
+                 * Replace only dashboard content
+                 */
+
+                content.innerHTML =
+                    newContent.innerHTML;
+
+
+                /*
+                 * Update browser URL
+                 */
+
+                if (updateHistory) {
+
+                    window.history.pushState(
+                        {},
+                        '',
+                        url
+                    );
+
+                }
+
+
+                /*
+                 * Scroll to top
+                 */
+
+                window.scrollTo(
+                    {
+                        top: 0,
+                        behavior: 'instant'
+                    }
+                );
+
+
+                /*
+                 * Re-initialize
+                 */
+
+                initializeDashboardSearch();
+
+                initializeScheduleButtons();
+
+            } catch (error) {
+
+                console.error(
+                    'Dashboard navigation error:',
+                    error
+                );
+
+
+                /*
+                 * Fallback:
+                 * normal navigation
+                 */
+
+                window.location.href =
+                    url;
+
+                return;
+
+            } finally {
+
+                hideDashboardLoader();
+
+            }
+
+        }
+
+
+
+        /* ============================================================
+         * DASHBOARD LINKS
          * ============================================================
          */
 
         document.addEventListener(
-            'DOMContentLoaded',
+            'click',
+            function (event) {
+
+                const link =
+                    event.target.closest(
+                        '#dashboardContent a[href]'
+                    );
+
+
+                if (!link) {
+
+                    return;
+
+                }
+
+
+                /*
+                 * Don't intercept special clicks
+                 */
+
+                if (
+                    event.ctrlKey ||
+                    event.metaKey ||
+                    event.shiftKey ||
+                    event.altKey ||
+                    event.button !== 0 ||
+                    link.target === '_blank' ||
+                    link.hasAttribute('download')
+                ) {
+
+                    return;
+
+                }
+
+
+                const url =
+                    new URL(
+                        link.href,
+                        window.location.origin
+                    );
+
+
+                /*
+                 * Only intercept dashboard URLs.
+                 *
+                 * Product links like:
+                 * - checkout
+                 * - item schedule
+                 * - baju page
+                 *
+                 * continue working normally.
+                 */
+
+                if (
+                    !isDashboardLink(
+                        url
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                event.preventDefault();
+
+
+                navigateDashboard(
+                    url.toString(),
+                    true
+                );
+
+            }
+        );
+
+
+
+        /* ============================================================
+         * BROWSER BACK / FORWARD
+         * ============================================================
+         */
+
+        window.addEventListener(
+            'popstate',
             function () {
 
-                initializeScheduleButtons();
+                navigateDashboard(
+                    window.location.href,
+                    false
+                );
 
             }
         );
@@ -1909,6 +2396,24 @@
 
             buttons.forEach(
                 function (button) {
+
+                    /*
+                     * Prevent duplicate listener
+                     */
+
+                    if (
+                        button.dataset.listenerInitialized ===
+                        'true'
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    button.dataset.listenerInitialized =
+                        'true';
+
 
                     button.addEventListener(
                         'click',
@@ -2711,6 +3216,24 @@
             );
 
         }
+
+
+
+        /* ============================================================
+         * INITIAL PAGE
+         * ============================================================
+         */
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            function () {
+
+                initializeDashboardSearch();
+
+                initializeScheduleButtons();
+
+            }
+        );
 
     </script>
 

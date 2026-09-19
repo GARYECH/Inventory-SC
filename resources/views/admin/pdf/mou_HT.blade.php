@@ -10,6 +10,7 @@
         {{ $order->mou_number ?? $order->order_number }}
     </title>
 
+
     <style>
 
         /*
@@ -382,7 +383,7 @@
         .items-table th,
         .items-table td {
             border: 1px solid #000000;
-            padding: 2mm 1.5mm;
+            padding: 2mm 1.2mm;
             vertical-align: middle;
             overflow-wrap: break-word;
             word-wrap: break-word;
@@ -391,42 +392,47 @@
         .items-table th {
             background-color: #d9e5f7;
             text-align: center;
-            font-size: 9.5pt;
+            font-size: 8.8pt;
             font-weight: bold;
             line-height: 1.2;
         }
 
         .items-table td {
-            font-size: 9.5pt;
+            font-size: 9.2pt;
             line-height: 1.35;
         }
 
         .col-no {
-            width: 7%;
+            width: 6%;
             text-align: center;
         }
 
         .col-description {
-            width: 37%;
+            width: 31%;
             text-align: left;
         }
 
         .col-quantity {
-            width: 10%;
-            text-align: center;
-        }
-
-        .col-unit {
             width: 9%;
             text-align: center;
         }
 
+        .col-unit {
+            width: 8%;
+            text-align: center;
+        }
+
         .col-price {
-            width: 18.5%;
+            width: 17%;
+        }
+
+        .col-days {
+            width: 10%;
+            text-align: center;
         }
 
         .col-subtotal {
-            width: 18.5%;
+            width: 19%;
         }
 
         .item-name {
@@ -443,7 +449,7 @@
         .money-table td {
             border: none !important;
             padding: 0 !important;
-            font-size: 9.5pt;
+            font-size: 9pt;
             line-height: 1.2;
         }
 
@@ -456,6 +462,37 @@
             width: 81%;
             text-align: right;
             white-space: nowrap;
+        }
+
+        .price-note {
+            margin-top: 1mm;
+            text-align: right;
+            font-size: 8pt;
+            color: #555555;
+        }
+
+        .formula {
+            margin-top: 1mm;
+            text-align: right;
+            font-size: 7.5pt;
+            color: #555555;
+            line-height: 1.2;
+        }
+
+        .free-label {
+            text-align: center;
+            color: #a00000;
+            font-weight: bold;
+            font-size: 9pt;
+            line-height: 1.2;
+        }
+
+        .free-note {
+            margin-top: 1mm;
+            text-align: center;
+            font-size: 7.5pt;
+            color: #666666;
+            line-height: 1.2;
         }
 
         .total-row td {
@@ -628,6 +665,51 @@
     $pageTwoItems = $htItems->slice(0, 2)->values();
 
     $pageThreeItems = $htItems->slice(2)->values();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RENTAL DAYS
+    |--------------------------------------------------------------------------
+    |
+    | Jumlah hari rental menggunakan GAP tanggal.
+    |
+    | Minggu → Senin  = 0 hari
+    | Minggu → Selasa = 1 hari
+    | Minggu → Rabu   = 2 hari
+    |
+    */
+
+    $rentalDays = null;
+
+
+    if (
+        $order->start_date &&
+        $order->end_date
+    ) {
+
+        $startCarbon =
+            \Carbon\Carbon::parse(
+                $order->start_date
+            )->startOfDay();
+
+        $endCarbon =
+            \Carbon\Carbon::parse(
+                $order->end_date
+            )->startOfDay();
+
+        $dateDifference =
+            $startCarbon->diffInDays(
+                $endCarbon
+            );
+
+        $rentalDays =
+            max(
+                0,
+                $dateDifference - 1
+            );
+
+    }
 
 
     /*
@@ -805,6 +887,7 @@
 @endphp
 
 
+
 <!-- ================================================================== -->
 <!-- PAGE 1 -->
 <!-- ================================================================== -->
@@ -812,31 +895,69 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
+
 
 
     <div class="title">
@@ -845,17 +966,21 @@
             SURAT PERJANJIAN KERJASAMA
         </div>
 
+
         <div class="title-number">
 
             Nomor:
 
             <span class="{{ $dynamicClass($order->mou_number ?? $order->order_number) }}">
+
                 {{ $order->mou_number ?? $order->order_number }}
+
             </span>
 
         </div>
 
     </div>
+
 
 
     <p class="paragraph">
@@ -871,48 +996,112 @@
     </p>
 
 
+
     <!-- PIHAK PERTAMA -->
 
     <table class="party-table">
 
         <tr>
-            <td class="party-number" rowspan="5">1.</td>
-            <td class="party-label">Nama</td>
-            <td class="party-colon">:</td>
-            <td class="party-value">Gregory Edgard Christian</td>
-        </tr>
 
-        <tr>
-            <td class="party-label">Jabatan</td>
-            <td class="party-colon">:</td>
-            <td class="party-value">Bendahara</td>
-        </tr>
+            <td
+                class="party-number"
+                rowspan="5"
+            >
+                1.
+            </td>
 
-        <tr>
-            <td class="party-label">Instansi</td>
-            <td class="party-colon">:</td>
-            <td class="party-value">Student Council Universitas Ciputra Surabaya</td>
-        </tr>
+            <td class="party-label">
+                Nama
+            </td>
 
-        <tr>
-            <td class="party-label">Alamat</td>
-            <td class="party-colon">:</td>
+            <td class="party-colon">
+                :
+            </td>
+
             <td class="party-value">
+                Gregory Edgard Christian
+            </td>
+
+        </tr>
+
+
+        <tr>
+
+            <td class="party-label">
+                Jabatan
+            </td>
+
+            <td class="party-colon">
+                :
+            </td>
+
+            <td class="party-value">
+                Bendahara
+            </td>
+
+        </tr>
+
+
+        <tr>
+
+            <td class="party-label">
+                Instansi
+            </td>
+
+            <td class="party-colon">
+                :
+            </td>
+
+            <td class="party-value">
+                Student Council Universitas Ciputra Surabaya
+            </td>
+
+        </tr>
+
+
+        <tr>
+
+            <td class="party-label">
+                Alamat
+            </td>
+
+            <td class="party-colon">
+                :
+            </td>
+
+            <td class="party-value">
+
                 Citraland CBD Boulevard, RT: 04/RW: 01,
                 Kelurahan Made,
+
                 <br>
+
                 Kec. Sambikerep, Kota Surabaya,
                 Jawa Timur - 60219
+
             </td>
+
         </tr>
 
+
         <tr>
-            <td class="party-label">No. Telpon</td>
-            <td class="party-colon">:</td>
-            <td class="party-value">+62 813-3222-7372</td>
+
+            <td class="party-label">
+                No. Telpon
+            </td>
+
+            <td class="party-colon">
+                :
+            </td>
+
+            <td class="party-value">
+                +62 813-3222-7372
+            </td>
+
         </tr>
 
     </table>
+
 
 
     <p class="party-description">
@@ -925,62 +1114,124 @@
     </p>
 
 
+
     <!-- PIHAK KEDUA -->
 
     <table class="party-table">
 
         <tr>
-            <td class="party-number" rowspan="5">2.</td>
-            <td class="party-label">Nama</td>
-            <td class="party-colon">:</td>
+
+            <td
+                class="party-number"
+                rowspan="5"
+            >
+                2.
+            </td>
+
+            <td class="party-label">
+                Nama
+            </td>
+
+            <td class="party-colon">
+                :
+            </td>
+
             <td class="party-value">
+
                 <span class="{{ $dynamicClass($partyTwoName) }}">
                     {{ $partyTwoName ?: '-' }}
                 </span>
+
             </td>
+
         </tr>
 
+
         <tr>
-            <td class="party-label">Jabatan</td>
-            <td class="party-colon">:</td>
+
+            <td class="party-label">
+                Jabatan
+            </td>
+
+            <td class="party-colon">
+                :
+            </td>
+
             <td class="party-value">
+
                 <span class="{{ $dynamicClass($partyTwoPosition) }}">
                     {{ $partyTwoPosition ?: '-' }}
                 </span>
+
             </td>
+
         </tr>
 
+
         <tr>
-            <td class="party-label">Instansi</td>
-            <td class="party-colon">:</td>
+
+            <td class="party-label">
+                Instansi
+            </td>
+
+            <td class="party-colon">
+                :
+            </td>
+
             <td class="party-value">
+
                 <span class="{{ $dynamicClass($partyTwoOrganization) }}">
                     {{ $partyTwoOrganization ?: '-' }}
                 </span>
+
             </td>
+
         </tr>
 
+
         <tr>
-            <td class="party-label">Alamat</td>
-            <td class="party-colon">:</td>
+
+            <td class="party-label">
+                Alamat
+            </td>
+
+            <td class="party-colon">
+                :
+            </td>
+
             <td class="party-value">
+
                 <span class="{{ $dynamicClass($partyTwoAddress) }}">
                     {{ $partyTwoAddress ?: '-' }}
                 </span>
+
             </td>
+
         </tr>
 
+
         <tr>
-            <td class="party-label">No. Telpon</td>
-            <td class="party-colon">:</td>
+
+            <td class="party-label">
+                No. Telpon
+            </td>
+
+            <td class="party-colon">
+                :
+            </td>
+
             <td class="party-value">
+
                 <span class="{{ $dynamicClass($partyTwoPhone) }}">
                     {{ $partyTwoPhone ?: '-' }}
                 </span>
+
             </td>
+
         </tr>
 
     </table>
+
 
 
     <p class="party-description">
@@ -995,6 +1246,7 @@
         disebut sebagai <strong>PIHAK KEDUA.</strong>
 
     </p>
+
 
 
     <p class="paragraph">
@@ -1017,6 +1269,7 @@
 </div>
 
 
+
 <!-- ================================================================== -->
 <!-- PAGE 2 -->
 <!-- ================================================================== -->
@@ -1024,37 +1277,83 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
+
 
 
     <div class="article-title">
-        <span class="line">PASAL I</span>
-        <span class="line">JENIS KESEPAKATAN</span>
+
+        <span class="line">
+            PASAL I
+        </span>
+
+        <span class="line">
+            JENIS KESEPAKATAN
+        </span>
+
     </div>
+
 
 
     <p class="paragraph">
@@ -1077,52 +1376,93 @@
     </p>
 
 
+
     <div class="sub-number">
         1) Pengambilan
     </div>
 
 
+
     <table class="schedule-table">
 
         <tr>
-            <td class="schedule-label">Hari, Tanggal</td>
-            <td class="schedule-colon">:</td>
+
+            <td class="schedule-label">
+                Hari, Tanggal
+            </td>
+
+            <td class="schedule-colon">
+                :
+            </td>
+
             <td class="schedule-value">
+
                 <span class="{{ $dynamicClass($order->start_date) }}">
+
                     {{
                         $order->start_date
                             ? \Carbon\Carbon::parse($order->start_date)->locale('id')->translatedFormat('l, d F Y')
                             : '-'
                     }}
+
                 </span>
+
             </td>
+
         </tr>
 
+
         <tr>
-            <td class="schedule-label">Waktu Pengambilan</td>
-            <td class="schedule-colon">:</td>
+
+            <td class="schedule-label">
+                Waktu Pengambilan
+            </td>
+
+            <td class="schedule-colon">
+                :
+            </td>
+
             <td class="schedule-value">
+
                 <span class="{{ $dynamicClass($order->start_time) }}">
+
                     {{
                         $order->start_time
                             ? \Carbon\Carbon::parse($order->start_time)->format('H.i') . ' WIB'
                             : '-'
                     }}
+
                 </span>
+
             </td>
+
         </tr>
 
+
         <tr>
-            <td class="schedule-label">Lokasi Pengambilan</td>
-            <td class="schedule-colon">:</td>
-            <td class="schedule-value">
-                Ruang Student Council, Main Building Lantai 2,
-                <br>
-                Universitas Ciputra Surabaya
+
+            <td class="schedule-label">
+                Lokasi Pengambilan
             </td>
+
+            <td class="schedule-colon">
+                :
+            </td>
+
+            <td class="schedule-value">
+
+                Ruang Student Council, Main Building Lantai 2,
+
+                <br>
+
+                Universitas Ciputra Surabaya
+
+            </td>
+
         </tr>
 
     </table>
+
 
 
     <div class="sub-number">
@@ -1130,47 +1470,112 @@
     </div>
 
 
+
     <table class="schedule-table">
 
         <tr>
-            <td class="schedule-label">Hari, Tanggal</td>
-            <td class="schedule-colon">:</td>
+
+            <td class="schedule-label">
+                Hari, Tanggal
+            </td>
+
+            <td class="schedule-colon">
+                :
+            </td>
+
             <td class="schedule-value">
+
                 <span class="{{ $dynamicClass($order->end_date) }}">
+
                     {{
                         $order->end_date
                             ? \Carbon\Carbon::parse($order->end_date)->locale('id')->translatedFormat('l, d F Y')
                             : '-'
                     }}
+
                 </span>
+
             </td>
+
         </tr>
 
+
         <tr>
-            <td class="schedule-label">Waktu Pengembalian</td>
-            <td class="schedule-colon">:</td>
+
+            <td class="schedule-label">
+                Waktu Pengembalian
+            </td>
+
+            <td class="schedule-colon">
+                :
+            </td>
+
             <td class="schedule-value">
+
                 <span class="{{ $dynamicClass($order->end_time) }}">
+
                     {{
                         $order->end_time
                             ? \Carbon\Carbon::parse($order->end_time)->format('H.i') . ' WIB'
                             : '-'
                     }}
+
                 </span>
+
             </td>
+
         </tr>
 
+
         <tr>
-            <td class="schedule-label">Lokasi Pengembalian</td>
-            <td class="schedule-colon">:</td>
-            <td class="schedule-value">
-                Ruang Student Council, Main Building Lantai 2,
-                <br>
-                Universitas Ciputra Surabaya
+
+            <td class="schedule-label">
+                Lokasi Pengembalian
             </td>
+
+            <td class="schedule-colon">
+                :
+            </td>
+
+            <td class="schedule-value">
+
+                Ruang Student Council, Main Building Lantai 2,
+
+                <br>
+
+                Universitas Ciputra Surabaya
+
+            </td>
+
+        </tr>
+
+
+        <tr>
+
+            <td class="schedule-label">
+                Durasi Rental
+            </td>
+
+            <td class="schedule-colon">
+                :
+            </td>
+
+            <td class="schedule-value">
+
+                <span class="{{ $dynamicClass($rentalDays) }}">
+
+                    {{ $rentalDays ?? 0 }}
+
+                    {{ ($rentalDays ?? 0) === 1 ? 'hari' : 'hari' }}
+
+                </span>
+
+            </td>
+
         </tr>
 
     </table>
+
 
 
     <!-- ============================================================= -->
@@ -1182,110 +1587,339 @@
         <thead>
 
             <tr>
-                <th class="col-no">No</th>
-                <th class="col-description">Keterangan</th>
-                <th class="col-quantity">Jumlah</th>
-                <th class="col-unit">Satuan</th>
-                <th class="col-price">Harga Satuan</th>
-                <th class="col-subtotal">Subtotal</th>
+
+                <th class="col-no">
+                    No
+                </th>
+
+                <th class="col-description">
+                    Keterangan
+                </th>
+
+                <th class="col-quantity">
+                    Jumlah
+                </th>
+
+                <th class="col-unit">
+                    Satuan
+                </th>
+
+                <th class="col-price">
+                    Harga / Hari
+                </th>
+
+                <th class="col-days">
+                    Hari
+                </th>
+
+                <th class="col-subtotal">
+                    Subtotal
+                </th>
+
             </tr>
 
         </thead>
 
 
+
         <tbody>
 
+
             @if($pageTwoItems->count() > 0)
+
 
                 @foreach($pageTwoItems as $index => $detail)
 
                     @php
 
-                        $quantity = (int) ($detail->quantity ?? 0);
+                        $quantity =
+                            (int) (
+                                $detail->quantity
+                                ?? 0
+                            );
 
-                        $subtotal = (int) ($detail->subtotal_price ?? 0);
 
-                        $unitPrice = $quantity > 0
-                            ? intdiv($subtotal, $quantity)
-                            : 0;
+                        $subtotal =
+                            (int) (
+                                $detail->subtotal_price
+                                ?? 0
+                            );
 
-                        $itemName = $detail->item->name
+
+                        $itemName =
+                            $detail->item->name
                             ?? $detail->item->transaction_detail
                             ?? '';
+
+
+                        $unitPrice =
+                            $detail->item
+                                ? (int) $detail->item->price
+                                : 0;
+
+
+                        $transactionDetail =
+                            $detail->item->transaction_detail
+                            ?? null;
+
+
+                        $isFree =
+                            $subtotal === 0
+                            &&
+                            $order->organization ===
+                                'Student Council'
+                            &&
+                            $transactionDetail ===
+                                'HT UV-5R';
 
                     @endphp
 
 
+
                     <tr>
 
+
+                        <!-- NO -->
+
                         <td class="col-no">
+
                             {{ $index + 1 }}
+
                         </td>
 
+
+
+                        <!-- DESCRIPTION -->
+
                         <td class="col-description">
+
                             <div class="item-name">
 
                                 <span class="{{ $dynamicClass($itemName) }}">
+
                                     {{ $itemName ?: '-' }}
+
                                 </span>
 
+
                                 <br>
+
 
                                 <span>
                                     (Fullset HT, Earphone,
                                     Charger, Antenna)
                                 </span>
 
+
+                                <br>
+
+
+                                <span
+                                    style="
+                                        font-style:normal;
+                                        font-size:8pt;
+                                        color:#555555;
+                                    "
+                                >
+
+                                    Harga dihitung berdasarkan
+                                    hari rental.
+
+                                </span>
+
                             </div>
+
                         </td>
+
+
+
+                        <!-- QUANTITY -->
 
                         <td class="col-quantity">
+
                             <span class="dynamic filled">
+
                                 {{ $quantity }}
+
                             </span>
+
                         </td>
+
+
+
+                        <!-- UNIT -->
 
                         <td class="col-unit">
+
                             Pcs
+
                         </td>
+
+
+
+                        <!-- PRICE / DAY -->
 
                         <td class="col-price">
-                            <table class="money-table">
-                                <tr>
-                                    <td class="money-prefix">Rp</td>
-                                    <td class="money-value">{{ $money($unitPrice) }}</td>
-                                </tr>
-                            </table>
+
+
+                            @if($isFree)
+
+                                <div class="free-label">
+                                    FREE (SC)
+                                </div>
+
+                                <div class="free-note">
+                                    Student Council
+                                </div>
+
+                            @else
+
+                                <table class="money-table">
+
+                                    <tr>
+
+                                        <td class="money-prefix">
+                                            Rp
+                                        </td>
+
+                                        <td class="money-value">
+
+                                            {{ $money($unitPrice) }}
+
+                                        </td>
+
+                                    </tr>
+
+                                </table>
+
+
+                                <div class="price-note">
+                                    / hari
+                                </div>
+
+                            @endif
+
                         </td>
 
+
+
+                        <!-- DAYS -->
+
+                        <td class="col-days">
+
+                            <strong>
+                                {{ $rentalDays ?? 0 }}
+                            </strong>
+
+                            <br>
+
+                            <span
+                                style="
+                                    font-size:7.5pt;
+                                    color:#555555;
+                                "
+                            >
+                                hari
+                            </span>
+
+                        </td>
+
+
+
+                        <!-- SUBTOTAL -->
+
                         <td class="col-subtotal">
+
+
+                            @if(!$isFree)
+
+                                <div class="formula">
+
+                                    Rp
+                                    {{
+                                        number_format(
+                                            $unitPrice,
+                                            0,
+                                            ',',
+                                            '.'
+                                        )
+                                    }}
+
+                                    ×
+
+                                    {{ $rentalDays ?? 0 }}
+
+                                    ×
+
+                                    {{ $quantity }}
+
+                                </div>
+
+                            @else
+
+                                <div
+                                    class="formula"
+                                    style="color:#a00000;"
+                                >
+                                    FREE (SC)
+                                </div>
+
+                            @endif
+
+
                             <table class="money-table">
+
                                 <tr>
-                                    <td class="money-prefix">Rp</td>
-                                    <td class="money-value">{{ $money($subtotal) }}</td>
+
+                                    <td class="money-prefix">
+                                        Rp
+                                    </td>
+
+                                    <td class="money-value">
+
+                                        {{ $money($subtotal) }}
+
+                                    </td>
+
                                 </tr>
+
                             </table>
+
                         </td>
 
                     </tr>
 
+
                 @endforeach
+
 
             @else
 
+
                 <tr>
-                    <td colspan="6" class="center" style="height:16mm;">
+
+                    <td
+                        colspan="7"
+                        class="center"
+                        style="height:16mm;"
+                    >
+
                         Tidak ada Handy Talkie yang dipesan.
+
                     </td>
+
                 </tr>
 
+
             @endif
+
 
         </tbody>
 
     </table>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -1295,72 +1929,194 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
+
 
 
     <table class="items-table">
 
+        <thead>
+
+            <tr>
+
+                <th class="col-no">
+                    No
+                </th>
+
+                <th class="col-description">
+                    Keterangan
+                </th>
+
+                <th class="col-quantity">
+                    Jumlah
+                </th>
+
+                <th class="col-unit">
+                    Satuan
+                </th>
+
+                <th class="col-price">
+                    Harga / Hari
+                </th>
+
+                <th class="col-days">
+                    Hari
+                </th>
+
+                <th class="col-subtotal">
+                    Subtotal
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+
         <tbody>
+
 
             @foreach($pageThreeItems as $index => $detail)
 
                 @php
 
-                    $quantity = (int) ($detail->quantity ?? 0);
+                    $quantity =
+                        (int) (
+                            $detail->quantity
+                            ?? 0
+                        );
 
-                    $subtotal = (int) ($detail->subtotal_price ?? 0);
 
-                    $unitPrice = $quantity > 0
-                        ? intdiv($subtotal, $quantity)
-                        : 0;
+                    $subtotal =
+                        (int) (
+                            $detail->subtotal_price
+                            ?? 0
+                        );
 
-                    $itemName = $detail->item->name
+
+                    $itemName =
+                        $detail->item->name
                         ?? $detail->item->transaction_detail
                         ?? '';
 
-                    $rowNumber = $index + 3;
+
+                    $unitPrice =
+                        $detail->item
+                            ? (int) $detail->item->price
+                            : 0;
+
+
+                    $transactionDetail =
+                        $detail->item->transaction_detail
+                        ?? null;
+
+
+                    $isFree =
+                        $subtotal === 0
+                        &&
+                        $order->organization ===
+                            'Student Council'
+                        &&
+                        $transactionDetail ===
+                            'HT UV-5R';
+
+
+                    $rowNumber =
+                        $index + 3;
 
                 @endphp
 
 
+
                 <tr>
 
+
+                    <!-- NO -->
+
                     <td class="col-no">
+
                         {{ $rowNumber }}
+
                     </td>
 
+
+
+                    <!-- DESCRIPTION -->
+
                     <td class="col-description">
+
                         <div class="item-name">
 
                             <span class="{{ $dynamicClass($itemName) }}">
+
                                 {{ $itemName ?: '-' }}
+
                             </span>
 
+
                             <br>
+
 
                             <span>
                                 (Fullset HT, Earphone,
@@ -1368,70 +2124,229 @@
                             </span>
 
                         </div>
+
                     </td>
+
+
+
+                    <!-- QUANTITY -->
 
                     <td class="col-quantity">
+
                         <span class="dynamic filled">
+
                             {{ $quantity }}
+
                         </span>
+
                     </td>
+
+
+
+                    <!-- UNIT -->
 
                     <td class="col-unit">
+
                         Pcs
+
                     </td>
+
+
+
+                    <!-- PRICE / DAY -->
 
                     <td class="col-price">
-                        <table class="money-table">
-                            <tr>
-                                <td class="money-prefix">Rp</td>
-                                <td class="money-value">{{ $money($unitPrice) }}</td>
-                            </tr>
-                        </table>
+
+
+                        @if($isFree)
+
+                            <div class="free-label">
+                                FREE (SC)
+                            </div>
+
+                            <div class="free-note">
+                                Student Council
+                            </div>
+
+                        @else
+
+                            <table class="money-table">
+
+                                <tr>
+
+                                    <td class="money-prefix">
+                                        Rp
+                                    </td>
+
+                                    <td class="money-value">
+
+                                        {{ $money($unitPrice) }}
+
+                                    </td>
+
+                                </tr>
+
+                            </table>
+
+
+                            <div class="price-note">
+                                / hari
+                            </div>
+
+                        @endif
+
                     </td>
 
+
+
+                    <!-- DAYS -->
+
+                    <td class="col-days">
+
+                        <strong>
+                            {{ $rentalDays ?? 0 }}
+                        </strong>
+
+                        <br>
+
+                        <span
+                            style="
+                                font-size:7.5pt;
+                                color:#555555;
+                            "
+                        >
+                            hari
+                        </span>
+
+                    </td>
+
+
+
+                    <!-- SUBTOTAL -->
+
                     <td class="col-subtotal">
+
+
+                        @if(!$isFree)
+
+                            <div class="formula">
+
+                                Rp
+                                {{
+                                    number_format(
+                                        $unitPrice,
+                                        0,
+                                        ',',
+                                        '.'
+                                    )
+                                }}
+
+                                ×
+
+                                {{ $rentalDays ?? 0 }}
+
+                                ×
+
+                                {{ $quantity }}
+
+                            </div>
+
+                        @else
+
+                            <div
+                                class="formula"
+                                style="color:#a00000;"
+                            >
+                                FREE (SC)
+                            </div>
+
+                        @endif
+
+
                         <table class="money-table">
+
                             <tr>
-                                <td class="money-prefix">Rp</td>
-                                <td class="money-value">{{ $money($subtotal) }}</td>
+
+                                <td class="money-prefix">
+                                    Rp
+                                </td>
+
+                                <td class="money-value">
+
+                                    {{ $money($subtotal) }}
+
+                                </td>
+
                             </tr>
+
                         </table>
+
                     </td>
 
                 </tr>
 
+
             @endforeach
 
+
+
+            <!-- TOTAL -->
 
             <tr>
 
                 <td
-                    colspan="5"
+                    colspan="6"
                     class="right"
-                    style="height:11mm; padding-right:8mm;"
+                    style="
+                        height:11mm;
+                        padding-right:8mm;
+                    "
                 >
-                    <strong>Total</strong>
+
+                    <strong>
+                        Total
+                    </strong>
+
                 </td>
+
 
                 <td
                     class="col-subtotal"
-                    style="background-color:#fff2cc; font-weight:bold;"
+                    style="
+                        background-color:#fff2cc;
+                        font-weight:bold;
+                    "
                 >
+
                     <table class="money-table">
+
                         <tr>
-                            <td class="money-prefix">Rp</td>
-                            <td class="money-value">{{ $money($htTotal) }}</td>
+
+                            <td class="money-prefix">
+                                Rp
+                            </td>
+
+                            <td class="money-value">
+
+                                {{ $money($htTotal) }}
+
+                            </td>
+
                         </tr>
+
                     </table>
+
                 </td>
 
             </tr>
+
 
         </tbody>
 
     </table>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -1441,37 +2356,83 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
+
 
 
     <div class="article-title">
-        <span class="line">PASAL II</span>
-        <span class="line">HAK DAN KEWAJIBAN PIHAK PERTAMA</span>
+
+        <span class="line">
+            PASAL II
+        </span>
+
+        <span class="line">
+            HAK DAN KEWAJIBAN PIHAK PERTAMA
+        </span>
+
     </div>
+
 
 
     <div class="sub-heading">
@@ -1479,16 +2440,22 @@
     </div>
 
 
+
     <ol class="legal-list">
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berhak menerima pembayaran sesuai skema, nominal dan
             jadwal pembayaran yang telah disepakati sebagaimana
             tercantum dalam <strong>Pasal IV.</strong>
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berhak menerima kembali <em>Handy Talkie</em> (HT) yang
             disewakan dalam kondisi baik, layak pakai, berfungsi
@@ -1496,9 +2463,12 @@
             (<em>fully charged</em>) sesuai waktu dan lokasi yang
             telah disepakati oleh <strong>PARA PIHAK</strong>
             sebagaimana diatur dalam <strong>Pasal I.</strong>
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berhak menentukan fungsi dan pengaturan
             (<em>setting</em>) awal pada <em>Handy Talkie</em> (HT)
@@ -1506,9 +2476,12 @@
             persetujuan atas segala bentuk pembongkaran, modifikasi,
             perbaikan, atau perubahan frekuensi yang diajukan oleh
             <strong>PIHAK KEDUA.</strong>
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berhak menerima kompensasi dari
             <strong>PIHAK KEDUA</strong>
@@ -1518,9 +2491,12 @@
             yang tidak sesuai oleh <strong>PIHAK KEDUA</strong>,
             dengan ketentuan sebagaimana tercantum dalam
             <strong>Pasal V</strong> mengenai sanksi.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berhak menerima kembali dokumen
             <em>Memorandum of Understanding</em> (MoU) yang telah
@@ -1528,18 +2504,24 @@
             melalui <em>website Inventory</em> Student Council
             setelah pesanan berada pada status
             “<em>Waiting for MoU</em>”.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berhak menerima bukti transfer atau bukti pembayaran dari
             <strong>PIHAK KEDUA</strong>
             melalui <em>website Inventory</em> Student Council
             apabila pesanan berada pada status
             “<em>Waiting for Payment</em>”.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berhak menerima kuitansi yang telah ditandatangani oleh
             <strong>PIHAK KEDUA</strong>
@@ -1547,11 +2529,14 @@
             sebagai bukti penyelesaian administrasi keuangan setelah
             pesanan berada pada status
             “<em>Waiting for Kwitansi</em>”.
+
         </li>
+
 
     </ol>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -1561,36 +2546,79 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
 
 
-    <ol class="legal-list" start="8">
+
+    <ol
+        class="legal-list"
+        start="8"
+    >
+
 
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berhak menerima tautan (<em>link</em>) Google Drive dari
             <strong>PIHAK KEDUA</strong>
@@ -1600,9 +2628,12 @@
             disamakan dengan penamaan barang di <em>website</em>,
             apabila pesanan telah memasuki status
             ”<em>Handed Over</em>”.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berhak menerima dokumen Berita Acara Kerusakan dan/atau
             Kehilangan Barang yang telah diisi secara lengkap,
@@ -1612,11 +2643,14 @@
             apabila pesanan berada pada status
             “<em>Returned(Damaged)</em>” terkait kendala, kerusakan,
             dan/atau kehilangan barang selama masa peminjaman.
+
         </li>
+
 
     </ol>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -1626,31 +2660,69 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
+
 
 
     <div class="sub-heading">
@@ -1658,9 +2730,12 @@
     </div>
 
 
+
     <ol class="legal-list">
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berkewajiban untuk menyerahkan
             <em>Handy Talkie</em> (HT) beserta seluruh
@@ -1668,16 +2743,22 @@
             dalam kondisi baik, layak pakai, berfungsi dengan baik,
             dan sesuai spesifikasi serta jumlah sebagaimana
             tercantum dalam <strong>Pasal I.</strong>
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berkewajiban mengatur dan menetapkan pembagian frekuensi
             <em>Handy Talkie</em> (HT) berdasarkan jumlah divisi
             yang disampaikan oleh <strong>PIHAK KEDUA.</strong>
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berkewajiban untuk melakukan pengecekan teknis
             (<em>quality control</em>) bersama
@@ -1686,9 +2767,12 @@
             daya <em>Handy Talkie</em> (HT) kepada
             <strong>PIHAK KEDUA</strong>
             pada saat serah terima.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berkewajiban menerima komplain dan menyediakan
             <em>Handy Talkie</em> HT pengganti sesuai ketersediaan
@@ -1698,9 +2782,12 @@
             <em>quality control</em> selesai,
             <strong>PIHAK PERTAMA</strong>
             tidak berkewajiban menerima komplain lanjutan.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK PERTAMA</strong>
             berkewajiban memberikan pemberitahuan kepada
             <strong>PIHAK KEDUA</strong>
@@ -1708,11 +2795,14 @@
             barang yang dapat mempengaruhi penyerahan barang sesuai
             dengan kesepakatan, segera setelah kondisi tersebut
             diketahui oleh <strong>PIHAK PERTAMA.</strong>
+
         </li>
+
 
     </ol>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -1722,37 +2812,83 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
+
 
 
     <div class="article-title">
-        <span class="line">PASAL III</span>
-        <span class="line">HAK DAN KEWAJIBAN PIHAK KEDUA</span>
+
+        <span class="line">
+            PASAL III
+        </span>
+
+        <span class="line">
+            HAK DAN KEWAJIBAN PIHAK KEDUA
+        </span>
+
     </div>
+
 
 
     <div class="sub-heading">
@@ -1760,9 +2896,12 @@
     </div>
 
 
+
     <ol class="legal-list">
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berhak mengambil dan menggunakan peralatan komunikasi
             berupa <em>Handy Talkie</em> (HT) beserta seluruh
@@ -1770,9 +2909,12 @@
             kondisi baik, layak pakai, berfungsi dengan baik, dan
             sesuai spesifikasi serta jumlah sebagaimana tercantum
             dalam <strong>Pasal I.</strong>
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berhak melakukan pengecekan barang
             (<em>quality control</em>) dan mendapatkan panduan atau
@@ -1780,9 +2922,12 @@
             <em>Handy Talkie</em> (HT) dari
             <strong>PIHAK PERTAMA</strong>
             pada saat serah terima barang.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berhak mengajukan komplain dan meminta unit pengganti
             (<em>replacement</em>) dengan spesifikasi setara atau
@@ -1793,28 +2938,37 @@
             Setelah proses <em>quality control</em> selesai,
             <strong>PIHAK PERTAMA</strong>
             tidak lagi dapat menerima komplain.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berhak menerima pemberitahuan dari
             <strong>PIHAK PERTAMA</strong>
             apabila terdapat kendala atau perubahan ketersediaan
             barang yang dapat mempengaruhi penyerahan barang sesuai
             dengan kesepakatan.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berhak menerima hasil pemeriksaan terhadap barang yang
             dikembalikan apabila ditemukan kerusakan, kehilangan,
             atau ketidaksesuaian pada barang, sesuai dengan ketentuan
             dalam <strong>Pasal V.</strong>
+
         </li>
+
 
     </ol>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -1824,31 +2978,69 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
+
 
 
     <div class="sub-heading">
@@ -1856,25 +3048,34 @@
     </div>
 
 
+
     <ol class="legal-list">
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban membayar biaya penyewaan peralatan dengan
             skema, nominal dan jadwal yang telah disepakati oleh
             <strong>PARA PIHAK</strong>, sesuai dengan ketentuan
             dalam <strong>Pasal IV.</strong>
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban menyediakan daftar plotting panitia yang
             menggunakan HT serta menyampaikan jumlah divisi kepada
             <strong>PIHAK PERTAMA</strong>
             untuk keperluan pengaturan frekuensi.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban menggunakan
             <em>Handy Talkie</em> (HT) sesuai dengan fungsi dan
@@ -1883,9 +3084,12 @@
             serta dilarang melakukan pembongkaran, modifikasi,
             perbaikan, atau perubahan frekuensi tanpa persetujuan
             terlebih dahulu oleh <strong>PIHAK PERTAMA.</strong>
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban untuk menjaga dan mengembalikan seluruh
             peralatan kepada <strong>PIHAK PERTAMA</strong>
@@ -1897,9 +3101,12 @@
             pertanggungjawaban kepada <strong>PIHAK KEDUA</strong>
             sebagaimana tercantum dalam <strong>Pasal V</strong>
             mengenai sanksi.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban melakukan pengisian daya baterai
             <em>Handy Talkie</em> (HT) selama masa peminjaman untuk
@@ -1907,9 +3114,12 @@
             pada hari berikutnya, serta mengembalikan seluruh
             <em>Handy Talkie</em> dalam kondisi baterai terisi penuh
             (<em>fully charged</em>).
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban untuk mengembalikan seluruh
             <em>Handy Talkie</em> (HT) tepat waktu sesuai yang sudah
@@ -1918,11 +3128,14 @@
             dengan kondisi baik, layak pakai, berfungsi dengan baik,
             baterai dalam keadaan terisi penuh
             (<em>fully charged</em>).
+
         </li>
+
 
     </ol>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -1932,63 +3145,115 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
 
 
-    <ol class="legal-list" start="7">
+
+    <ol
+        class="legal-list"
+        start="7"
+    >
+
 
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban untuk mengunduh, menandatangani, dan
             mengunggah kembali dokumen
             <em>Memorandum of Understanding</em> (MoU) ke dalam
             website Inventory Student Council apabila pesanan berada
             pada status “<em>Waiting for MoU</em>”.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban melakukan pembayaran sesuai dengan nominal
             yang tertera pada Invoice dan mengunggah bukti transfer
             ke dalam website Inventory Student Council apabila
             pesanan berada pada status status
             “<em>Waiting for Payment</em>”.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban untuk mengunduh, menandatangani, dan
             mengunggah kembali dokumen Kwitansi ke dalam website
             Inventory Student Council sebagai bukti sah
             penyelesaian administrasi apabila pesanan berada pada
             status “<em>Waiting for Kwitansi</em>”.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban untuk mengunggah tautan (<em>link</em>)
             Google Drive ke dalam website Inventory Student Council
@@ -1998,9 +3263,12 @@
             tipe barang dan penamaan file foto di dalam Google Drive
             harus sama persis dengan penamaan barang yang tertera di
             website.
+
         </li>
 
+
         <li>
+
             <strong>PIHAK KEDUA</strong>
             berkewajiban untuk mengunduh, mengisi lampiran bukti
             transfer, menandatangani, dan mengunggah kembali dokumen
@@ -2009,20 +3277,33 @@
             berada pada status “<em>Returned(Damaged)</em>” akibat
             kerusakan dan/atau kehilangan barang selama masa
             peminjaman.
+
         </li>
+
 
     </ol>
 
 
+
     <div class="article-title mt-medium">
-        <span class="line">PASAL IV</span>
-        <span class="line">BIAYA</span>
+
+        <span class="line">
+            PASAL IV
+        </span>
+
+        <span class="line">
+            BIAYA
+        </span>
+
     </div>
+
 
 
     <ol class="legal-list">
 
+
         <li>
+
             Harga total dari barang-barang sebagaimana dicantumkan
             dalam Pasal I Perjanjian ini, dibayar oleh
             <strong>PIHAK KEDUA</strong>
@@ -2030,25 +3311,35 @@
             sebesar
 
             <span class="{{ $dynamicClass($htTotal) }}">
+
                 Rp {{ $money($htTotal) }}-
+
             </span>
 
             (
 
             <span class="{{ $dynamicClass($htTotal) }}">
+
                 {{ trim($terbilang($htTotal)) }} Rupiah
+
             </span>
 
             ).
+
         </li>
 
+
         <li>
+
             Nominal tersebut sudah dalam nilai bersih (neto).
+
         </li>
+
 
     </ol>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -2058,53 +3349,106 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
 
 
-    <ol class="legal-list" start="3">
+
+    <ol
+        class="legal-list"
+        start="3"
+    >
+
 
         <li>
+
             Pembayaran dilakukan secara lunas oleh
             <strong>PIHAK KEDUA</strong>
             kepada <strong>PIHAK PIHAK PERTAMA</strong>
             melalui transfer bank, setelah surat perjanjian ini
             ditandatangani dan paling lambat pada hari pengambilan
             barang.
+
         </li>
 
+
         <li>
+
             Metode pembayaran akan dilakukan melalui transfer bank
             dengan rincian:
+
         </li>
+
 
     </ol>
 
 
-    <ol class="legal-list alpha" type="a">
+
+    <ol
+        class="legal-list alpha"
+        type="a"
+    >
+
 
         <li>
             Nama Bank : Bank Central Asia (BCA)
@@ -2118,45 +3462,70 @@
             Nomor Rekening : 8620797163
         </li>
 
+
     </ol>
 
 
+
     <div class="article-title mt-medium">
-        <span class="line">PASAL V</span>
-        <span class="line">SANKSI</span>
+
+        <span class="line">
+            PASAL V
+        </span>
+
+        <span class="line">
+            SANKSI
+        </span>
+
     </div>
+
 
 
     <ol class="legal-list">
 
+
         <li>
+
             Apabila salah satu PIHAK tidak melaksanakan hak dan/atau
             kewajibannya sebagaimana diatur dalam Surat Perjanjian
             Kerja Sama ini, maka PIHAK lainnya berhak memberikan
             teguran dan meminta pemenuhan kewajiban tersebut dalam
             jangka waktu yang disepakati oleh PARA PIHAK.
+
         </li>
 
+
         <li>
+
             Apabila salah satu PIHAK tidak melaksanakan hak dan/atau
             kewajibannya sebagaimana diatur dalam Surat Perjanjian
             Kerja Sama ini, maka PIHAK lainnya berhak memberikan
             teguran dan meminta pemenuhan kewajiban tersebut dalam
             jangka waktu yang disepakati oleh PARA PIHAK.
+
         </li>
 
+
         <li>
+
             Apabila terjadi kerusakan atau kehilangan akibat
             kesengajaan, kelalaian, maupun penggunaan yang tidak
             sesuai oleh PIHAK KEDUA, maka PIHAK KEDUA wajib
             menanggung biaya penggantian sesuai dengan komponen yang
             rusak atau hilang, dengan rincian sebagai berikut:
+
         </li>
+
 
     </ol>
 
 
-    <ol class="legal-list alpha" type="a">
+
+    <ol
+        class="legal-list alpha"
+        type="a"
+    >
+
 
         <li>
             Unit HT Baofeng UV-5r : Rp500.000,-
@@ -2174,9 +3543,11 @@
             Potensiometer Baofeng UV-5r : Rp 160.000,-
         </li>
 
+
     </ol>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -2186,34 +3557,77 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
 
 
-    <ol class="legal-list alpha" type="a" start="5">
+
+    <ol
+        class="legal-list alpha"
+        type="a"
+        start="5"
+    >
+
 
         <li>
             Regulator Baofeng UV-5rr : Rp150.000,-
@@ -2275,7 +3689,9 @@
             Antenna Baofeng 888s : Rp 20.000,-
         </li>
 
+
     </ol>
+
 
 
     <p class="paragraph">
@@ -2288,7 +3704,12 @@
     </p>
 
 
-    <ol class="legal-list" start="4">
+
+    <ol
+        class="legal-list"
+        start="4"
+    >
+
 
         <li>
 
@@ -2300,26 +3721,35 @@
             Perjanjian Kerja Sama ini, termasuk namun tidak terbatas
             pada:
 
-            <ol class="legal-list alpha" type="a">
+            <ol
+                class="legal-list alpha"
+                type="a"
+            >
 
                 <li>
+
                     pengakhiran Surat Perjanjian Kerja Sama atas
                     kesepakatan atau karena wanprestasi;
+
                 </li>
 
                 <li>
+
                     pembayaran ganti rugi atau kompensasi sesuai
                     dengan ketentuan yang berlaku dalam Surat
                     Perjanjian Kerja Sama ini.
+
                 </li>
 
             </ol>
 
         </li>
 
+
     </ol>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -2329,49 +3759,103 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
 
 
-    <ol class="legal-list" start="5">
+
+    <ol
+        class="legal-list"
+        start="5"
+    >
+
 
         <li>
+
             Pembayaran kompensasi atau ganti rugi sebagaimana
             dimaksud dalam Pasal ini wajib diselesaikan paling lambat
             7 (tujuh) hari kerja sejak disepakatinya nilai kompensasi
             atau ganti rugi oleh <strong>PARA PIHAK.</strong>
+
         </li>
+
 
     </ol>
 
 
+
     <div class="article-title">
-        <span class="line">PASAL VI</span>
-        <span class="line">JANGKA WAKTU PERJANJIAN</span>
+
+        <span class="line">
+            PASAL VI
+        </span>
+
+        <span class="line">
+            JANGKA WAKTU PERJANJIAN
+        </span>
+
     </div>
+
 
 
     <p class="paragraph">
@@ -2389,10 +3873,19 @@
     </p>
 
 
+
     <div class="article-title">
-        <span class="line">PASAL VII</span>
-        <span class="line">PENYELESAIAN PERSELISIHAN</span>
+
+        <span class="line">
+            PASAL VII
+        </span>
+
+        <span class="line">
+            PENYELESAIAN PERSELISIHAN
+        </span>
+
     </div>
+
 
 
     <p class="paragraph">
@@ -2405,15 +3898,26 @@
     </p>
 
 
+
     <div class="article-title">
-        <span class="line">PASAL VIII</span>
-        <span class="line">LAIN-LAIN</span>
+
+        <span class="line">
+            PASAL VIII
+        </span>
+
+        <span class="line">
+            LAIN-LAIN
+        </span>
+
     </div>
+
 
 
     <ol class="legal-list">
 
+
         <li>
+
             Hal-hal yang belum diatur dalam Surat Perjanjian Kerja
             Sama ini akan disepakati kemudian oleh
             <strong>PARA PIHAK</strong>
@@ -2421,17 +3925,23 @@
             ini. Setiap perubahan terhadap Surat Perjanjian Kerja Sama
             ini hanya sah apabila dibuat secara tertulis dan disetujui
             oleh <strong>PARA PIHAK.</strong>
+
         </li>
 
+
         <li>
+
             Surat Perjanjian Kerja Sama ini disepakati semata-mata
             untuk menjaga agar tidak terjadi perselisihan antara
             kedua belah pihak tanpa ada maksud lain.
+
         </li>
+
 
     </ol>
 
 </div>
+
 
 
 <!-- ================================================================== -->
@@ -2441,37 +3951,83 @@
 <div class="page">
 
     <div class="header">
+
         <table class="header-table">
+
             <tr>
+
                 <td class="header-logo">
+
                     @if($logoPath && file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Student Council">
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
                     @endif
+
                 </td>
+
+
                 <td class="header-text">
-                    <div class="header-main">UNIVERSITAS CIPUTRA SURABAYA</div>
-                    <div class="header-main">STUDENT COUNCIL</div>
-                    <div class="header-sub">SURAT PERJANJIAN KERJASAMA</div>
-                    <div class="header-sub">VENDOR SATU PINTU</div>
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur - Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
                     </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+
+                        Citraland CBD Boulevard, Surabaya, 60219
+
+                        <br>
+
+                        Jawa Timur - Indonesia
+
+                        <br>
+
+                        Telepon: (031)7451699; Fax: (031)7451698
+
+                        <br>
+
+                        Email: studentcouncil@ciputra.ac.id
+
+                    </div>
+
                 </td>
+
             </tr>
+
         </table>
+
     </div>
+
 
 
     <div class="article-title">
-        <span class="line">PASAL IX</span>
-        <span class="line">PENUTUP</span>
+
+        <span class="line">
+            PASAL IX
+        </span>
+
+        <span class="line">
+            PENUTUP
+        </span>
+
     </div>
+
 
 
     <p class="paragraph">
@@ -2484,20 +4040,25 @@
     </p>
 
 
+
     <div class="signature-date">
 
         Surabaya,
 
         <span class="{{ $dynamicClass($agreementDateShort) }}">
+
             {{ $agreementDateShort ?: '-' }}
+
         </span>
 
     </div>
 
 
+
     <table class="signature-table">
 
         <tr>
+
 
             <!-- PIHAK PERTAMA -->
 
@@ -2507,23 +4068,38 @@
                     PIHAK PERTAMA
                 </div>
 
+
                 <div class="signature-image">
+
                     @if($ttdPath && file_exists($ttdPath))
-                        <img src="{{ $ttdPath }}" alt="TTD Bendahara">
+
+                        <img
+                            src="{{ $ttdPath }}"
+                            alt="TTD Bendahara"
+                        >
+
                     @endif
+
                 </div>
+
 
                 <div class="signature-name">
                     Gregory Edgard Christian
                 </div>
 
+
                 <div class="signature-role">
+
                     Bendahara Student Council Universitas Ciputra
+
                     <br>
+
                     Surabaya
+
                 </div>
 
             </td>
+
 
 
             <!-- PIHAK KEDUA -->
@@ -2534,24 +4110,33 @@
                     PIHAK KEDUA
                 </div>
 
+
                 <div class="signature-space">
                 </div>
 
+
                 <div class="{{ $dynamicClass($partyTwoName) }} signature-name">
+
                     {{ $partyTwoName ?: '-' }}
+
                 </div>
 
+
                 <div class="{{ $dynamicClass($partyTwoPosition) }} signature-role">
+
                     {{ $partyTwoPosition ?: '-' }}
+
                 </div>
 
             </td>
+
 
         </tr>
 
     </table>
 
 </div>
+
 
 
 </body>

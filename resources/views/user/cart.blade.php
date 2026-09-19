@@ -383,80 +383,6 @@
 
                         /*
                         |--------------------------------------------------------------------------
-                        | PRICE
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $basePrice =
-                            (int) (
-                                $details['price'] ?? 0
-                            );
-
-                        $sizeExtra =
-                            (int) (
-                                $details[
-                                    'size_additional_price'
-                                ] ?? 0
-                            );
-
-                        $quantity =
-                            (int) (
-                                $details['quantity'] ?? 1
-                            );
-
-                        $sizeBreakdowns =
-                            $details[
-                                'size_breakdowns'
-                            ] ?? [];
-
-                        $isBaju =
-                            $transactionType ===
-                            'Merchandise' &&
-                            $subcategory ===
-                            'Baju';
-
-
-                        if (
-                            $isBaju &&
-                            !empty($sizeBreakdowns)
-                        ) {
-
-                            $subtotal =
-                                collect(
-                                    $sizeBreakdowns
-                                )->sum(
-                                    function (
-                                        $breakdown
-                                    ) {
-
-                                        return (int) (
-                                            $breakdown[
-                                                'subtotal_price'
-                                            ] ?? 0
-                                        );
-
-                                    }
-                                );
-
-                        } else {
-
-                            $unitPrice =
-                                $basePrice +
-                                $sizeExtra;
-
-                            $subtotal =
-                                $unitPrice *
-                                $quantity;
-
-                        }
-
-
-                        $totalPrice +=
-                            $subtotal;
-
-
-                        /*
-                        |--------------------------------------------------------------------------
                         | MOU
                         |--------------------------------------------------------------------------
                         */
@@ -788,6 +714,7 @@
 
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-indigo-800">
                                             Barang wajib dikembalikan sesuai jadwal yang telah dipilih.
+                                            Harga rental dihitung berdasarkan jumlah hari sewa.
                                         </p>
 
                                     </div>
@@ -805,7 +732,7 @@
                                         </p>
 
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-amber-800">
-                                            HT wajib dikembalikan dan menggunakan MoU Handy Talkie.
+                                            HT wajib dikembalikan. Harga rental dihitung berdasarkan jumlah hari sewa dan transaksi menggunakan MoU Handy Talkie.
                                         </p>
 
                                     </div>
@@ -855,6 +782,85 @@
                                 @endif
 
                             </div>
+
+
+
+                            <!-- ================================================= -->
+                            <!-- RENTAL PRICING NOTICE -->
+                            <!-- ================================================= -->
+
+                            @if($hasEquipment || $hasHandyTalkie)
+
+                                <div class="px-6 pt-4 sm:px-8">
+
+                                    <div class="rounded-2xl border border-violet-100 bg-violet-50 p-4">
+
+                                        <div class="flex items-start gap-3">
+
+                                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white">
+
+                                                <svg
+                                                    class="h-4 w-4"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                    />
+
+                                                </svg>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <p class="text-[9px] font-black uppercase tracking-[0.15em] text-violet-600">
+                                                    Perhitungan Rental
+                                                </p>
+
+
+                                                <p class="mt-1 text-[10px] font-bold leading-relaxed text-violet-900">
+
+                                                    Untuk
+                                                    <span class="font-black">
+                                                        HT dan Peralatan
+                                                    </span>,
+                                                    jumlah hari sewa dihitung berdasarkan
+                                                    <span class="font-black">
+                                                        gap antara tanggal pengambilan dan tanggal pengembalian.
+                                                    </span>
+
+                                                </p>
+
+
+                                                <p class="mt-2 text-[9px] font-bold leading-relaxed text-violet-700">
+
+                                                    Contoh:
+                                                    <span class="font-black">
+                                                        Minggu → Selasa = 1 hari
+                                                    </span>
+                                                    •
+                                                    <span class="font-black">
+                                                        Minggu → Rabu = 2 hari
+                                                    </span>
+
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            @endif
 
 
 
@@ -948,6 +954,26 @@
                                                 true
                                             );
 
+                                        $isPeralatan =
+                                            $transactionType ===
+                                            'Peralatan';
+
+                                        $isHandyTalkie =
+                                            $transactionType ===
+                                            'Handy Talkie';
+
+                                        $isConsumable =
+                                            $transactionType ===
+                                            'Habis Pakai';
+
+                                        $isUv5r =
+                                            $isHandyTalkie &&
+                                            (
+                                                $transactionDetail
+                                                ===
+                                                'HT UV-5R'
+                                            );
+
                                         $isBaju =
                                             $transactionType ===
                                             'Merchandise' &&
@@ -960,6 +986,79 @@
                                                     'id'
                                                 ] ?? 0
                                             );
+
+
+
+                                        /*
+                                        |--------------------------------------------------------------------------
+                                        | RENTAL DAYS
+                                        |--------------------------------------------------------------------------
+                                        |
+                                        | Gunakan value dari cart yang sudah
+                                        | dihitung oleh CartController.
+                                        |
+                                        | Untuk cart lama yang belum mempunyai
+                                        | rental_days, hitung ulang di sini.
+                                        |
+                                        */
+
+                                        $rentalDays =
+                                            null;
+
+                                        if ($isRental) {
+
+                                            if (
+                                                array_key_exists(
+                                                    'rental_days',
+                                                    $details
+                                                )
+                                            ) {
+
+                                                $rentalDays =
+                                                    max(
+                                                        0,
+                                                        (int) (
+                                                            $details[
+                                                                'rental_days'
+                                                            ]
+                                                        )
+                                                    );
+
+                                            } elseif (
+                                                !empty($startDate) &&
+                                                !empty($endDate)
+                                            ) {
+
+                                                $startCarbon =
+                                                    \Carbon\Carbon::parse(
+                                                        $startDate
+                                                    )->startOfDay();
+
+                                                $endCarbon =
+                                                    \Carbon\Carbon::parse(
+                                                        $endDate
+                                                    )->startOfDay();
+
+                                                $dateDifference =
+                                                    $startCarbon->diffInDays(
+                                                        $endCarbon
+                                                    );
+
+                                                $rentalDays =
+                                                    max(
+                                                        0,
+                                                        $dateDifference - 1
+                                                    );
+
+                                            } else {
+
+                                                $rentalDays =
+                                                    0;
+
+                                            }
+
+                                        }
+
 
 
                                         /*
@@ -1013,9 +1112,24 @@
                                                 $basePrice +
                                                 $sizeExtra;
 
-                                            $subtotal =
-                                                $unitPrice *
-                                                $quantity;
+                                            if (
+                                                $isRental
+                                            ) {
+
+                                                $subtotal =
+                                                    $unitPrice
+                                                    *
+                                                    $rentalDays
+                                                    *
+                                                    $quantity;
+
+                                            } else {
+
+                                                $subtotal =
+                                                    $unitPrice *
+                                                    $quantity;
+
+                                            }
 
                                         }
 
@@ -1062,7 +1176,21 @@
                                     <!-- ITEM -->
                                     <!-- ================================================= -->
 
-                                    <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-indigo-100 hover:shadow-md sm:p-5">
+                                    <div
+                                        class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-indigo-100 hover:shadow-md sm:p-5"
+                                        data-cart-item
+                                        data-item-transaction-type="{{ $transactionType }}"
+                                        data-item-transaction-detail="{{ $transactionDetail }}"
+                                        data-item-base-price="{{ $basePrice }}"
+                                        data-item-size-extra="{{ $sizeExtra }}"
+                                        data-item-quantity="{{ $quantity }}"
+                                        data-item-rental-days="{{ $rentalDays ?? 0 }}"
+                                        data-item-is-rental="{{ $isRental ? '1' : '0' }}"
+                                        data-item-is-equipment="{{ $isPeralatan ? '1' : '0' }}"
+                                        data-item-is-consumable="{{ $isConsumable ? '1' : '0' }}"
+                                        data-item-is-uv5r="{{ $isUv5r ? '1' : '0' }}"
+                                        data-item-is-baju="{{ $isBaju ? '1' : '0' }}"
+                                    >
 
 
                                         <!-- ================================================= -->
@@ -1167,7 +1295,7 @@
 
                                                         <!-- PRICE -->
 
-                                                        <div class="mt-2">
+                                                        <div class="mt-3">
 
                                                             @if($isBaju)
 
@@ -1179,6 +1307,58 @@
                                                                     </span>
 
                                                                 </p>
+
+                                                            @elseif($isRental)
+
+                                                                <div class="space-y-2">
+
+                                                                    <div class="flex flex-wrap items-center gap-2">
+
+                                                                        <span class="rounded-lg bg-violet-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-violet-700">
+                                                                            Harga / Hari
+                                                                        </span>
+
+                                                                        <span class="text-sm font-black text-gray-900">
+
+                                                                            Rp
+                                                                            {{ number_format($basePrice, 0, ',', '.') }}
+
+                                                                        </span>
+
+                                                                    </div>
+
+
+                                                                    @if($rentalDays !== null)
+
+                                                                        <div class="flex flex-wrap items-center gap-2">
+
+                                                                            <span class="rounded-lg bg-gray-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-gray-500">
+                                                                                Durasi
+                                                                            </span>
+
+                                                                            <span class="text-[10px] font-black text-gray-700">
+
+                                                                                {{ $rentalDays }}
+                                                                                {{ $rentalDays === 1 ? 'hari' : 'hari' }}
+                                                                                sewa
+
+                                                                            </span>
+
+                                                                        </div>
+
+                                                                    @endif
+
+
+                                                                    <p class="text-[8px] font-bold leading-relaxed text-gray-400">
+
+                                                                        Harga dihitung:
+                                                                        <span class="font-black text-gray-600">
+                                                                            harga/hari × jumlah hari × qty
+                                                                        </span>
+
+                                                                    </p>
+
+                                                                </div>
 
                                                             @else
 
@@ -2042,16 +2222,88 @@
                                                 </p>
 
 
-                                                <p class="mt-1 text-lg font-black text-indigo-600 sm:text-xl">
+                                                @if($isRental)
 
-                                                    Rp
-                                                    {{ number_format($subtotal, 0, ',', '.') }}
+                                                    <p
+                                                        class="mt-1 text-lg font-black text-indigo-600 sm:text-xl"
+                                                        data-item-subtotal
+                                                    >
+                                                        Rp
+                                                        {{ number_format($subtotal, 0, ',', '.') }}
+                                                    </p>
 
-                                                </p>
+                                                    <p
+                                                        class="mt-1 hidden text-[8px] font-black uppercase tracking-widest text-emerald-600"
+                                                        data-item-free-label
+                                                    >
+                                                        Gratis Student Council
+                                                    </p>
+
+                                                @else
+
+                                                    <p
+                                                        class="mt-1 text-lg font-black text-indigo-600 sm:text-xl"
+                                                        data-item-subtotal
+                                                    >
+                                                        Rp
+                                                        {{ number_format($subtotal, 0, ',', '.') }}
+                                                    </p>
+
+                                                    <p
+                                                        class="mt-1 hidden text-[8px] font-black uppercase tracking-widest text-emerald-600"
+                                                        data-item-free-label
+                                                    >
+                                                        Gratis Student Council
+                                                    </p>
+
+                                                @endif
 
                                             </div>
 
                                         </div>
+
+
+
+                                        <!-- ================================================= -->
+                                        <!-- RENTAL PRICE DETAIL -->
+                                        <!-- ================================================= -->
+
+                                        @if($isRental)
+
+                                            <div
+                                                class="mt-4 rounded-xl border border-violet-100 bg-violet-50/50 px-4 py-3"
+                                                data-rental-detail
+                                            >
+
+                                                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+
+                                                    <p class="text-[8px] font-black uppercase tracking-widest text-violet-500">
+                                                        Detail Harga Rental
+                                                    </p>
+
+                                                    <p class="text-[9px] font-bold text-violet-700">
+
+                                                        Rp
+                                                        {{ number_format($basePrice, 0, ',', '.') }}
+                                                        /hari
+
+                                                        ×
+
+                                                        {{ $rentalDays }}
+                                                        hari
+
+                                                        ×
+
+                                                        {{ $quantity }}
+                                                        qty
+
+                                                    </p>
+
+                                                </div>
+
+                                            </div>
+
+                                        @endif
 
                                     </div>
 
@@ -2076,13 +2328,16 @@
                                         </p>
 
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-gray-500">
-                                            Total dihitung berdasarkan ukuran, divisi, quantity, dan harga masing-masing.
+                                            Total dihitung berdasarkan harga per hari, jumlah hari rental, quantity, ukuran, dan harga masing-masing.
                                         </p>
 
                                     </div>
 
 
-                                    <p class="text-2xl font-black text-white sm:text-3xl">
+                                    <p
+                                        class="text-2xl font-black text-white sm:text-3xl"
+                                        id="cartTotalPrice"
+                                    >
 
                                         Rp
                                         {{ number_format($totalPrice, 0, ',', '.') }}
@@ -2199,6 +2454,7 @@
 
                                         <select
                                             name="organization"
+                                            id="organizationSelect"
                                             required
                                             class="w-full appearance-none rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                         >
@@ -2423,54 +2679,64 @@
 
 
                                 <!-- ================================================= -->
-                                <!-- HABIS PAKAI NOTICE -->
+                                <!-- STUDENT COUNCIL FREE NOTICE -->
                                 <!-- ================================================= -->
 
-                                @if($hasConsumable)
+                                <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
 
-                                    <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+                                    <div class="flex items-start gap-3">
 
-                                        <div class="flex items-start gap-3">
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-xs font-black text-white">
+                                            SC
+                                        </div>
 
-                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-xs font-black text-white">
-                                                SC
+
+                                        <div>
+
+                                            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-600">
+                                                Fasilitas Student Council
+                                            </p>
+
+
+                                            <p class="mt-1 text-xs font-bold leading-relaxed text-emerald-800">
+
+                                                Pilih
+                                                <span class="font-black">
+                                                    Student Council
+                                                </span>
+                                                sebagai organisasi untuk mendapatkan fasilitas gratis pada:
+
+                                            </p>
+
+
+                                            <div class="mt-2 flex flex-wrap gap-2">
+
+                                                <span class="rounded-lg bg-white px-2.5 py-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-700 shadow-sm">
+                                                    Habis Pakai
+                                                </span>
+
+                                                <span class="rounded-lg bg-white px-2.5 py-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-700 shadow-sm">
+                                                    Peralatan
+                                                </span>
+
+                                                <span class="rounded-lg bg-white px-2.5 py-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-700 shadow-sm">
+                                                    HT UV-5R
+                                                </span>
+
                                             </div>
 
 
-                                            <div>
+                                            <p class="mt-3 text-[8px] font-bold leading-relaxed text-emerald-600">
 
-                                                <p class="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-600">
-                                                    Fasilitas Student Council
-                                                </p>
+                                                HT UV-82 dan HT 888s tetap mengikuti harga rental normal.
 
-
-                                                <p class="mt-1 text-xs font-bold leading-relaxed text-emerald-800">
-
-                                                    Barang
-                                                    <span class="font-black">
-                                                        Habis Pakai
-                                                    </span>
-                                                    tidak perlu dikembalikan dan stok akan berkurang setelah transaksi.
-
-                                                </p>
-
-
-                                                <p class="mt-2 text-[8px] font-bold leading-relaxed text-emerald-600">
-
-                                                    Untuk fasilitas gratis, pilih organisasi
-                                                    <span class="font-black">
-                                                        Student Council
-                                                    </span>.
-
-                                                </p>
-
-                                            </div>
+                                            </p>
 
                                         </div>
 
                                     </div>
 
-                                @endif
+                                </div>
 
 
 
@@ -2598,6 +2864,17 @@
 
                                                 </p>
 
+
+                                                <p class="mt-2 text-[9px] font-bold leading-relaxed text-gray-500">
+
+                                                    Perhitungan hari rental menggunakan
+                                                    <span class="font-black">
+                                                        gap tanggal pengambilan dan pengembalian
+                                                    </span>,
+                                                    bukan jumlah tanggal yang dilewati secara inklusif.
+
+                                                </p>
+
                                             @endif
 
                                         </div>
@@ -2661,5 +2938,469 @@
         </div>
 
     </div>
+
+
+
+    <!-- ============================================================= -->
+    <!-- RENTAL / STUDENT COUNCIL PRICE CALCULATOR -->
+    <!-- ============================================================= -->
+
+    @if(!empty($cart))
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+                const organizationSelect =
+                    document.getElementById('organizationSelect');
+
+                const cartItems =
+                    document.querySelectorAll(
+                        '[data-cart-item]'
+                    );
+
+                const totalElement =
+                    document.getElementById(
+                        'cartTotalPrice'
+                    );
+
+
+                if (
+                    !organizationSelect ||
+                    !totalElement
+                ) {
+                    return;
+                }
+
+
+                function formatRupiah(value) {
+
+                    return new Intl.NumberFormat(
+                        'id-ID'
+                    ).format(
+                        Math.max(
+                            0,
+                            value
+                        )
+                    );
+
+                }
+
+
+                function isStudentCouncilFree(
+                    cartItem,
+                    organization
+                ) {
+
+                    if (
+                        organization !==
+                        'Student Council'
+                    ) {
+                        return false;
+                    }
+
+
+                    const isEquipment =
+                        cartItem.dataset
+                            .itemIsEquipment ===
+                        '1';
+
+                    const isConsumable =
+                        cartItem.dataset
+                            .itemIsConsumable ===
+                        '1';
+
+                    const isUv5r =
+                        cartItem.dataset
+                            .itemIsUv5r ===
+                        '1';
+
+
+                    if (
+                        isEquipment ||
+                        isConsumable ||
+                        isUv5r
+                    ) {
+                        return true;
+                    }
+
+
+                    return false;
+                }
+
+
+                function calculateItemSubtotal(
+                    cartItem,
+                    organization
+                ) {
+
+                    const basePrice =
+                        parseInt(
+                            cartItem.dataset
+                                .itemBasePrice
+                            || '0',
+                            10
+                        );
+
+                    const sizeExtra =
+                        parseInt(
+                            cartItem.dataset
+                                .itemSizeExtra
+                            || '0',
+                            10
+                        );
+
+                    const quantity =
+                        parseInt(
+                            cartItem.dataset
+                                .itemQuantity
+                            || '0',
+                            10
+                        );
+
+                    const rentalDays =
+                        parseInt(
+                            cartItem.dataset
+                                .itemRentalDays
+                            || '0',
+                            10
+                        );
+
+                    const isRental =
+                        cartItem.dataset
+                            .itemIsRental ===
+                        '1';
+
+                    const isBaju =
+                        cartItem.dataset
+                            .itemIsBaju ===
+                        '1';
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | BAJU
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        isBaju
+                    ) {
+                        const currentSubtotal =
+                            cartItem.querySelector(
+                                '[data-item-subtotal]'
+                            );
+
+                        if (
+                            currentSubtotal
+                        ) {
+
+                            return parseInt(
+                                currentSubtotal
+                                    .dataset
+                                    .originalSubtotal
+                                || '0',
+                                10
+                            );
+
+                        }
+
+                        return 0;
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | FREE STUDENT COUNCIL
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        isStudentCouncilFree(
+                            cartItem,
+                            organization
+                        )
+                    ) {
+                        return 0;
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | RENTAL
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        isRental
+                    ) {
+
+                        return (
+                            basePrice
+                            *
+                            rentalDays
+                            *
+                            quantity
+                        );
+
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NORMAL
+                    |--------------------------------------------------------------------------
+                    */
+
+                    return (
+                        (
+                            basePrice
+                            +
+                            sizeExtra
+                        )
+                        *
+                        quantity
+                    );
+                }
+
+
+                function updateCartPricing() {
+
+                    const organization =
+                        organizationSelect.value;
+
+
+                    let total =
+                        0;
+
+
+                    cartItems.forEach(
+                        function (
+                            cartItem
+                        ) {
+
+                            const subtotalElement =
+                                cartItem.querySelector(
+                                    '[data-item-subtotal]'
+                                );
+
+                            const freeLabel =
+                                cartItem.querySelector(
+                                    '[data-item-free-label]'
+                                );
+
+                            const isFree =
+                                isStudentCouncilFree(
+                                    cartItem,
+                                    organization
+                                );
+
+                            const subtotal =
+                                calculateItemSubtotal(
+                                    cartItem,
+                                    organization
+                                );
+
+
+                            if (
+                                subtotalElement
+                            ) {
+
+                                subtotalElement.textContent =
+                                    'Rp ' +
+                                    formatRupiah(
+                                        subtotal
+                                    );
+
+                            }
+
+
+                            if (
+                                freeLabel
+                            ) {
+
+                                if (
+                                    isFree
+                                ) {
+
+                                    freeLabel.classList.remove(
+                                        'hidden'
+                                    );
+
+                                } else {
+
+                                    freeLabel.classList.add(
+                                        'hidden'
+                                    );
+
+                                }
+
+                            }
+
+
+                            const isRental =
+                                cartItem.dataset
+                                    .itemIsRental ===
+                                '1';
+
+
+                            if (
+                                isRental
+                            ) {
+
+                                const rentalDetail =
+                                    cartItem.querySelector(
+                                        '[data-rental-detail]'
+                                    );
+
+                                if (
+                                    rentalDetail
+                                ) {
+
+                                    if (
+                                        isFree
+                                    ) {
+
+                                        rentalDetail.innerHTML = `
+                                            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                <p class="text-[8px] font-black uppercase tracking-widest text-emerald-600">
+                                                    Detail Harga Rental
+                                                </p>
+
+                                                <p class="text-[9px] font-black text-emerald-700">
+                                                    Gratis Student Council
+                                                </p>
+                                            </div>
+                                        `;
+
+                                    } else {
+
+                                        const basePrice =
+                                            parseInt(
+                                                cartItem.dataset
+                                                    .itemBasePrice
+                                                || '0',
+                                                10
+                                            );
+
+                                        const quantity =
+                                            parseInt(
+                                                cartItem.dataset
+                                                    .itemQuantity
+                                                || '0',
+                                                10
+                                            );
+
+                                        const rentalDays =
+                                            parseInt(
+                                                cartItem.dataset
+                                                    .itemRentalDays
+                                                || '0',
+                                                10
+                                            );
+
+                                        rentalDetail.innerHTML = `
+                                            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                <p class="text-[8px] font-black uppercase tracking-widest text-violet-500">
+                                                    Detail Harga Rental
+                                                </p>
+
+                                                <p class="text-[9px] font-bold text-violet-700">
+                                                    Rp ${formatRupiah(basePrice)}/hari
+                                                    ×
+                                                    ${rentalDays} hari
+                                                    ×
+                                                    ${quantity} qty
+                                                </p>
+                                            </div>
+                                        `;
+
+                                    }
+
+                                }
+
+                            }
+
+
+                            total +=
+                                subtotal;
+
+                        }
+                    );
+
+
+                    totalElement.textContent =
+                        'Rp ' +
+                        formatRupiah(
+                            total
+                        );
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SAVE ORIGINAL BAJU SUBTOTAL
+                |--------------------------------------------------------------------------
+                |
+                | Baju tidak ikut berubah berdasarkan
+                | organisasi.
+                |
+                */
+
+                cartItems.forEach(
+                    function (
+                        cartItem
+                    ) {
+
+                        const subtotalElement =
+                            cartItem.querySelector(
+                                '[data-item-subtotal]'
+                            );
+
+                        const isBaju =
+                            cartItem.dataset
+                                .itemIsBaju ===
+                            '1';
+
+
+                        if (
+                            subtotalElement &&
+                            isBaju
+                        ) {
+
+                            const text =
+                                subtotalElement.textContent
+                                    .replace(
+                                        /[^0-9]/g,
+                                        ''
+                                    );
+
+                            subtotalElement.dataset
+                                .originalSubtotal =
+                                text;
+
+                        }
+
+                    }
+                );
+
+
+                organizationSelect.addEventListener(
+                    'change',
+                    updateCartPricing
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | INITIAL CALCULATION
+                |--------------------------------------------------------------------------
+                */
+
+                updateCartPricing();
+
+            });
+        </script>
+
+    @endif
 
 </x-app-layout>

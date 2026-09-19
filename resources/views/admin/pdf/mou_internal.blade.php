@@ -430,7 +430,7 @@
         .items-table td {
             border: 1px solid #000000;
 
-            padding: 2mm 1.5mm;
+            padding: 2mm 1.2mm;
 
             vertical-align: middle;
 
@@ -443,7 +443,7 @@
 
             text-align: center;
 
-            font-size: 9.5pt;
+            font-size: 8.8pt;
 
             font-weight: bold;
 
@@ -451,31 +451,31 @@
         }
 
         .items-table td {
-            font-size: 9.5pt;
+            font-size: 9.2pt;
 
             line-height: 1.35;
         }
 
         .col-no {
-            width: 7%;
+            width: 6%;
 
             text-align: center;
         }
 
         .col-description {
-            width: 38%;
+            width: 31%;
 
             text-align: left;
         }
 
         .col-quantity {
-            width: 11%;
+            width: 9%;
 
             text-align: center;
         }
 
         .col-unit {
-            width: 10%;
+            width: 8%;
 
             text-align: center;
         }
@@ -486,8 +486,14 @@
             text-align: right;
         }
 
+        .col-days {
+            width: 10%;
+
+            text-align: center;
+        }
+
         .col-subtotal {
-            width: 17%;
+            width: 19%;
 
             text-align: right;
         }
@@ -505,23 +511,69 @@
 
             padding: 0 !important;
 
-            font-size: 9.5pt;
+            font-size: 9pt;
 
             line-height: 1.2;
         }
 
         .money-prefix {
-            width: 18%;
+            width: 19%;
 
             text-align: left;
         }
 
         .money-value {
-            width: 82%;
+            width: 81%;
 
             text-align: right;
 
             white-space: nowrap;
+        }
+
+        .price-note {
+            margin-top: 1mm;
+
+            text-align: right;
+
+            font-size: 8pt;
+
+            color: #555555;
+        }
+
+        .formula {
+            margin-top: 1mm;
+
+            text-align: right;
+
+            font-size: 7.5pt;
+
+            color: #555555;
+
+            line-height: 1.2;
+        }
+
+        .free-label {
+            text-align: center;
+
+            color: #a00000;
+
+            font-weight: bold;
+
+            font-size: 9pt;
+
+            line-height: 1.2;
+        }
+
+        .free-note {
+            margin-top: 1mm;
+
+            text-align: center;
+
+            font-size: 7.5pt;
+
+            color: #666666;
+
+            line-height: 1.2;
         }
 
 
@@ -729,12 +781,57 @@
 
     /*
     |--------------------------------------------------------------------------
+    | RENTAL DAYS
+    |--------------------------------------------------------------------------
+    |
+    | Jumlah hari rental menggunakan GAP tanggal.
+    |
+    | Minggu → Senin  = 0 hari
+    | Minggu → Selasa = 1 hari
+    | Minggu → Rabu   = 2 hari
+    |
+    */
+
+    $rentalDays = null;
+
+
+    if (
+        $order->start_date &&
+        $order->end_date
+    ) {
+
+        $startCarbon =
+            \Carbon\Carbon::parse(
+                $order->start_date
+            )->startOfDay();
+
+        $endCarbon =
+            \Carbon\Carbon::parse(
+                $order->end_date
+            )->startOfDay();
+
+        $dateDifference =
+            $startCarbon->diffInDays(
+                $endCarbon
+            );
+
+        $rentalDays =
+            max(
+                0,
+                $dateDifference - 1
+            );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | INTERNAL RENTAL ITEMS
     |--------------------------------------------------------------------------
     |
     | HANYA barang dengan:
     |
-    | transaction_type  = Peralatan
+    | transaction_type   = Peralatan
     | transaction_detail = Internal Rental
     |
     */
@@ -1828,11 +1925,38 @@
 
         </tr>
 
+
+        <tr>
+
+            <td class="schedule-label">
+                Durasi Rental
+            </td>
+
+            <td class="schedule-colon">
+                :
+            </td>
+
+            <td class="schedule-value">
+
+                <span
+                    class="{{ $dynamicClass(
+                        $rentalDays
+                    ) }}"
+                >
+
+                    {{ $rentalDays ?? 0 }} hari
+
+                </span>
+
+            </td>
+
+        </tr>
+
     </table>
 
 
     <!-- ============================================================= -->
-    <!-- DYNAMIC INTERNAL ITEMS -->
+    <!-- ORDER ITEMS -->
     <!-- ============================================================= -->
 
     <table class="items-table">
@@ -1858,7 +1982,11 @@
                 </th>
 
                 <th class="col-price">
-                    Harga Sewa
+                    Harga / Hari
+                </th>
+
+                <th class="col-days">
+                    Hari
                 </th>
 
                 <th class="col-subtotal">
@@ -1900,24 +2028,46 @@
                             );
 
 
-                        $unitPrice =
-                            $quantity > 0
-                                ? intdiv(
-                                    $subtotal,
-                                    $quantity
-                                )
-                                : 0;
-
-
                         $itemName =
                             $detail->item->name
                             ??
                             '';
 
+
+                        $baseUnitPrice =
+                            $detail->item
+                                ? (int) (
+                                    $detail->item->price
+                                )
+                                : 0;
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | STUDENT COUNCIL FREE
+                        |--------------------------------------------------------------------------
+                        |
+                        | Semua Internal Rental termasuk
+                        | kategori Peralatan.
+                        |
+                        */
+
+                        $isFree =
+                            $order->organization ===
+                            'Student Council';
+
+
+                        $unitPrice =
+                            $isFree
+                                ? 0
+                                : $baseUnitPrice;
+
                     @endphp
 
 
                     <tr>
+
+                        <!-- NO -->
 
                         <td class="col-no">
 
@@ -1926,6 +2076,8 @@
                         </td>
 
 
+                        <!-- DESCRIPTION -->
+
                         <td class="col-description">
 
                             <span
@@ -1933,56 +2085,167 @@
                                     $itemName
                                 ) }}"
                             >
+
                                 {{
                                     $itemName ?: '-'
                                 }}
+
+                            </span>
+
+
+                            <br>
+
+
+                            <span
+                                style="
+                                    font-size:8pt;
+                                    color:#555555;
+                                "
+                            >
+
+                                Internal Rental
+
                             </span>
 
                         </td>
 
+
+                        <!-- QUANTITY -->
 
                         <td class="col-quantity">
 
                             <span class="dynamic filled">
+
                                 {{ $quantity }}
+
                             </span>
 
                         </td>
 
 
+                        <!-- UNIT -->
+
                         <td class="col-unit">
+
                             <em>Pcs</em>
+
                         </td>
 
+
+                        <!-- PRICE / DAY -->
 
                         <td class="col-price">
 
-                            <table class="money-table">
+                            @if($isFree)
 
-                                <tr>
+                                <div class="free-label">
+                                    FREE (SC)
+                                </div>
 
-                                    <td class="money-prefix">
-                                        Rp
-                                    </td>
+                                <div class="free-note">
+                                    Student Council
+                                </div>
 
-                                    <td class="money-value">
+                            @else
 
-                                        {{
-                                            $money(
-                                                $unitPrice
-                                            )
-                                        }}
+                                <table class="money-table">
 
-                                    </td>
+                                    <tr>
 
-                                </tr>
+                                        <td class="money-prefix">
+                                            Rp
+                                        </td>
 
-                            </table>
+                                        <td class="money-value">
+
+                                            {{
+                                                $money(
+                                                    $unitPrice
+                                                )
+                                            }}
+
+                                        </td>
+
+                                    </tr>
+
+                                </table>
+
+
+                                <div class="price-note">
+                                    / hari
+                                </div>
+
+                            @endif
 
                         </td>
 
 
+                        <!-- DAYS -->
+
+                        <td class="col-days">
+
+                            <strong>
+
+                                {{ $rentalDays ?? 0 }}
+
+                            </strong>
+
+                            <br>
+
+                            <span
+                                style="
+                                    font-size:7.5pt;
+                                    color:#555555;
+                                "
+                            >
+                                hari
+                            </span>
+
+                        </td>
+
+
+                        <!-- SUBTOTAL -->
+
                         <td class="col-subtotal">
+
+
+                            @if($isFree)
+
+                                <div
+                                    class="formula"
+                                    style="color:#a00000;"
+                                >
+
+                                    FREE (SC)
+
+                                </div>
+
+                            @else
+
+                                <div class="formula">
+
+                                    Rp
+                                    {{
+                                        number_format(
+                                            $unitPrice,
+                                            0,
+                                            ',',
+                                            '.'
+                                        )
+                                    }}
+
+                                    ×
+
+                                    {{ $rentalDays ?? 0 }}
+
+                                    ×
+
+                                    {{ $quantity }}
+
+                                </div>
+
+                            @endif
+
 
                             <table class="money-table">
 
@@ -2017,12 +2280,14 @@
                 <tr>
 
                     <td
-                        colspan="6"
+                        colspan="7"
                         class="center"
                         style="height:18mm;"
                     >
+
                         Tidak ada barang Internal Rental
                         yang dipesan.
+
                     </td>
 
                 </tr>
@@ -2030,10 +2295,12 @@
             @endif
 
 
+            <!-- TOTAL -->
+
             <tr>
 
                 <td
-                    colspan="5"
+                    colspan="6"
                     class="center"
                     style="height:12mm;"
                 >
@@ -2058,7 +2325,11 @@
                             <td class="money-value">
 
                                 <strong>
-                                    {{ $money($grandTotal) }}
+                                    {{
+                                        $money(
+                                            $grandTotal
+                                        )
+                                    }}
                                 </strong>
 
                             </td>
@@ -2080,6 +2351,74 @@
 
 <!-- ================================================================== -->
 <!-- PAGE 3 -->
+<!-- ================================================================== -->
+
+<div class="page">
+
+    <div class="header">
+
+        <table class="header-table">
+
+            <tr>
+
+                <td class="header-logo">
+
+                    @if(
+                        $logoPath &&
+                        file_exists($logoPath)
+                    )
+
+                        <img
+                            src="{{ $logoPath }}"
+                            alt="Student Council"
+                        >
+
+                    @endif
+
+                </td>
+
+
+                <td class="header-text">
+
+                    <div class="header-main">
+                        UNIVERSITAS CIPUTRA SURABAYA
+                    </div>
+
+                    <div class="header-main">
+                        STUDENT COUNCIL
+                    </div>
+
+                    <div class="header-sub">
+                        SURAT PERJANJIAN KERJASAMA
+                    </div>
+
+                    <div class="header-sub">
+                        VENDOR SATU PINTU
+                    </div>
+
+                    <div class="header-address">
+                        Citraland CBD Boulevard, Surabaya, 60219
+                        <br>
+                        Jawa Timur – Indonesia
+                        <br>
+                        Telepon: (031)7451699; Fax: (031)7451698
+                        <br>
+                        Email: studentcouncil@ciputra.ac.id
+                    </div>
+
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- ================================================================== -->
+<!-- PAGE 4 -->
 <!-- ================================================================== -->
 
 <div class="page">
@@ -2234,7 +2573,7 @@
 
 
 <!-- ================================================================== -->
-<!-- PAGE 4 -->
+<!-- PAGE 5 -->
 <!-- ================================================================== -->
 
 <div class="page">
@@ -2246,15 +2585,19 @@
             <tr>
 
                 <td class="header-logo">
+
                     @if(
                         $logoPath &&
                         file_exists($logoPath)
                     )
+
                         <img
                             src="{{ $logoPath }}"
                             alt="Student Council"
                         >
+
                     @endif
+
                 </td>
 
 
@@ -2338,7 +2681,7 @@
 
 
 <!-- ================================================================== -->
-<!-- PAGE 5 -->
+<!-- PAGE 6 -->
 <!-- ================================================================== -->
 
 <div class="page">
@@ -2465,72 +2808,6 @@
         </li>
 
     </ol>
-
-</div>
-
-
-<!-- ================================================================== -->
-<!-- PAGE 6 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-                    @endif
-
-                </td>
-
-
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
 
 </div>
 
@@ -3035,6 +3312,15 @@
 
 
         <li>
+
+            Biaya sewa dihitung berdasarkan harga sewa per hari,
+            dikalikan dengan jumlah hari rental dan jumlah barang
+            yang disewa, sesuai dengan rincian pada tabel Pasal I.
+
+        </li>
+
+
+        <li>
             Nominal tersebut sudah dalam nilai bersih (neto).
         </li>
 
@@ -3127,10 +3413,12 @@
                         $logoPath &&
                         file_exists($logoPath)
                     )
+
                         <img
                             src="{{ $logoPath }}"
                             alt="Student Council"
                         >
+
                     @endif
 
                 </td>
@@ -3242,15 +3530,19 @@
             <tr>
 
                 <td class="header-logo">
+
                     @if(
                         $logoPath &&
                         file_exists($logoPath)
                     )
+
                         <img
                             src="{{ $logoPath }}"
                             alt="Student Council"
                         >
+
                     @endif
+
                 </td>
 
 

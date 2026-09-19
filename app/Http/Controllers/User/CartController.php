@@ -262,6 +262,9 @@ class CartController extends Controller
         $endTime =
             null;
 
+        $rentalDays =
+            null;
+
         /*
         |--------------------------------------------------------------------------
         | MERCHANDISE NON-BAJU
@@ -388,6 +391,32 @@ class CartController extends Controller
                     'Waktu pengembalian harus setelah waktu pengambilan.'
                 );
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | RENTAL DAYS
+            |--------------------------------------------------------------------------
+            |
+            | Jumlah hari sewa dihitung berdasarkan
+            | gap antara tanggal pengambilan dan
+            | tanggal pengembalian.
+            |
+            | Contoh:
+            |
+            | Minggu → Senin  = 0 hari
+            | Minggu → Selasa = 1 hari
+            | Minggu → Rabu   = 2 hari
+            |
+            | Tanggal pengambilan dan pengembalian
+            | tidak dihitung sebagai hari sewa.
+            |
+            */
+
+            $rentalDays =
+                $this->getRentalDays(
+                    $startDate,
+                    $endDate
+                );
         }
 
         /*
@@ -627,6 +656,9 @@ class CartController extends Controller
 
             'end_time' =>
                 $endTime,
+
+            'rental_days' =>
+                $rentalDays,
 
             'size' =>
                 $size,
@@ -1247,9 +1279,9 @@ class CartController extends Controller
                 $additionalPrice;
 
             /*
-            |----------------------------------------------------------------------
+            |--------------------------------------------------------------------------
             | DO NOT MERGE SAME SIZE
-            |----------------------------------------------------------------------
+            |--------------------------------------------------------------------------
             |
             | S + Event
             | S + Konsumsi
@@ -1530,6 +1562,9 @@ class CartController extends Controller
             'end_time' =>
                 null,
 
+            'rental_days' =>
+                null,
+
             'size' =>
                 null,
 
@@ -1762,6 +1797,28 @@ class CartController extends Controller
         ]['quantity'] =
             $quantity;
 
+        /*
+        |--------------------------------------------------------------------------
+        | KEEP RENTAL DAYS IN SYNC
+        |--------------------------------------------------------------------------
+        */
+
+        if ($isRental) {
+
+            $cart[
+                $lineKey
+            ]['rental_days'] =
+                $this->getRentalDays(
+                    $cart[
+                        $lineKey
+                    ]['start_date'] ?? null,
+
+                    $cart[
+                        $lineKey
+                    ]['end_date'] ?? null
+                );
+        }
+
         session()->put(
             'cart',
             $cart
@@ -1992,8 +2049,6 @@ class CartController extends Controller
 
             'notes' =>
                 'nullable|string',
-
-            
         ]);
 
         $firstItem =
@@ -2179,6 +2234,37 @@ class CartController extends Controller
                     );
                 }
             }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RENTAL DAYS
+        |--------------------------------------------------------------------------
+        |
+        | Rental days dihitung ulang saat checkout
+        | supaya tidak hanya bergantung pada session.
+        |
+        */
+
+        $rentalDays =
+            null;
+
+        if (
+            $this->requiresReturn(
+                $orderType
+            )
+        ) {
+
+            $rentalDays =
+                $this->getRentalDays(
+                    $firstItem[
+                        'start_date'
+                    ] ?? null,
+
+                    $firstItem[
+                        'end_date'
+                    ] ?? null
+                );
         }
 
         DB::beginTransaction();
@@ -2431,8 +2517,6 @@ class CartController extends Controller
                             'end_time'
                         ] ?? null,
 
-            
-
                     'status' =>
                         'Pending',
                 ]);
@@ -2514,19 +2598,28 @@ class CartController extends Controller
 
                     /*
                     |--------------------------------------------------------------------------
-                    | STUDENT COUNCIL FREE HABIS PAKAI
+                    | STUDENT COUNCIL FREE FACILITIES
                     |--------------------------------------------------------------------------
+                    |
+                    | Student Council mendapat fasilitas gratis:
+                    |
+                    | - Habis Pakai
+                    | |  - Semua Peralatan
+                    | - HT UV-5R
+                    |
+                    | HT UV-82 dan HT 888s tetap menggunakan harga normal.
+                    |
                     */
 
                     $unitPrice =
                         $basePrice;
 
                     if (
-                        $request->organization ===
-                        'Student Council'
-                        &&
-                        $orderType ===
-                        'Habis Pakai'
+                        $this->isStudentCouncilFree(
+                            $request->organization,
+                            $orderType,
+                            $cartItem
+                        )
                     ) {
                         $unitPrice =
                             0;
@@ -2542,9 +2635,43 @@ class CartController extends Controller
                             ] ?? 0
                         );
 
-                    $subtotal =
-                        $unitPrice *
-                        $quantity;
+                    /*
+                    |--------------------------------------------------------------------------
+                    | RENTAL PRICE PER DAY
+                    |--------------------------------------------------------------------------
+                    |
+                    | Khusus:
+                    |
+                    | Peralatan
+                    | Handy Talkie
+                    |
+                    | Harga:
+                    |
+                    | Harga per hari
+                    | × jumlah hari rental
+                    | × quantity
+                    |
+                    */
+
+                    if (
+                        $this->requiresReturn(
+                            $orderType
+                        )
+                    ) {
+
+                        $subtotal =
+                            $unitPrice
+                            *
+                            $rentalDays
+                            *
+                            $quantity;
+
+                    } else {
+
+                        $subtotal =
+                            $unitPrice *
+                            $quantity;
+                    }
 
                     $orderItemSize =
                         $cartItem[
@@ -2760,6 +2887,137 @@ class CartController extends Controller
             ],
             true
         );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RENTAL DAYS
+    |--------------------------------------------------------------------------
+    |
+    | Rental day menggunakan GAP tanggal.
+    |
+    | Pengambilan → Pengembalian
+    |
+    | Minggu → Senin  = 0 hari
+    | Minggu → Selasa = 1 hari
+    | Minggu → Rabu   = 2 hari
+    |
+    | Jadi:
+    |
+    | diff tanggal - 1
+    |
+    */
+
+    private function getRentalDays(
+        ?string $startDate,
+        ?string $endDate
+    ): int {
+
+        if (
+            empty($startDate)
+            ||
+            empty($endDate)
+        ) {
+            return 0;
+        }
+
+        $start =
+            Carbon::parse(
+                $startDate
+            )->startOfDay();
+
+        $end =
+            Carbon::parse(
+                $endDate
+            )->startOfDay();
+
+        $difference =
+            $start->diffInDays(
+                $end
+            );
+
+        return max(
+            0,
+            $difference - 1
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | STUDENT COUNCIL FREE FACILITIES
+    |--------------------------------------------------------------------------
+    */
+
+    private function isStudentCouncilFree(
+        ?string $organization,
+        string $transactionType,
+        array $cartItem
+    ): bool {
+
+        if (
+            $organization !==
+            'Student Council'
+        ) {
+            return false;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | HABIS PAKAI
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $transactionType ===
+            'Habis Pakai'
+        ) {
+            return true;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PERALATAN
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $transactionType ===
+            'Peralatan'
+        ) {
+            return true;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | HT UV-5R
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $transactionType ===
+            'Handy Talkie'
+            &&
+            (
+                $cartItem[
+                    'transaction_detail'
+                ] ?? null
+            )
+            ===
+            'HT UV-5R'
+        ) {
+            return true;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | OTHER HT
+        |--------------------------------------------------------------------------
+        |
+        | UV-82 dan 888s tetap berbayar.
+        |
+        */
+
+        return false;
     }
 
     private function getMouType(

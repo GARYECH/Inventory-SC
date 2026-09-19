@@ -2,6 +2,7 @@
 <html lang="id">
 
 <head>
+
     <meta charset="UTF-8">
 
     <title>
@@ -14,6 +15,7 @@
     </title>
 
     <style>
+
         body {
             font-family: "Times New Roman", Times, serif;
             font-size: 13px;
@@ -65,12 +67,22 @@
         .center {
             text-align: center;
         }
+
     </style>
+
 </head>
+
 
 <body>
 
+
 @php
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOGO + TTD
+    |--------------------------------------------------------------------------
+    */
 
     $logoDb =
         \App\Models\Setting::where(
@@ -83,6 +95,7 @@
             'key',
             'ttd_bendahara'
         )->value('value');
+
 
     $logoPath =
         $logoDb
@@ -98,10 +111,77 @@
             )
             : null;
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | TOTAL
+    |--------------------------------------------------------------------------
+    */
+
     $total =
         (int) $order->total_price;
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | RENTAL DAYS
+    |--------------------------------------------------------------------------
+    |
+    | Rental day menggunakan GAP tanggal.
+    |
+    | Minggu → Senin  = 0 hari
+    | Minggu → Selasa = 1 hari
+    | Minggu → Rabu   = 2 hari
+    |
+    */
+
+    $rentalDays =
+        null;
+
+
+    if (
+        $order->start_date &&
+        $order->end_date &&
+        in_array(
+            $order->order_type,
+            [
+                'Peralatan',
+                'Handy Talkie',
+            ],
+            true
+        )
+    ) {
+
+        $startCarbon =
+            \Carbon\Carbon::parse(
+                $order->start_date
+            )->startOfDay();
+
+        $endCarbon =
+            \Carbon\Carbon::parse(
+                $order->end_date
+            )->startOfDay();
+
+        $dateDifference =
+            $startCarbon->diffInDays(
+                $endCarbon
+            );
+
+        $rentalDays =
+            max(
+                0,
+                $dateDifference - 1
+            );
+    }
+
+
 @endphp
+
+
+
+<!-- =============================================================== -->
+<!-- HEADER -->
+<!-- =============================================================== -->
 
 <table style="margin-bottom:15px;">
 
@@ -127,6 +207,7 @@
 
         </td>
 
+
         <td
             width="70%"
             style="
@@ -138,21 +219,26 @@
             <strong>
                 UNIVERSITAS CIPUTRA SURABAYA
             </strong>
+
             <br>
 
             <strong>
                 STUDENT COUNCIL
             </strong>
+
             <br>
 
             Citraland CBD Boulevard,
             Surabaya, 60219
+
             <br>
 
             Jawa Timur – Indonesia
+
             <br>
 
             Telepon: (031)7451699
+
             <br>
 
             Email:
@@ -164,6 +250,8 @@
 
 </table>
 
+
+
 <hr
     style="
         border:0;
@@ -171,6 +259,12 @@
         margin:0 0 15px 0;
     "
 >
+
+
+
+<!-- =============================================================== -->
+<!-- TITLE -->
+<!-- =============================================================== -->
 
 <div
     style="
@@ -182,6 +276,12 @@
 >
     INVOICE
 </div>
+
+
+
+<!-- =============================================================== -->
+<!-- BILL TO + INVOICE INFO -->
+<!-- =============================================================== -->
 
 <table style="margin-bottom:20px;">
 
@@ -203,9 +303,11 @@
                 Bill To
             </div>
 
+
             <table cellpadding="3">
 
                 <tr>
+
                     <td width="25%">
                         Name
                     </td>
@@ -217,9 +319,12 @@
                     <td width="70%">
                         {{ $order->user->name }}
                     </td>
+
                 </tr>
 
+
                 <tr>
+
                     <td>
                         Address
                     </td>
@@ -231,9 +336,12 @@
                     <td>
                         {{ $order->address ?? '-' }}
                     </td>
+
                 </tr>
 
+
                 <tr>
+
                     <td>
                         Number
                     </td>
@@ -245,13 +353,16 @@
                     <td>
                         {{ $order->phone_number }}
                     </td>
+
                 </tr>
 
             </table>
 
         </td>
 
+
         <td width="4%"></td>
+
 
         <td
             width="48%"
@@ -264,6 +375,7 @@
             <table cellpadding="3">
 
                 <tr>
+
                     <td width="35%">
                         Invoice Num.
                     </td>
@@ -279,9 +391,12 @@
                             $order->order_number
                         }}
                     </td>
+
                 </tr>
 
+
                 <tr>
+
                     <td>
                         Date
                     </td>
@@ -296,9 +411,12 @@
                                 ->format('d/m/Y')
                         }}
                     </td>
+
                 </tr>
 
+
                 <tr>
+
                     <td>
                         Due Date
                     </td>
@@ -318,6 +436,7 @@
                                 : '-'
                         }}
                     </td>
+
                 </tr>
 
             </table>
@@ -327,6 +446,12 @@
     </tr>
 
 </table>
+
+
+
+<!-- =============================================================== -->
+<!-- ITEMS TABLE -->
+<!-- =============================================================== -->
 
 <table class="items-table">
 
@@ -358,7 +483,9 @@
 
     </thead>
 
+
     <tbody>
+
 
         @foreach(
             $order->orderItems
@@ -366,41 +493,192 @@
         )
 
             @php
+
+                /*
+                |--------------------------------------------------------------------------
+                | BASIC DATA
+                |--------------------------------------------------------------------------
+                */
+
                 $quantity =
                     (int) $detail->quantity;
 
                 $subtotal =
                     (int) $detail->subtotal_price;
 
-                $unitPrice =
-                    $quantity > 0
-                        ? intdiv(
-                            $subtotal,
-                            $quantity
-                        )
-                        : 0;
+                $item =
+                    $detail->item;
+
+                $transactionType =
+                    $item
+                        ? $item->transaction_type
+                        : null;
+
+                $transactionDetail =
+                    $item
+                        ? $item->transaction_detail
+                        : null;
+
+                $subcategory =
+                    $item
+                        ? $item->subcategory
+                        : null;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | RENTAL ITEM
+                |--------------------------------------------------------------------------
+                */
+
+                $isRental =
+                    in_array(
+                        $transactionType,
+                        [
+                            'Peralatan',
+                            'Handy Talkie',
+                        ],
+                        true
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | STUDENT COUNCIL FREE
+                |--------------------------------------------------------------------------
+                */
 
                 $isFree =
+                    false;
+
+
+                if (
                     $subtotal === 0 &&
                     $order->organization ===
-                        'Student Council' &&
-                    $detail->item &&
-                    $detail->item->transaction_type ===
-                        'Habis Pakai';
+                        'Student Council'
+                ) {
+
+                    if (
+                        $transactionType ===
+                        'Habis Pakai'
+                    ) {
+
+                        $isFree =
+                            true;
+
+                    } elseif (
+                        $transactionType ===
+                        'Peralatan'
+                    ) {
+
+                        $isFree =
+                            true;
+
+                    } elseif (
+                        $transactionType ===
+                        'Handy Talkie'
+                        &&
+                        $transactionDetail ===
+                        'HT UV-5R'
+                    ) {
+
+                        $isFree =
+                            true;
+
+                    }
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | NORMAL UNIT PRICE
+                |--------------------------------------------------------------------------
+                */
+
+                $baseUnitPrice =
+                    $item
+                        ? (int) $item->price
+                        : 0;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Baju SIZE EXTRA
+                |--------------------------------------------------------------------------
+                */
+
+                $sizeAdditionalPrice =
+                    (int) (
+                        $detail->size_additional_price
+                        ?? 0
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | DISPLAY UNIT PRICE
+                |--------------------------------------------------------------------------
+                |
+                | Rental:
+                |
+                | harga per hari
+                |
+                | Non-rental:
+                |
+                | harga per pcs
+                |
+                */
+
+                if ($isRental) {
+
+                    $displayUnitPrice =
+                        $baseUnitPrice;
+
+                } else {
+
+                    $displayUnitPrice =
+                        $baseUnitPrice
+                        +
+                        $sizeAdditionalPrice;
+                }
+
+
             @endphp
+
+
+            <!-- ===================================================== -->
+            <!-- ITEM ROW -->
+            <!-- ===================================================== -->
 
             <tr>
 
+
+                <!-- ================================================= -->
+                <!-- NO -->
+                <!-- ================================================= -->
+
                 <td class="center">
+
                     {{ $index + 1 }}
+
                 </td>
 
+
+
+                <!-- ================================================= -->
+                <!-- DESCRIPTION -->
+                <!-- ================================================= -->
+
                 <td>
-                    {{ $detail->item->name }}
 
-                    @if(
-                        $detail->item->transaction_detail
-                    )
+                    <strong>
+                        {{ $item->name ?? '-' }}
+                    </strong>
+
+
+                    @if($transactionDetail)
+
                         <br>
 
                         <span
@@ -409,16 +687,18 @@
                                 color:#666;
                             "
                         >
+
                             {{
-                                $detail->item
-                                    ->transaction_detail
+                                $transactionDetail
                             }}
+
                         </span>
+
                     @endif
 
-                    @if(
-                        $detail->item->subcategory
-                    )
+
+                    @if($subcategory)
+
                         <br>
 
                         <span
@@ -427,14 +707,18 @@
                                 color:#666;
                             "
                         >
+
                             {{
-                                $detail->item
-                                    ->subcategory
+                                $subcategory
                             }}
+
                         </span>
+
                     @endif
+
 
                     @if($detail->size)
+
                         <br>
 
                         <span
@@ -443,18 +727,88 @@
                                 color:#666;
                             "
                         >
+
                             Size:
                             {{ $detail->size }}
+
                         </span>
+
+                    @endif
+
+
+                    <!-- ================================================= -->
+                    <!-- RENTAL DETAIL -->
+                    <!-- ================================================= -->
+
+                    @if($isRental)
+
+                        <div
+                            style="
+                                margin-top:5px;
+                                padding-top:4px;
+                                border-top:1px dotted #999;
+                                font-size:10px;
+                                color:#555;
+                            "
+                        >
+
+                            <strong>
+                                Rental:
+                            </strong>
+
+                            {{
+                                $order->start_date
+                                    ? \Carbon\Carbon::parse(
+                                        $order->start_date
+                                    )->format('d/m/Y')
+                                    : '-'
+                            }}
+
+                            →
+
+                            {{
+                                $order->end_date
+                                    ? \Carbon\Carbon::parse(
+                                        $order->end_date
+                                    )->format('d/m/Y')
+                                    : '-'
+                            }}
+
+                            <br>
+
+                            <strong>
+                                Durasi:
+                            </strong>
+
+                            {{ $rentalDays ?? 0 }}
+                            {{ ($rentalDays ?? 0) === 1 ? 'hari' : 'hari' }}
+
+                        </div>
+
                     @endif
 
                 </td>
 
+
+
+                <!-- ================================================= -->
+                <!-- QTY -->
+                <!-- ================================================= -->
+
                 <td class="center">
+
                     {{ $quantity }}
+
                 </td>
 
+
+
+                <!-- ================================================= -->
+                <!-- UNIT PRICE -->
+                <!-- ================================================= -->
+
                 <td>
+
 
                     @if($isFree)
 
@@ -466,10 +820,34 @@
                                 font-size:11px;
                             "
                         >
+
                             FREE (SC)
+
                         </div>
 
+
+                        @if($isRental)
+
+                            <div
+                                style="
+                                    margin-top:4px;
+                                    text-align:center;
+                                    font-size:9px;
+                                    color:#666;
+                                "
+                            >
+
+                                {{ $rentalDays ?? 0 }}
+                                {{ ($rentalDays ?? 0) === 1 ? 'hari' : 'hari' }}
+                                rental
+
+                            </div>
+
+                        @endif
+
+
                     @else
+
 
                         <table class="no-border-table">
 
@@ -483,25 +861,87 @@
                                     width="80%"
                                     style="text-align:right;"
                                 >
+
                                     {{
                                         number_format(
-                                            $unitPrice,
+                                            $displayUnitPrice,
                                             0,
                                             ',',
                                             '.'
                                         )
                                     }},-
+
                                 </td>
 
                             </tr>
 
                         </table>
 
+
+                        @if($isRental)
+
+                            <div
+                                style="
+                                    margin-top:3px;
+                                    text-align:right;
+                                    font-size:9px;
+                                    color:#666;
+                                    font-style:italic;
+                                "
+                            >
+
+                                / hari
+
+                            </div>
+
+                        @endif
+
+
                     @endif
 
                 </td>
 
+
+
+                <!-- ================================================= -->
+                <!-- SUBTOTAL -->
+                <!-- ================================================= -->
+
                 <td>
+
+
+                    @if($isRental && !$isFree)
+
+                        <div
+                            style="
+                                font-size:9px;
+                                color:#666;
+                                margin-bottom:3px;
+                                text-align:right;
+                            "
+                        >
+
+                            {{
+                                number_format(
+                                    $displayUnitPrice,
+                                    0,
+                                    ',',
+                                    '.'
+                                )
+                            }}
+
+                            ×
+
+                            {{ $rentalDays ?? 0 }}
+
+                            ×
+
+                            {{ $quantity }}
+
+                        </div>
+
+                    @endif
+
 
                     <table class="no-border-table">
 
@@ -515,6 +955,7 @@
                                 width="80%"
                                 style="text-align:right;"
                             >
+
                                 {{
                                     number_format(
                                         $subtotal,
@@ -523,6 +964,7 @@
                                         '.'
                                     )
                                 }},-
+
                             </td>
 
                         </tr>
@@ -535,16 +977,26 @@
 
         @endforeach
 
+
+
+        <!-- ========================================================= -->
+        <!-- SUBTOTAL -->
+        <!-- ========================================================= -->
+
         <tr>
 
             <td
                 colspan="4"
                 class="right"
             >
+
                 Subtotal
+
             </td>
 
+
             <td>
+
                 Rp
                 {{
                     number_format(
@@ -554,9 +1006,16 @@
                         '.'
                     )
                 }},-
+
             </td>
 
         </tr>
+
+
+
+        <!-- ========================================================= -->
+        <!-- TAX -->
+        <!-- ========================================================= -->
 
         <tr>
 
@@ -564,29 +1023,47 @@
                 colspan="4"
                 class="right"
             >
+
                 Tax
+
             </td>
 
+
             <td>
+
                 Rp 0,-
+
             </td>
 
         </tr>
+
+
+
+        <!-- ========================================================= -->
+        <!-- TOTAL -->
+        <!-- ========================================================= -->
 
         <tr>
 
             <td
                 colspan="4"
                 class="bg-red"
-                style="font-weight:bold;text-align:right;"
+                style="
+                    font-weight:bold;
+                    text-align:right;
+                "
             >
+
                 Total
+
             </td>
+
 
             <td
                 class="bg-red"
                 style="font-weight:bold;"
             >
+
                 Rp
                 {{
                     number_format(
@@ -596,6 +1073,7 @@
                         '.'
                     )
                 }},-
+
             </td>
 
         </tr>
@@ -604,9 +1082,20 @@
 
 </table>
 
+
+
+<!-- =============================================================== -->
+<!-- PAYMENT + SIGNATURE -->
+<!-- =============================================================== -->
+
 <table style="margin-top:35px;">
 
     <tr>
+
+
+        <!-- ========================================================= -->
+        <!-- PAYMENT -->
+        <!-- ========================================================= -->
 
         <td
             width="50%"
@@ -621,23 +1110,38 @@
                     width:80%;
                 "
             >
+
                 Payment Method
+
             </div>
+
 
             <p>
                 Bank Central Asia (BCA)
             </p>
 
-            <p>
-                No Rekening:
-                8620797163
-            </p>
 
             <p>
+
+                No Rekening:
+                8620797163
+
+            </p>
+
+
+            <p>
+
                 a/n Chalistha Dea Yuwanda
+
             </p>
 
         </td>
+
+
+
+        <!-- ========================================================= -->
+        <!-- SIGNATURE -->
+        <!-- ========================================================= -->
 
         <td
             width="50%"
@@ -650,6 +1154,7 @@
             <p>
                 Diketahui,
             </p>
+
 
             @if(
                 $ttdPath &&
@@ -671,6 +1176,7 @@
 
             @endif
 
+
             <p
                 style="
                     font-weight:bold;
@@ -679,6 +1185,7 @@
             >
                 Gregory Edgard Christian
             </p>
+
 
             <p>
                 Bendahara Student Council
@@ -690,5 +1197,7 @@
 
 </table>
 
+
 </body>
+
 </html>

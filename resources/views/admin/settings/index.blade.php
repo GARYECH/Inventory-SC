@@ -101,7 +101,7 @@
 
                     <p class="text-xs text-gray-500 mb-6 leading-relaxed">
                         File PDF ini menjadi panduan dan referensi bagi mahasiswa.
-                        Guidebook bersifat opsional dan tidak wajib dibaca sebelum Checkout.
+                        Guidebook bersifat opsional dan tidak mempengaruhi proses transaksi atau status pengajuan.
                     </p>
 
                     @if(isset($settings['guidebook_pdf_path']))
@@ -126,7 +126,7 @@
                             </div>
 
                             <a
-                                href="{{ asset('storage/' . $settings['guidebook_pdf_path']) }}"
+                                href="{{ route('guidebook') }}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="px-4 py-2 bg-white text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-200 hover:bg-indigo-600 hover:text-white transition"

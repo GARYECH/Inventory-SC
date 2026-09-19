@@ -272,21 +272,13 @@ class UserDashboardController extends Controller
         */
 
         $categories =
-            Cache::remember(
-                'user_dashboard_categories',
-                now()->addMinutes(10),
-                function () {
-
-                    return Category::withCount(
-                        'items'
-                    )
-                    ->orderBy(
-                        'name'
-                    )
-                    ->get();
-
-                }
-            );
+    Category::withCount(
+        'items'
+    )
+    ->orderBy(
+        'name'
+    )
+    ->get();
 
         /*
         |--------------------------------------------------------------------------

@@ -13,20 +13,28 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Buat Akun Admin (Sesuai request)
-        User::create([
-            'name' => 'Admin Inventory SC',
-            'email' => 'admin@sc.com',
-            'password' => Hash::make('adminsc123'),
-            'role' => 'admin',
-        ]);
+        // 1. Buat atau update akun Admin
+        User::updateOrCreate(
+            [
+                'email' => 'admin@sc.com',
+            ],
+            [
+                'name' => 'Admin Inventory SC',
+                'password' => Hash::make('adminsc123'),
+                'role' => 'admin',
+            ]
+        );
 
-        // 2. Buat Akun Mahasiswa (Testing)
-        User::create([
-            'name' => 'Gregory Edgard Christian',
-            'email' => 'student@ciputra.ac.id',
-            'password' => Hash::make('password'), // Password: password
-            'role' => 'student',
-        ]);
+        // 2. Buat atau update akun Mahasiswa
+        User::updateOrCreate(
+            [
+                'email' => 'student@ciputra.ac.id',
+            ],
+            [
+                'name' => 'Gregory Edgard Christian',
+                'password' => Hash::make('password'),
+                'role' => 'student',
+            ]
+        );
     }
 }

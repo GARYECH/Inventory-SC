@@ -25,10 +25,34 @@ return Application::configure(
         }
     )
     ->withExceptions(
-        function (
-            Exceptions $exceptions
-        ): void {
-            //
-        }
+    function (
+        Exceptions $exceptions
+    ): void {
+        $exceptions->render(
+            function (
+                \Symfony\Component\HttpKernel\Exception\RequestEntityTooLargeHttpException $e,
+                \Illuminate\Http\Request $request
+            ) {
+                if (
+                    $request->expectsJson()
+                ) {
+                    return response()->json(
+                        [
+                            'message' =>
+                                'Request Entity Too Large.',
+                        ],
+                        413
+                    );
+                }
+
+                return response()->view(
+                    'errors.413',
+                    [],
+                    413
+                );
+            }
+        );
+    }
+
     )
     ->create();

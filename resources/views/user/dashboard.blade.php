@@ -21,6 +21,7 @@
                         fill="none"
                         viewBox="0 0 24 24"
                     >
+
                         <circle
                             class="opacity-20"
                             cx="12"
@@ -55,9 +56,9 @@
         <!-- HEADER -->
         <!-- ========================================================= -->
 
-        <div class="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur-xl shadow-sm">
+        <div class="sticky top-0 z-40 border-b border-gray-100 bg-white/90 shadow-sm backdrop-blur-xl">
 
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
 
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
@@ -73,12 +74,14 @@
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
                             >
+
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                                 />
+
                             </svg>
 
                         </div>
@@ -139,12 +142,14 @@
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
                                 >
+
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                         stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                                     />
+
                                 </svg>
 
                             </div>
@@ -174,12 +179,14 @@
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
                             >
+
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                                 />
+
                             </svg>
 
                             Checkout
@@ -211,7 +218,7 @@
 
         <div
             id="dashboardContent"
-            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 transition-opacity duration-150"
+            class="mx-auto max-w-7xl px-4 pt-6 transition-opacity duration-150 sm:px-6 lg:px-8"
         >
 
 
@@ -231,15 +238,18 @@
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                         >
+
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M5 13l4 4L19 7"
                             />
+
                         </svg>
 
                     </div>
+
 
                     <p class="text-sm font-bold text-emerald-800">
                         {{ session('success') }}
@@ -267,15 +277,18 @@
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                         >
+
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c-.98 0-1.54-1.06-1.05-1.91L13.05 4.91c-.47-.82-1.63-.82-2.1 0L3.89 16.09c-.49.85.07 1.91 1.05 1.91z"
                             />
+
                         </svg>
 
                     </div>
+
 
                     <p class="text-sm font-bold text-red-800">
                         {{ session('error') }}
@@ -288,21 +301,21 @@
 
 
             <!-- ===================================================== -->
-            <!-- STUDENT COUNCIL SPECIAL FACILITIES -->
+            <!-- CATALOG INFORMATION -->
             <!-- ===================================================== -->
 
             <div class="mb-7">
 
-                <div class="overflow-hidden rounded-[2rem] border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-indigo-50 shadow-sm">
+                <div class="rounded-[1.75rem] border border-gray-100 bg-white shadow-sm">
 
-                    <div class="p-5 sm:p-6">
+                    <div class="px-5 py-4 sm:px-6">
 
-                        <div class="flex items-start gap-4">
+                        <div class="flex items-center gap-3">
 
-                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-200">
+                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-950 text-white">
 
                                 <svg
-                                    class="h-6 w-6"
+                                    class="h-4 w-4"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -312,7 +325,7 @@
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                         stroke-width="1.8"
-                                        d="M5 13l4 4L19 7"
+                                        d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
                                     />
 
                                 </svg>
@@ -320,91 +333,193 @@
                             </div>
 
 
-                            <div class="min-w-0 flex-1">
+                            <div>
 
-                                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-
-                                    <div>
-
-                                        <p class="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600">
-                                            Fasilitas Khusus Student Council
-                                        </p>
-
-                                        <h2 class="mt-1 text-lg font-black tracking-tight text-gray-950 sm:text-xl">
-                                            Proker di bawah Student Council mendapatkan fasilitas gratis
-                                        </h2>
-
-                                    </div>
-
-                                    <span class="inline-flex w-fit shrink-0 rounded-full bg-emerald-600 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-white shadow-sm">
-                                        Khusus Student Council
-                                    </span>
-
-                                </div>
-
-
-                                <p class="mt-3 text-xs font-bold leading-relaxed text-gray-700 sm:text-sm">
-                                    Proker di bawah Student Council akan mendapatkan fasilitas gratis pada:
+                                <p class="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400">
+                                    Info Pemesanan
                                 </p>
 
-
-                                <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-
-                                    <div class="rounded-xl border border-emerald-100 bg-white/80 px-3 py-2.5">
-                                        <p class="text-[8px] font-black uppercase tracking-widest text-emerald-600">
-                                            Gratis
-                                        </p>
-                                        <p class="mt-1 text-[10px] font-black text-gray-900">
-                                            Habis Pakai
-                                        </p>
-                                    </div>
-
-
-                                    <div class="rounded-xl border border-emerald-100 bg-white/80 px-3 py-2.5">
-                                        <p class="text-[8px] font-black uppercase tracking-widest text-emerald-600">
-                                            Gratis
-                                        </p>
-                                        <p class="mt-1 text-[10px] font-black text-gray-900">
-                                            Peralatan
-                                        </p>
-                                    </div>
-
-
-                                    <div class="rounded-xl border border-emerald-100 bg-white/80 px-3 py-2.5">
-                                        <p class="text-[8px] font-black uppercase tracking-widest text-emerald-600">
-                                            Gratis
-                                        </p>
-                                        <p class="mt-1 text-[10px] font-black text-gray-900">
-                                            HT UV-5R
-                                        </p>
-                                    </div>
-
-                                </div>
-
-
-                                <div class="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-3.5 py-3">
-
-                                    <p class="text-[9px] font-black uppercase tracking-widest text-amber-700">
-                                        Ketentuan HT Berbayar
-                                    </p>
-
-                                    <p class="mt-1 text-[10px] font-bold leading-relaxed text-amber-900">
-                                        HT UV-82 dan HT 888s tetap mengikuti harga rental normal.
-                                        Transport HT gratis apabila total harga rental HT UV-82 dan HT 888s mencapai
-                                        <span class="font-black">Rp 150.000</span>.
-                                        Jika belum mencapai Rp 150.000, biaya transport adalah
-                                        <span class="font-black">Rp 15.000</span>.
-                                    </p>
-
-                                </div>
-
-
-                                <p class="mt-3 text-[9px] font-semibold leading-relaxed text-gray-500">
-                                    Fasilitas gratis berlaku untuk proker yang berada di bawah Student Council.
-                                    Ketersediaan stok dan jadwal barang tetap mengikuti sistem peminjaman.
+                                <p class="mt-0.5 text-sm font-black text-gray-900">
+                                    Sedikit info sebelum memilih barang
                                 </p>
 
                             </div>
+
+                        </div>
+
+
+                        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+
+
+                            <!-- STUDENT COUNCIL -->
+
+                            <div class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+
+                                <div class="flex items-start gap-3">
+
+                                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+
+                                        <svg
+                                            class="h-4 w-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="1.8"
+                                                d="M5 13l4 4L19 7"
+                                            />
+
+                                        </svg>
+
+                                    </div>
+
+
+                                    <div class="min-w-0 flex-1">
+
+                                        <div class="flex flex-wrap items-center gap-2">
+
+                                            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-700">
+                                                Student Council Benefit
+                                            </p>
+
+                                            <span class="rounded-full bg-emerald-600 px-2 py-0.5 text-[7px] font-black uppercase tracking-widest text-white">
+                                                FREE
+                                            </span>
+
+                                        </div>
+
+
+                                        <p class="mt-1.5 text-[10px] font-semibold leading-relaxed text-gray-700">
+
+                                            Proker di bawah Student Council mendapatkan fasilitas gratis untuk
+                                            <span class="font-black text-emerald-700">
+                                                Habis Pakai, Peralatan,
+                                            </span>
+                                            dan
+                                            <span class="font-black text-emerald-700">
+                                                HT UV-5R.
+                                            </span>
+
+                                        </p>
+
+
+                                        <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-500">
+
+                                            HT UV-82 dan HT 888s tetap mengikuti harga rental normal.
+                                            Transport HT gratis apabila total harga rental keduanya mencapai
+                                            <span class="font-black text-gray-700">
+                                                Rp 150.000.
+                                            </span>
+
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- TRANSACTION RULE -->
+
+                            <div class="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+
+                                <div class="flex items-start gap-3">
+
+                                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+
+                                        <svg
+                                            class="h-4 w-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="1.8"
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
+                                            />
+
+                                        </svg>
+
+                                    </div>
+
+
+                                    <div class="min-w-0 flex-1">
+
+                                        <p class="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-700">
+                                            Aturan 1 Transaksi
+                                        </p>
+
+
+                                        <p class="mt-1.5 text-[10px] font-semibold leading-relaxed text-gray-700">
+
+                                            Barang dari
+                                            <span class="font-black text-indigo-700">
+                                                kategori berbeda
+                                            </span>
+                                            tetap bisa digabung dalam satu transaksi.
+
+                                        </p>
+
+
+                                        <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-500">
+
+                                            Yang perlu sama adalah
+                                            <span class="font-black text-gray-700">
+                                                Transaction Type
+                                            </span>
+                                            — misalnya semua
+                                            <span class="font-black text-gray-700">
+                                                Peralatan
+                                            </span>
+                                            atau semua
+                                            <span class="font-black text-gray-700">
+                                                Handy Talkie.
+                                            </span>
+
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
+
+                            <svg
+                                class="h-3.5 w-3.5 shrink-0 text-gray-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="1.8"
+                                    d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                                />
+
+                            </svg>
+
+
+                            <p class="text-[8px] font-semibold leading-relaxed text-gray-400">
+
+                                Ketersediaan stok dan jadwal barang tetap mengikuti sistem peminjaman.
+
+                            </p>
 
                         </div>
 
@@ -413,6 +528,7 @@
                 </div>
 
             </div>
+
 
 
             <!-- ===================================================== -->
@@ -429,6 +545,10 @@
                             Jenis Transaksi
                         </p>
 
+                        <p class="mt-0.5 text-[9px] font-semibold text-gray-400">
+                            Pilih jenis barang yang ingin kamu gunakan dalam satu transaksi
+                        </p>
+
                     </div>
 
                 </div>
@@ -438,6 +558,7 @@
 
 
                     <!-- ALL -->
+
                     <a
                         href="{{ route(
                             'student.dashboard',
@@ -447,9 +568,10 @@
                             ])
                         ) }}"
                         class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
-                        {{ !request('type')
-                            ? 'border-gray-950 bg-gray-950 text-white shadow-lg'
-                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900'
+                        {{
+                            !request('type')
+                                ? 'border-gray-950 bg-gray-950 text-white shadow-lg'
+                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900'
                         }}"
                     >
 
@@ -458,6 +580,7 @@
                             fill="none"
                             viewBox="0 0 24 24"
                         >
+
                             <path
                                 stroke="currentColor"
                                 stroke-linecap="round"
@@ -465,6 +588,7 @@
                                 stroke-width="2"
                                 d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
                             />
+
                         </svg>
 
                         Semua
@@ -474,6 +598,7 @@
 
 
                     <!-- PERALATAN -->
+
                     <a
                         href="{{ route(
                             'student.dashboard',
@@ -485,13 +610,21 @@
                             )
                         ) }}"
                         class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
-                        {{ request('type') === 'Peralatan'
-                            ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                            : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
+                        {{
+                            request('type') === 'Peralatan'
+                                ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                                : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
                         }}"
                     >
 
-                        <span class="h-2.5 w-2.5 rounded-full {{ request('type') === 'Peralatan' ? 'bg-indigo-500' : 'bg-gray-300' }}"></span>
+                        <span
+                            class="h-2.5 w-2.5 rounded-full
+                            {{
+                                request('type') === 'Peralatan'
+                                    ? 'bg-indigo-500'
+                                    : 'bg-gray-300'
+                            }}"
+                        ></span>
 
                         Peralatan
 
@@ -500,6 +633,7 @@
 
 
                     <!-- HANDY TALKIE -->
+
                     <a
                         href="{{ route(
                             'student.dashboard',
@@ -511,13 +645,21 @@
                             )
                         ) }}"
                         class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
-                        {{ request('type') === 'Handy Talkie'
-                            ? 'border-amber-200 bg-amber-50 text-amber-700'
-                            : 'border-gray-200 bg-white text-gray-500 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-600'
+                        {{
+                            request('type') === 'Handy Talkie'
+                                ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                : 'border-gray-200 bg-white text-gray-500 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-600'
                         }}"
                     >
 
-                        <span class="h-2.5 w-2.5 rounded-full {{ request('type') === 'Handy Talkie' ? 'bg-amber-500' : 'bg-gray-300' }}"></span>
+                        <span
+                            class="h-2.5 w-2.5 rounded-full
+                            {{
+                                request('type') === 'Handy Talkie'
+                                    ? 'bg-amber-500'
+                                    : 'bg-gray-300'
+                            }}"
+                        ></span>
 
                         Handy Talkie
 
@@ -526,6 +668,7 @@
 
 
                     <!-- HABIS PAKAI -->
+
                     <a
                         href="{{ route(
                             'student.dashboard',
@@ -537,13 +680,21 @@
                             )
                         ) }}"
                         class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
-                        {{ request('type') === 'Habis Pakai'
-                            ? 'border-rose-200 bg-rose-50 text-rose-700'
-                            : 'border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600'
+                        {{
+                            request('type') === 'Habis Pakai'
+                                ? 'border-rose-200 bg-rose-50 text-rose-700'
+                                : 'border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600'
                         }}"
                     >
 
-                        <span class="h-2.5 w-2.5 rounded-full {{ request('type') === 'Habis Pakai' ? 'bg-rose-500' : 'bg-gray-300' }}"></span>
+                        <span
+                            class="h-2.5 w-2.5 rounded-full
+                            {{
+                                request('type') === 'Habis Pakai'
+                                    ? 'bg-rose-500'
+                                    : 'bg-gray-300'
+                            }}"
+                        ></span>
 
                         Habis Pakai
 
@@ -552,6 +703,7 @@
 
 
                     <!-- MERCHANDISE -->
+
                     <a
                         href="{{ route(
                             'student.dashboard',
@@ -563,13 +715,21 @@
                             )
                         ) }}"
                         class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
-                        {{ request('type') === 'Merchandise'
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                            : 'border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600'
+                        {{
+                            request('type') === 'Merchandise'
+                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                : 'border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600'
                         }}"
                     >
 
-                        <span class="h-2.5 w-2.5 rounded-full {{ request('type') === 'Merchandise' ? 'bg-emerald-500' : 'bg-gray-300' }}"></span>
+                        <span
+                            class="h-2.5 w-2.5 rounded-full
+                            {{
+                                request('type') === 'Merchandise'
+                                    ? 'bg-emerald-500'
+                                    : 'bg-gray-300'
+                            }}"
+                        ></span>
 
                         Merchandise
 
@@ -598,7 +758,7 @@
                             </p>
 
                             <p class="mt-0.5 text-[9px] font-semibold text-gray-400">
-                                Kategori dan jenis transaksi tidak harus sama
+                                Kategori berbeda tetap bisa dipilih selama jenis transaksinya sama
                             </p>
 
                         </div>
@@ -610,6 +770,7 @@
 
 
                         <!-- ALL CATEGORIES -->
+
                         <a
                             href="{{ route(
                                 'student.dashboard',
@@ -619,9 +780,10 @@
                                 ])
                             ) }}"
                             class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
-                            {{ !request('category')
-                                ? 'border-gray-950 bg-gray-950 text-white shadow-lg'
-                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900'
+                            {{
+                                !request('category')
+                                    ? 'border-gray-950 bg-gray-950 text-white shadow-lg'
+                                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900'
                             }}"
                         >
 
@@ -643,9 +805,10 @@
                                     )
                                 ) }}"
                                 class="inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all
-                                {{ request('category') === $category->slug
-                                    ? 'border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm'
-                                    : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
+                                {{
+                                    request('category') === $category->slug
+                                        ? 'border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm'
+                                        : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
                                 }}"
                             >
 
@@ -657,6 +820,7 @@
                                             : 'bg-gray-300'
                                     }}"
                                 ></span>
+
 
                                 {{ $category->name }}
 
@@ -707,7 +871,8 @@
                              * =====================================================
                              */
 
-                            $type = $item->transaction_type;
+                            $type =
+                                $item->transaction_type;
 
 
                             /*
@@ -716,13 +881,14 @@
                              * =====================================================
                              */
 
-                            $isRental = in_array(
-                                $type,
-                                [
-                                    'Peralatan',
-                                    'Handy Talkie'
-                                ]
-                            );
+                            $isRental =
+                                in_array(
+                                    $type,
+                                    [
+                                        'Peralatan',
+                                        'Handy Talkie'
+                                    ]
+                                );
 
 
                             /*
@@ -746,7 +912,8 @@
                              */
 
                             $transactionDetail =
-                                $item->transaction_detail ?? null;
+                                $item->transaction_detail
+                                ?? null;
 
 
                             /*
@@ -755,7 +922,9 @@
                              * =====================================================
                              */
 
-                            $badgeText = $type;
+                            $badgeText =
+                                $type;
+
 
                             $badgeClass =
                                 'bg-gray-900 text-white';
@@ -824,6 +993,7 @@
                                                     return false;
 
                                                 }
+
 
                                                 return !in_array(
                                                     $detail->order->status,
@@ -907,6 +1077,7 @@
                                                     viewBox="0 0 24 24"
                                                     stroke="currentColor"
                                                 >
+
                                                     <path
                                                         stroke="currentColor"
                                                         stroke-linecap="round"
@@ -914,7 +1085,9 @@
                                                         stroke-width="1.4"
                                                         d="M3 5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm4 13l4-4 3 3 2-2 4 3"
                                                     />
+
                                                 </svg>
+
 
                                                 <span class="text-[8px] font-black uppercase tracking-widest">
                                                     No Image
@@ -929,6 +1102,7 @@
 
 
                                     <!-- TRANSACTION TYPE BADGE -->
+
                                     <div class="absolute left-3 top-3">
 
                                         <span
@@ -942,6 +1116,7 @@
 
 
                                     <!-- CONDITION -->
+
                                     <div class="absolute right-3 top-3">
 
                                         <span
@@ -1021,12 +1196,14 @@
                                                 viewBox="0 0 24 24"
                                                 stroke="currentColor"
                                             >
+
                                                 <path
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
                                                     d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
                                                 />
+
                                             </svg>
 
                                         </div>
@@ -1041,7 +1218,9 @@
 
                                             <div class="mt-2 space-y-1.5">
 
+
                                                 <!-- CATEGORY -->
+
                                                 <div class="flex items-start justify-between gap-3">
 
                                                     <span class="text-[8px] font-bold uppercase tracking-wider text-gray-400">
@@ -1056,6 +1235,7 @@
 
 
                                                 <!-- TRANSACTION TYPE -->
+
                                                 <div class="flex items-start justify-between gap-3">
 
                                                     <span class="text-[8px] font-bold uppercase tracking-wider text-gray-400">
@@ -1070,6 +1250,7 @@
 
 
                                                 <!-- TRANSACTION DETAIL -->
+
                                                 @if($transactionDetail)
 
                                                     <div class="flex items-start justify-between gap-3">
@@ -1085,43 +1266,6 @@
                                                     </div>
 
                                                 @endif
-
-                                            </div>
-
-
-                                            <!-- SIMPLE EXPLANATION -->
-                                            <div class="mt-3 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2.5">
-
-                                                <div class="flex items-start gap-2">
-
-                                                    <svg
-                                                        class="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
-                                                        />
-                                                    </svg>
-
-                                                    <p class="text-[8px] font-bold leading-relaxed text-indigo-600">
-
-                                                        <span class="font-black">
-                                                            Penting:
-                                                        </span>
-
-                                                        Dalam satu transaksi, semua barang harus memiliki
-                                                        <span class="font-black">
-                                                            Transaction Type yang sama.
-                                                        </span>
-
-                                                    </p>
-
-                                                </div>
 
                                             </div>
 
@@ -1151,15 +1295,19 @@
 
                                         </p>
 
+
                                         <p class="mt-1 text-lg font-black text-indigo-600">
 
                                             Rp
-                                            {{ number_format(
-                                                $item->price,
-                                                0,
-                                                ',',
-                                                '.'
-                                            ) }}
+
+                                            {{
+                                                number_format(
+                                                    $item->price,
+                                                    0,
+                                                    ',',
+                                                    '.'
+                                                )
+                                            }}
 
                                         </p>
 
@@ -1171,6 +1319,7 @@
                                         <p class="text-[8px] font-black uppercase tracking-widest text-gray-400">
                                             Stok
                                         </p>
+
 
                                         <p
                                             class="mt-1 text-lg font-black
@@ -1214,13 +1363,16 @@
                                                 viewBox="0 0 24 24"
                                                 stroke="currentColor"
                                             >
+
                                                 <path
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
                                                 />
+
                                             </svg>
+
 
                                             <span class="text-[8px] font-black uppercase tracking-widest text-orange-600">
                                                 Sedang Ter-booking
@@ -1241,12 +1393,20 @@
 
                                                             <p class="truncate text-[9px] font-black text-orange-700">
 
-                                                                {{ optional($detail->order->start_date)->format('d M Y') }}
+                                                                {{
+                                                                    optional(
+                                                                        $detail->order->start_date
+                                                                    )->format('d M Y')
+                                                                }}
 
                                                                 @if($detail->order->end_date)
 
                                                                     —
-                                                                    {{ optional($detail->order->end_date)->format('d M Y') }}
+                                                                    {{
+                                                                        optional(
+                                                                            $detail->order->end_date
+                                                                        )->format('d M Y')
+                                                                    }}
 
                                                                 @endif
 
@@ -1344,18 +1504,22 @@
                                                 fill="none"
                                                 viewBox="0 0 24 24"
                                             >
+
                                                 <path
                                                     stroke="currentColor"
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     stroke-width="2"
-                                                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 8h6m-6 4h4"
+                                                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 8h6m-6 4h4"
                                                 />
+
                                             </svg>
+
 
                                             Detail Pesanan Baju
 
                                         </a>
+
 
                                         <p class="mt-2 text-center text-[8px] font-bold leading-relaxed text-gray-400">
                                             Atur ukuran, divisi, jumlah, dan desain di halaman berikutnya.
@@ -1364,6 +1528,7 @@
                                     @else
 
                                         <!-- VIEW BOOKING -->
+
                                         @if($isRental)
 
                                             <a
@@ -1379,6 +1544,7 @@
                                                     fill="none"
                                                     viewBox="0 0 24 24"
                                                 >
+
                                                     <path
                                                         stroke="currentColor"
                                                         stroke-linecap="round"
@@ -1386,7 +1552,9 @@
                                                         stroke-width="2"
                                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
                                                     />
+
                                                 </svg>
+
 
                                                 Lihat Booking
 
@@ -1397,6 +1565,7 @@
 
 
                                         <!-- OPEN SCHEDULE -->
+
                                         <button
                                             type="button"
                                             class="schedule-toggle flex w-full items-center justify-center gap-2 rounded-xl bg-gray-950 px-4 py-3.5 text-[9px] font-black uppercase tracking-[0.16em] text-white shadow-lg transition-all hover:bg-indigo-600 active:scale-95"
@@ -1408,6 +1577,7 @@
                                                 fill="none"
                                                 viewBox="0 0 24 24"
                                             >
+
                                                 <path
                                                     stroke="currentColor"
                                                     stroke-linecap="round"
@@ -1415,7 +1585,9 @@
                                                     stroke-width="2"
                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
                                                 />
+
                                             </svg>
+
 
                                             {{
                                                 $isRental
@@ -1444,6 +1616,7 @@
                                         >
 
                                             @csrf
+
 
 
                                             <!-- ================================================= -->
@@ -1481,6 +1654,7 @@
                                                             fill="none"
                                                             viewBox="0 0 24 24"
                                                         >
+
                                                             <path
                                                                 stroke="currentColor"
                                                                 stroke-linecap="round"
@@ -1488,6 +1662,7 @@
                                                                 stroke-width="2"
                                                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5v12a2 2 0 002 2h14"
                                                             />
+
                                                         </svg>
 
                                                     </div>
@@ -1513,6 +1688,7 @@
                                                             fill="none"
                                                             viewBox="0 0 24 24"
                                                         >
+
                                                             <path
                                                                 stroke="currentColor"
                                                                 stroke-linecap="round"
@@ -1520,6 +1696,7 @@
                                                                 stroke-width="2"
                                                                 d="M19 9l-7 7-7-7"
                                                             />
+
                                                         </svg>
 
                                                     </div>
@@ -1539,7 +1716,11 @@
                                                     type="hidden"
                                                     name="end_date"
                                                     class="end-date"
-                                                    {{ $isRental ? 'required' : '' }}
+                                                    {{
+                                                        $isRental
+                                                            ? 'required'
+                                                            : ''
+                                                    }}
                                                 >
 
                                             </div>
@@ -1582,6 +1763,7 @@
 
 
                                                     <!-- START -->
+
                                                     <div>
 
                                                         <select
@@ -1627,6 +1809,7 @@
 
 
                                                     <!-- END -->
+
                                                     @if($isRental)
 
                                                         <div>
@@ -1688,6 +1871,7 @@
                                             )
 
                                                 <!-- ID CARD DRIVE -->
+
                                                 <div class="mt-4">
 
                                                     <label class="mb-2 block text-[8px] font-black uppercase tracking-[0.15em] text-indigo-700">
@@ -1764,6 +1948,7 @@
                                                             fill="none"
                                                             viewBox="0 0 24 24"
                                                         >
+
                                                             <path
                                                                 stroke="currentColor"
                                                                 stroke-linecap="round"
@@ -1771,7 +1956,9 @@
                                                                 stroke-width="2"
                                                                 d="M12 4v16m8-8H4"
                                                             />
+
                                                         </svg>
+
 
                                                         Ke Keranjang
 
@@ -1788,6 +1975,7 @@
                                 @else
 
                                     <!-- OUT OF STOCK -->
+
                                     <button
                                         type="button"
                                         disabled
@@ -1845,6 +2033,7 @@
                             fill="none"
                             viewBox="0 0 24 24"
                         >
+
                             <path
                                 stroke="currentColor"
                                 stroke-linecap="round"
@@ -1852,6 +2041,7 @@
                                 stroke-width="1.5"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                             />
+
                         </svg>
 
                     </div>

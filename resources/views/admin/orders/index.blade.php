@@ -94,6 +94,10 @@
         <div class="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
 
 
+            <!-- ========================================================= -->
+            <!-- SUCCESS MESSAGE -->
+            <!-- ========================================================= -->
+
             @if(session('success'))
 
                 <div class="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4">
@@ -106,6 +110,11 @@
 
             @endif
 
+
+
+            <!-- ========================================================= -->
+            <!-- ERROR MESSAGE -->
+            <!-- ========================================================= -->
 
             @if(session('error'))
 
@@ -367,7 +376,10 @@
                                     @foreach($order->orderItems as $detail)
 
                                         @php
-                                            $item = $detail->item;
+
+                                            $item =
+                                                $detail->item;
+
                                         @endphp
 
 
@@ -455,10 +467,13 @@
                                                         )
 
                                                             <p class="mt-1 text-[9px] font-bold text-gray-500">
+
                                                                 Warna:
+
                                                                 <span class="font-black text-purple-600">
                                                                     {{ $detail->color_number }}
                                                                 </span>
+
                                                             </p>
 
                                                         @endif
@@ -512,7 +527,9 @@
                             <div class="xl:col-span-4">
 
 
+                                <!-- ================================================= -->
                                 <!-- DOCUMENTS -->
+                                <!-- ================================================= -->
 
                                 <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4">
 
@@ -660,29 +677,30 @@
 
                                                     @php
 
-                                                        $mouLabel = match(
-                                                            $document->mou_type
-                                                        ) {
+                                                        $mouLabel =
+                                                            match(
+                                                                $document->mou_type
+                                                            ) {
 
-                                                            'ht' =>
-                                                                'MoU Handy Talkie',
+                                                                'ht' =>
+                                                                    'MoU Handy Talkie',
 
-                                                            'internal' =>
-                                                                'MoU Internal Rental',
+                                                                'internal' =>
+                                                                    'MoU Internal Rental',
 
-                                                            'vendor' =>
-                                                                'MoU Vendor Rental',
+                                                                'vendor' =>
+                                                                    'MoU Vendor Rental',
 
-                                                            'merch_baju' =>
-                                                                'MoU Baju',
+                                                                'merch_baju' =>
+                                                                    'MoU Baju',
 
-                                                            'merch_idcard' =>
-                                                                'MoU ID Card',
+                                                                'merch_idcard' =>
+                                                                    'MoU ID Card',
 
-                                                            default =>
-                                                                'MoU',
+                                                                default =>
+                                                                    'MoU',
 
-                                                        };
+                                                            };
 
                                                     @endphp
 
@@ -726,29 +744,30 @@
 
                                                 @php
 
-                                                    $mouLabel = match(
-                                                        $document->mou_type
-                                                    ) {
+                                                    $mouLabel =
+                                                        match(
+                                                            $document->mou_type
+                                                        ) {
 
-                                                        'ht' =>
-                                                            'MoU Handy Talkie',
+                                                            'ht' =>
+                                                                'MoU Handy Talkie',
 
-                                                        'internal' =>
-                                                            'MoU Internal Rental',
+                                                            'internal' =>
+                                                                'MoU Internal Rental',
 
-                                                        'vendor' =>
-                                                            'MoU Vendor Rental',
+                                                            'vendor' =>
+                                                                'MoU Vendor Rental',
 
-                                                        'merch_baju' =>
-                                                            'MoU Baju',
+                                                            'merch_baju' =>
+                                                                'MoU Baju',
 
-                                                        'merch_idcard' =>
-                                                            'MoU ID Card',
+                                                            'merch_idcard' =>
+                                                                'MoU ID Card',
 
-                                                        default =>
-                                                            'MoU',
+                                                            default =>
+                                                                'MoU',
 
-                                                    };
+                                                        };
 
                                                 @endphp
 
@@ -801,7 +820,7 @@
                                 <form
                                     action="{{ route('admin.orders.update', $order->id) }}"
                                     method="POST"
-                                    class="mt-4 rounded-2xl border border-gray-100 bg-white p-4"
+                                    class="js-order-form mt-4 rounded-2xl border border-gray-100 bg-white p-4"
                                 >
 
                                     @csrf
@@ -823,9 +842,10 @@
                                             Status
                                         </label>
 
+
                                         <select
                                             name="status"
-                                            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-xs font-bold text-gray-800 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10"
+                                            class="js-status-select w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-xs font-bold text-gray-800 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10"
                                         >
 
                                             @foreach([
@@ -884,6 +904,7 @@
                                                     MoU Number
                                                 </label>
 
+
                                                 <input
                                                     type="text"
                                                     name="mou_number"
@@ -891,6 +912,7 @@
                                                     placeholder="MOU/001"
                                                     class="mt-2 w-full rounded-lg border border-purple-200 bg-white px-3 py-2.5 text-[10px] font-black text-gray-800 outline-none placeholder:text-purple-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/10"
                                                 >
+
 
                                                 <p class="mt-1 text-[8px] font-semibold text-purple-400">
                                                     Contoh: MOU/001
@@ -908,6 +930,7 @@
                                                     Invoice Number
                                                 </label>
 
+
                                                 <input
                                                     type="text"
                                                     name="invoice_number"
@@ -915,6 +938,7 @@
                                                     placeholder="INV/001"
                                                     class="mt-2 w-full rounded-lg border border-orange-200 bg-white px-3 py-2.5 text-[10px] font-black text-gray-800 outline-none placeholder:text-orange-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-500/10"
                                                 >
+
 
                                                 <p class="mt-1 text-[8px] font-semibold text-orange-400">
                                                     Contoh: INV/001
@@ -932,6 +956,7 @@
                                                     Kwitansi Number
                                                 </label>
 
+
                                                 <input
                                                     type="text"
                                                     name="kwitansi_number"
@@ -939,6 +964,7 @@
                                                     placeholder="KWI/001"
                                                     class="mt-2 w-full rounded-lg border border-pink-200 bg-white px-3 py-2.5 text-[10px] font-black text-gray-800 outline-none placeholder:text-pink-300 focus:border-pink-400 focus:ring-2 focus:ring-pink-500/10"
                                                 >
+
 
                                                 <p class="mt-1 text-[8px] font-semibold text-pink-400">
                                                     Contoh: KWI/001
@@ -956,110 +982,134 @@
                                     <!-- BA -->
                                     <!-- ================================================= -->
 
-                                    @if(
-                                        $order->status === 'Returned (Damaged)' ||
-                                        $order->status === 'Pending Review BA'
-                                    )
+                                    <div
+                                        class="js-ba-section mt-4 rounded-xl border border-red-200 bg-red-50 p-4"
+                                        style="
+                                            {{
+                                                $order->status === 'Returned (Damaged)' ||
+                                                $order->status === 'Pending Review BA'
+                                                    ? 'display: block;'
+                                                    : 'display: none;'
+                                            }}
+                                        "
+                                    >
 
-                                        <div class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-
-                                            <p class="mb-3 text-[9px] font-black uppercase tracking-widest text-red-700">
-                                                Berita Acara & Denda
-                                            </p>
-
-
-                                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
-
-                                                <div>
-
-                                                    <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-gray-500">
-                                                        BA Number
-                                                    </label>
-
-                                                    <input
-                                                        type="text"
-                                                        name="ba_number"
-                                                        value="{{ $order->ba_number }}"
-                                                        placeholder="BA/001"
-                                                        class="w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[10px] font-bold"
-                                                    >
-
-                                                </div>
+                                        <p class="mb-3 text-[9px] font-black uppercase tracking-widest text-red-700">
+                                            Berita Acara & Denda
+                                        </p>
 
 
-                                                <div>
-
-                                                    <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-gray-500">
-                                                        BA Date
-                                                    </label>
-
-                                                    <input
-                                                        type="text"
-                                                        name="ba_date"
-                                                        value="{{ $order->ba_date }}"
-                                                        class="w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[10px] font-bold"
-                                                    >
-
-                                                </div>
+                                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
 
-                                                <div class="sm:col-span-2">
+                                            <!-- BA NUMBER -->
 
-                                                    <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-gray-500">
-                                                        Description
-                                                    </label>
+                                            <div>
 
-                                                    <textarea
-                                                        name="ba_description"
-                                                        rows="3"
-                                                        class="w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[10px] font-bold"
-                                                    >{{ $order->ba_description }}</textarea>
-
-                                                </div>
+                                                <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-gray-500">
+                                                    BA Number
+                                                </label>
 
 
-                                                <div>
+                                                <input
+                                                    type="text"
+                                                    name="ba_number"
+                                                    value="{{ $order->ba_number }}"
+                                                    placeholder="BA/001"
+                                                    class="w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[10px] font-bold"
+                                                >
 
-                                                    <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-gray-500">
-                                                        Due Date
-                                                    </label>
-
-                                                    <input
-                                                        type="text"
-                                                        name="ba_due_date"
-                                                        value="{{ $order->ba_due_date }}"
-                                                        class="w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[10px] font-bold"
-                                                    >
-
-                                                </div>
+                                            </div>
 
 
-                                                <div>
 
-                                                    <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-red-600">
-                                                        Total Fine
-                                                    </label>
+                                            <!-- BA DATE -->
 
-                                                    <input
-                                                        type="number"
-                                                        name="ba_total_fine"
-                                                        value="{{ $order->ba_total_fine }}"
-                                                        min="0"
-                                                        class="w-full rounded-xl border border-red-200 bg-red-100 px-3 py-2.5 text-[10px] font-black text-red-800"
-                                                    >
+                                            <div>
 
-                                                </div>
+                                                <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-gray-500">
+                                                    BA Date
+                                                </label>
+
+
+                                                <input
+                                                    type="text"
+                                                    name="ba_date"
+                                                    value="{{ $order->ba_date }}"
+                                                    class="w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[10px] font-bold"
+                                                >
+
+                                            </div>
+
+
+
+                                            <!-- DESCRIPTION -->
+
+                                            <div class="sm:col-span-2">
+
+                                                <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-gray-500">
+                                                    Description
+                                                </label>
+
+
+                                                <textarea
+                                                    name="ba_description"
+                                                    rows="3"
+                                                    class="w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[10px] font-bold"
+                                                >{{ $order->ba_description }}</textarea>
+
+                                            </div>
+
+
+
+                                            <!-- DUE DATE -->
+
+                                            <div>
+
+                                                <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-gray-500">
+                                                    Due Date
+                                                </label>
+
+
+                                                <input
+                                                    type="text"
+                                                    name="ba_due_date"
+                                                    value="{{ $order->ba_due_date }}"
+                                                    class="w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-[10px] font-bold"
+                                                >
+
+                                            </div>
+
+
+
+                                            <!-- TOTAL FINE -->
+
+                                            <div>
+
+                                                <label class="mb-1 block text-[8px] font-black uppercase tracking-widest text-red-600">
+                                                    Total Fine
+                                                </label>
+
+
+                                                <input
+                                                    type="number"
+                                                    name="ba_total_fine"
+                                                    value="{{ $order->ba_total_fine }}"
+                                                    min="0"
+                                                    class="w-full rounded-xl border border-red-200 bg-red-100 px-3 py-2.5 text-[10px] font-black text-red-800"
+                                                >
 
                                             </div>
 
                                         </div>
 
-                                    @endif
+                                    </div>
 
 
 
+                                    <!-- ================================================= -->
                                     <!-- UPDATE BUTTON -->
+                                    <!-- ================================================= -->
 
                                     <button
                                         type="submit"
@@ -1086,6 +1136,7 @@
                                     @csrf
 
                                     @method('DELETE')
+
 
                                     <button
                                         type="submit"
@@ -1136,5 +1187,117 @@
         </div>
 
     </div>
+
+
+
+    <!-- ============================================================= -->
+    <!-- BA STATUS TOGGLE -->
+    <!-- ============================================================= -->
+
+    <script>
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            function () {
+
+                const orderForms =
+                    document.querySelectorAll(
+                        '.js-order-form'
+                    );
+
+
+                orderForms.forEach(
+                    function (form) {
+
+                        const statusSelect =
+                            form.querySelector(
+                                '.js-status-select'
+                            );
+
+                        const baSection =
+                            form.querySelector(
+                                '.js-ba-section'
+                            );
+
+
+                        if (
+                            !statusSelect ||
+                            !baSection
+                        ) {
+                            return;
+                        }
+
+
+                        const baFields =
+                            baSection.querySelectorAll(
+                                'input, textarea, select'
+                            );
+
+
+                        function updateBaSection() {
+
+                            const selectedStatus =
+                                statusSelect.value;
+
+
+                            const shouldShow =
+                                selectedStatus ===
+                                    'Returned (Damaged)'
+                                ||
+                                selectedStatus ===
+                                    'Pending Review BA';
+
+
+                            if (shouldShow) {
+
+                                baSection.style.display =
+                                    'block';
+
+
+                                baFields.forEach(
+                                    function (field) {
+
+                                        field.disabled =
+                                            false;
+
+                                    }
+                                );
+
+                            } else {
+
+                                baSection.style.display =
+                                    'none';
+
+
+                                baFields.forEach(
+                                    function (field) {
+
+                                        field.disabled =
+                                            true;
+
+                                    }
+                                );
+
+                            }
+
+                        }
+
+
+                        statusSelect.addEventListener(
+                            'change',
+                            updateBaSection
+                        );
+
+
+                        updateBaSection();
+
+                    }
+                );
+
+            }
+        );
+
+    </script>
+
 
 </x-app-layout>

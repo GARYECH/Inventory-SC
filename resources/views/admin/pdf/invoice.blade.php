@@ -114,8 +114,67 @@
 
     /*
     |--------------------------------------------------------------------------
-    | TOTAL
+    | ITEM SUBTOTAL
     |--------------------------------------------------------------------------
+    |
+    | Subtotal hanya berasal dari seluruh
+    | order item.
+    |
+    | HT Fee dan Transport dihitung terpisah.
+    |
+    */
+
+    $itemSubtotal =
+        (int) $order->orderItems->sum(
+            function ($detail) {
+
+                return (int) (
+                    $detail->subtotal_price
+                    ?? 0
+                );
+
+            }
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | HT FEE
+    |--------------------------------------------------------------------------
+    */
+
+    $htFee =
+        (int) (
+            $order->ht_fee
+            ?? 0
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSPORT FEE
+    |--------------------------------------------------------------------------
+    */
+
+    $transportFee =
+        (int) (
+            $order->transport_fee
+            ?? 0
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GRAND TOTAL
+    |--------------------------------------------------------------------------
+    |
+    | Menggunakan accessor total_price
+    | dari Order.
+    |
+    | item subtotal
+    | + ht fee
+    | + transport fee
+    |
     */
 
     $total =
@@ -129,9 +188,10 @@
     |
     | Rental day menggunakan GAP tanggal.
     |
-    | Minggu → Senin  = 0 hari
-    | Minggu → Selasa = 1 hari
-    | Minggu → Rabu   = 2 hari
+    | Tanggal pengambilan dan pengembalian
+    | tidak dihitung sebagai hari sewa.
+    |
+    | Minimum biaya rental = 1 hari.
     |
     */
 
@@ -169,7 +229,7 @@
 
         $rentalDays =
             max(
-                0,
+                1,
                 $dateDifference - 1
             );
     }
@@ -1000,7 +1060,7 @@
                 Rp
                 {{
                     number_format(
-                        $total,
+                        $itemSubtotal,
                         0,
                         ',',
                         '.'
@@ -1010,6 +1070,93 @@
             </td>
 
         </tr>
+
+
+
+        <!-- ========================================================= -->
+        <!-- HT FEE -->
+        <!-- ========================================================= -->
+
+        @if($htFee > 0)
+
+            <tr>
+
+                <td
+                    colspan="4"
+                    class="right"
+                >
+
+                    HT Fee
+
+                </td>
+
+
+                <td>
+
+                    Rp
+                    {{
+                        number_format(
+                            $htFee,
+                            0,
+                            ',',
+                            '.'
+                        )
+                    }},-
+
+                </td>
+
+            </tr>
+
+        @endif
+
+
+
+        <!-- ========================================================= -->
+        <!-- TRANSPORT -->
+        <!-- ========================================================= -->
+
+        @if(
+            $order->order_type ===
+            'Handy Talkie'
+        )
+
+            <tr>
+
+                <td
+                    colspan="4"
+                    class="right"
+                >
+
+                    Transport HT
+
+                </td>
+
+
+                <td>
+
+                    @if($transportFee > 0)
+
+                        Rp
+                        {{
+                            number_format(
+                                $transportFee,
+                                0,
+                                ',',
+                                '.'
+                            )
+                        }},-
+
+                    @else
+
+                        GRATIS
+
+                    @endif
+
+                </td>
+
+            </tr>
+
+        @endif
 
 
 

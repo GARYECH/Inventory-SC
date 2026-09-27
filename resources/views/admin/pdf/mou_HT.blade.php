@@ -674,9 +674,10 @@
     |
     | Jumlah hari rental menggunakan GAP tanggal.
     |
-    | Minggu → Senin  = 0 hari
-    | Minggu → Selasa = 1 hari
-    | Minggu → Rabu   = 2 hari
+    | Tanggal pengambilan dan pengembalian
+    | tidak dihitung sebagai hari sewa.
+    |
+    | Namun, minimum biaya rental adalah 1 (satu) hari.
     |
     */
 
@@ -705,7 +706,7 @@
 
         $rentalDays =
             max(
-                0,
+                1,
                 $dateDifference - 1
             );
 
@@ -714,15 +715,68 @@
 
     /*
     |--------------------------------------------------------------------------
-    | HT TOTAL
+    | HT SUBTOTAL
     |--------------------------------------------------------------------------
+    |
+    | Total seluruh subtotal Handy Talkie.
+    |
     */
 
-    $htTotal = (int) $htItems->sum(function ($detail) {
+    $htSubtotal = (int) $htItems->sum(function ($detail) {
 
         return (int) ($detail->subtotal_price ?? 0);
 
     });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | HT FEE
+    |--------------------------------------------------------------------------
+    |
+    | HT UV-82 dan HT 888s:
+    |
+    | Rp20.000 satu kali per transaksi.
+    |
+    */
+
+    $htFee =
+        (int) (
+            $order->ht_fee
+            ?? 0
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSPORT FEE
+    |--------------------------------------------------------------------------
+    */
+
+    $transportFee =
+        (int) (
+            $order->transport_fee
+            ?? 0
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | HT GRAND TOTAL
+    |--------------------------------------------------------------------------
+    |
+    | Subtotal HT
+    | + HT Fee
+    | + Transport
+    |
+    */
+
+    $htTotal =
+        $htSubtotal
+        +
+        $htFee
+        +
+        $transportFee;
 
 
     /*
@@ -2290,7 +2344,169 @@
 
 
 
-            <!-- TOTAL -->
+            <!-- ========================================================= -->
+            <!-- HT SUBTOTAL -->
+            <!-- ========================================================= -->
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    class="right"
+                    style="
+                        padding-right:8mm;
+                    "
+                >
+
+                    <strong>
+                        Subtotal HT
+                    </strong>
+
+                </td>
+
+
+                <td class="col-subtotal">
+
+                    <table class="money-table">
+
+                        <tr>
+
+                            <td class="money-prefix">
+                                Rp
+                            </td>
+
+                            <td class="money-value">
+
+                                {{ $money($htSubtotal) }}
+
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                </td>
+
+            </tr>
+
+
+
+            <!-- ========================================================= -->
+            <!-- HT FEE -->
+            <!-- ========================================================= -->
+
+            @if($htFee > 0)
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        class="right"
+                        style="
+                            padding-right:8mm;
+                        "
+                    >
+
+                        <strong>
+                            HT Fee
+                        </strong>
+
+                    </td>
+
+
+                    <td class="col-subtotal">
+
+                        <table class="money-table">
+
+                            <tr>
+
+                                <td class="money-prefix">
+                                    Rp
+                                </td>
+
+                                <td class="money-value">
+
+                                    {{ $money($htFee) }}
+
+                                </td>
+
+                            </tr>
+
+                        </table>
+
+                    </td>
+
+                </tr>
+
+            @endif
+
+
+
+            <!-- ========================================================= -->
+            <!-- TRANSPORT -->
+            <!-- ========================================================= -->
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    class="right"
+                    style="
+                        padding-right:8mm;
+                    "
+                >
+
+                    <strong>
+                        Transport HT
+                    </strong>
+
+                </td>
+
+
+                <td class="col-subtotal">
+
+                    @if($transportFee > 0)
+
+                        <table class="money-table">
+
+                            <tr>
+
+                                <td class="money-prefix">
+                                    Rp
+                                </td>
+
+                                <td class="money-value">
+
+                                    {{ $money($transportFee) }}
+
+                                </td>
+
+                            </tr>
+
+                        </table>
+
+                    @else
+
+                        <div
+                            style="
+                                text-align:right;
+                                font-weight:bold;
+                            "
+                        >
+                            GRATIS
+                        </div>
+
+                    @endif
+
+                </td>
+
+            </tr>
+
+
+
+            <!-- ========================================================= -->
+            <!-- GRAND TOTAL -->
+            <!-- ========================================================= -->
 
             <tr>
 
@@ -2639,7 +2855,7 @@
             Kehilangan Barang yang telah diisi secara lengkap,
             meliputi bukti transfer denda dan ditandatangani oleh
             <strong>PIHAK KEDUA</strong>
-            melalui <em>website Inventory</em> Student Council
+            melalui <em>website</em> Inventory Student Council
             apabila pesanan berada pada status
             “<em>Returned(Damaged)</em>” terkait kendala, kerusakan,
             dan/atau kehilangan barang selama masa peminjaman.

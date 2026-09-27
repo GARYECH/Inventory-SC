@@ -246,6 +246,8 @@
 
                     $hasHandyTalkie = false;
 
+                    $hasPaidHandyTalkie = false;
+
                     $hasConsumable = false;
 
                     $hasMerchandise = false;
@@ -304,6 +306,21 @@
 
                             $transactionTypes['Handy Talkie'] =
                                 true;
+
+                            if (
+                                in_array(
+                                    $transactionDetail,
+                                    [
+                                        'HT UV-82',
+                                        'HT 888s',
+                                    ],
+                                    true
+                                )
+                            ) {
+
+                                $hasPaidHandyTalkie = true;
+
+                            }
 
                         }
 
@@ -733,6 +750,7 @@
 
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-amber-800">
                                             HT wajib dikembalikan. Harga rental dihitung berdasarkan jumlah hari sewa dan transaksi menggunakan MoU Handy Talkie.
+                                            HT UV-82 dan HT 888s dikenakan HT Fee Rp 20.000 satu kali per transaksi.
                                         </p>
 
 
@@ -853,11 +871,6 @@
                                                     <span class="font-black">
                                                         gap antara tanggal pengambilan dan tanggal pengembalian.
                                                     </span>
-                                                    Tanggal pengambilan dan pengembalian tidak dihitung sebagai hari sewa,
-                                                    tetapi minimum biaya rental tetap dihitung
-                                                    <span class="font-black">
-                                                        1 hari.
-                                                    </span>
 
                                                 </p>
 
@@ -865,14 +878,6 @@
                                                 <p class="mt-2 text-[9px] font-bold leading-relaxed text-violet-700">
 
                                                     Contoh:
-                                                    <span class="font-black">
-                                                        Minggu → Minggu = 1 hari
-                                                    </span>
-                                                    •
-                                                    <span class="font-black">
-                                                        Minggu → Senin = 1 hari
-                                                    </span>
-                                                    •
                                                     <span class="font-black">
                                                         Minggu → Selasa = 1 hari
                                                     </span>
@@ -2359,7 +2364,8 @@
                                         </p>
 
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-gray-500">
-                                            Total dihitung berdasarkan harga per hari, jumlah hari rental, quantity, ukuran, harga masing-masing, dan transport HT apabila berlaku.
+                                            Total dihitung berdasarkan harga rental, jumlah hari rental, quantity,
+                                            dan biaya tambahan HT/transport apabila berlaku.
                                         </p>
 
                                     </div>
@@ -2381,6 +2387,29 @@
                                             </span>
 
                                         </div>
+
+
+                                        @if($hasPaidHandyTalkie)
+
+                                            <div
+                                                id="htFeeRow"
+                                                class="flex items-center justify-between gap-4 border-t border-white/10 pt-2"
+                                            >
+
+                                                <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                                                    HT Fee
+                                                </span>
+
+                                                <span
+                                                    id="htFeeDisplay"
+                                                    class="text-sm font-black text-amber-300"
+                                                >
+                                                    Rp 20.000
+                                                </span>
+
+                                            </div>
+
+                                        @endif
 
 
                                         @if($hasHandyTalkie)
@@ -2764,6 +2793,14 @@
 
                                 <input
                                     type="hidden"
+                                    name="ht_fee"
+                                    id="htFeeInput"
+                                    value="0"
+                                >
+
+
+                                <input
+                                    type="hidden"
                                     name="transport_fee"
                                     id="transportFeeInput"
                                     value="0"
@@ -2820,7 +2857,7 @@
 
                                             <p class="mt-3 text-[8px] font-bold leading-relaxed text-emerald-600">
 
-                                                HT UV-82 dan HT 888s tetap mengikuti harga rental normal.
+                                                HT UV-82 dan HT 888s dikenakan HT Fee Rp 20.000 satu kali per transaksi.
 
                                             </p>
 
@@ -3060,6 +3097,16 @@
                         'cartItemSubtotal'
                     );
 
+                const htFeeDisplay =
+                    document.getElementById(
+                        'htFeeDisplay'
+                    );
+
+                const htFeeInput =
+                    document.getElementById(
+                        'htFeeInput'
+                    );
+
                 const transportFeeDisplay =
                     document.getElementById(
                         'transportFeeDisplay'
@@ -3076,6 +3123,32 @@
                             return cartItem.dataset
                                 .itemTransactionType ===
                                 'Handy Talkie';
+                        }
+                    );
+
+                const hasPaidHandyTalkie =
+                    Array.from(cartItems).some(
+                        function (cartItem) {
+                            const transactionType =
+                                cartItem.dataset
+                                    .itemTransactionType;
+
+                            const transactionDetail =
+                                cartItem.dataset
+                                    .itemTransactionDetail;
+
+                            return (
+                                transactionType ===
+                                'Handy Talkie'
+                                &&
+                                (
+                                    transactionDetail ===
+                                    'HT UV-82'
+                                    ||
+                                    transactionDetail ===
+                                    'HT 888s'
+                                )
+                            );
                         }
                     );
 
@@ -3276,6 +3349,16 @@
                         *
                         quantity
                     );
+                }
+
+
+                function calculateHtFee() {
+
+                    if (!hasPaidHandyTalkie) {
+                        return 0;
+                    }
+
+                    return 20000;
                 }
 
 
@@ -3504,6 +3587,9 @@
                     );
 
 
+                    const htFee =
+                        calculateHtFee();
+
                     const transportFee =
                         calculateTransportFee(
                             organization
@@ -3511,6 +3597,7 @@
 
                     const grandTotal =
                         itemTotal +
+                        htFee +
                         transportFee;
 
 
@@ -3520,6 +3607,27 @@
                             formatRupiah(
                                 itemTotal
                             );
+                    }
+
+
+                    if (htFeeDisplay) {
+
+                        if (htFee === 0) {
+                            htFeeDisplay.textContent =
+                                'GRATIS';
+                        } else {
+                            htFeeDisplay.textContent =
+                                'Rp ' +
+                                formatRupiah(
+                                    htFee
+                                );
+                        }
+                    }
+
+
+                    if (htFeeInput) {
+                        htFeeInput.value =
+                            htFee;
                     }
 
 

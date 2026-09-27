@@ -392,31 +392,25 @@ class CartController extends Controller
                 );
             }
 
-           /*
-|--------------------------------------------------------------------------
-| RENTAL DAYS
-|--------------------------------------------------------------------------
-|
-| Jumlah hari sewa dihitung berdasarkan
-| gap antara tanggal pengambilan dan
-| tanggal pengembalian.
-|
-| Tanggal pengambilan dan pengembalian
-| tidak dihitung sebagai hari sewa.
-|
-| Namun, minimum biaya rental adalah
-| 1 (satu) hari.
-|
-| Contoh:
-|
-| Minggu → Minggu   = 1 hari
-| Minggu → Senin    = 1 hari
-| Minggu → Selasa   = 1 hari
-| Minggu → Rabu     = 2 hari
-| Senin → Rabu      = 1 hari
-| Senin → Kamis     = 2 hari
-|
-*/
+            /*
+            |--------------------------------------------------------------------------
+            | RENTAL DAYS
+            |--------------------------------------------------------------------------
+            |
+            | Jumlah hari sewa dihitung berdasarkan
+            | gap antara tanggal pengambilan dan
+            | tanggal pengembalian.
+            |
+            | Contoh:
+            |
+            | Minggu → Senin  = 0 hari
+            | Minggu → Selasa = 1 hari
+            | Minggu → Rabu   = 2 hari
+            |
+            | Tanggal pengambilan dan pengembalian
+            | tidak dihitung sebagai hari sewa.
+            |
+            */
 
             $rentalDays =
                 $this->getRentalDays(
@@ -2273,6 +2267,38 @@ class CartController extends Controller
                 );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | HT FEE + TRANSPORT FEE
+        |--------------------------------------------------------------------------
+        |
+        | HT UV-82 dan HT 888s dikenakan HT Fee Rp20.000
+        | satu kali dalam satu transaksi.
+        |
+        | Transport HT:
+        |
+        | Total harga UV-82 + HT 888s >= Rp150.000
+        | → GRATIS
+        |
+        | Total harga UV-82 + HT 888s < Rp150.000
+        | → Rp15.000
+        |
+        | HT Fee tidak dihitung dalam batas Rp150.000.
+        |
+        */
+
+        $htFee =
+            $this->calculateHtFee(
+                $cart
+            );
+
+        $transportFee =
+            $this->calculateTransportFee(
+                $cart,
+                $request->organization,
+                $rentalDays
+            );
+
         DB::beginTransaction();
 
         try {
@@ -2523,6 +2549,12 @@ class CartController extends Controller
                             'end_time'
                         ] ?? null,
 
+                    'ht_fee' =>
+                        $htFee,
+
+                    'transport_fee' =>
+                        $transportFee,
+
                     'status' =>
                         'Pending',
                 ]);
@@ -2613,7 +2645,8 @@ class CartController extends Controller
                     | |  - Semua Peralatan
                     | - HT UV-5R
                     |
-                    | HT UV-82 dan HT 888s tetap menggunakan harga normal.
+                    | HT UV-82 dan HT 888s tetap menggunakan harga item.
+                    | HT Fee Rp20.000 dicatat satu kali per transaksi.
                     |
                     */
 
@@ -3024,6 +3057,170 @@ class CartController extends Controller
         */
 
         return false;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HT FEE
+    |--------------------------------------------------------------------------
+    |
+    | HT UV-82 dan HT 888s dikenakan
+    | HT Fee flat Rp20.000 satu kali
+    | dalam satu transaksi.
+    |
+    | Quantity tidak memengaruhi HT Fee.
+    | Dua tipe HT sekaligus juga tetap
+    | hanya dikenakan Rp20.000.
+    |
+    */
+
+    private function calculateHtFee(
+        array $cart
+    ): int {
+
+        foreach (
+            $cart as $cartItem
+        ) {
+
+            if (
+                (
+                    $cartItem[
+                        'transaction_type'
+                    ] ?? null
+                )
+                !==
+                'Handy Talkie'
+            ) {
+                continue;
+            }
+
+            $transactionDetail =
+                $cartItem[
+                    'transaction_detail'
+                ] ?? null;
+
+            if (
+                in_array(
+                    $transactionDetail,
+                    [
+                        'HT UV-82',
+                        'HT 888s',
+                    ],
+                    true
+                )
+            ) {
+                return 20000;
+            }
+        }
+
+        return 0;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSPORT FEE
+    |--------------------------------------------------------------------------
+    |
+    | Semua HT dapat membutuhkan transport.
+    |
+    | Untuk menentukan GRATIS / Rp15.000,
+    | hanya total HT UV-82 dan HT 888s
+    | yang dihitung.
+    |
+    | HT UV-5R tidak masuk batas Rp150.000.
+    |
+    */
+
+    private function calculateTransportFee(
+        array $cart,
+        ?string $organization,
+        ?int $rentalDays
+    ): int {
+
+        $hasHandyTalkie =
+            false;
+
+        $paidHandyTalkieTotal =
+            0;
+
+        foreach (
+            $cart as $cartItem
+        ) {
+
+            if (
+                (
+                    $cartItem[
+                        'transaction_type'
+                    ] ?? null
+                )
+                !==
+                'Handy Talkie'
+            ) {
+                continue;
+            }
+
+            $hasHandyTalkie =
+                true;
+
+            $transactionDetail =
+                $cartItem[
+                    'transaction_detail'
+                ] ?? null;
+
+            if (
+                !in_array(
+                    $transactionDetail,
+                    [
+                        'HT UV-82',
+                        'HT 888s',
+                    ],
+                    true
+                )
+            ) {
+                continue;
+            }
+
+            $unitPrice =
+                (int) (
+                    $cartItem[
+                        'price'
+                    ] ?? 0
+                );
+
+            $quantity =
+                (int) (
+                    $cartItem[
+                        'quantity'
+                    ] ?? 0
+                );
+
+            $days =
+                (int) (
+                    $rentalDays
+                    ?? 0
+                );
+
+            $paidHandyTalkieTotal +=
+                $unitPrice
+                *
+                $days
+                *
+                $quantity;
+        }
+
+        if (!$hasHandyTalkie) {
+            return 0;
+        }
+
+        if (
+            $paidHandyTalkieTotal
+            >=
+            150000
+        ) {
+            return 0;
+        }
+
+        return 15000;
     }
 
     private function getMouType(

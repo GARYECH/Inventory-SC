@@ -18,7 +18,8 @@ class Order extends Model
         'end_date' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
-         'transport_fee' => 'integer',
+        'ht_fee' => 'integer',
+        'transport_fee' => 'integer',
     ];
 
     /*
@@ -91,18 +92,30 @@ class Order extends Model
 
     public function getTotalPriceAttribute(): int
     {
-        return (int) $this->orderItems()
-            ->sum(
-                'subtotal_price'
+        $itemTotal =
+            (int) $this->orderItems()
+                ->sum(
+                    'subtotal_price'
+                );
+
+        $htFee =
+            (int) (
+                $this->attributes['ht_fee']
+                ?? 0
             );
 
-    $transportFee =
-        (int) (
-            $this->attributes['transport_fee']
-            ?? 0
-        );
+        $transportFee =
+            (int) (
+                $this->attributes['transport_fee']
+                ?? 0
+            );
 
-    return $itemTotal + $transportFee;
+        return
+            $itemTotal
+            +
+            $htFee
+            +
+            $transportFee;
     }
 
     /*

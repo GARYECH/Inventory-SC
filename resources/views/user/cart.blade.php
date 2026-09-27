@@ -735,6 +735,24 @@
                                             HT wajib dikembalikan. Harga rental dihitung berdasarkan jumlah hari sewa dan transaksi menggunakan MoU Handy Talkie.
                                         </p>
 
+
+                                        <p class="mt-2 text-[9px] font-bold leading-relaxed text-amber-700">
+                                            Transport HT sebesar
+                                            <span class="font-black">
+                                                Rp 15.000
+                                            </span>
+                                            apabila total harga HT UV-82 dan HT 888s kurang dari
+                                            <span class="font-black">
+                                                Rp 150.000
+                                            </span>.
+                                            Transport menjadi
+                                            <span class="font-black">
+                                                gratis
+                                            </span>
+                                            apabila total tersebut mencapai Rp 150.000.
+                                            HT UV-5R tidak dihitung dalam batas Rp 150.000.
+                                        </p>
+
                                     </div>
 
                                 @endif
@@ -835,6 +853,11 @@
                                                     <span class="font-black">
                                                         gap antara tanggal pengambilan dan tanggal pengembalian.
                                                     </span>
+                                                    Tanggal pengambilan dan pengembalian tidak dihitung sebagai hari sewa,
+                                                    tetapi minimum biaya rental tetap dihitung
+                                                    <span class="font-black">
+                                                        1 hari.
+                                                    </span>
 
                                                 </p>
 
@@ -842,6 +865,14 @@
                                                 <p class="mt-2 text-[9px] font-bold leading-relaxed text-violet-700">
 
                                                     Contoh:
+                                                    <span class="font-black">
+                                                        Minggu → Minggu = 1 hari
+                                                    </span>
+                                                    •
+                                                    <span class="font-black">
+                                                        Minggu → Senin = 1 hari
+                                                    </span>
+                                                    •
                                                     <span class="font-black">
                                                         Minggu → Selasa = 1 hari
                                                     </span>
@@ -1016,7 +1047,7 @@
 
                                                 $rentalDays =
                                                     max(
-                                                        0,
+                                                        1,
                                                         (int) (
                                                             $details[
                                                                 'rental_days'
@@ -1046,7 +1077,7 @@
 
                                                 $rentalDays =
                                                     max(
-                                                        0,
+                                                        1,
                                                         $dateDifference - 1
                                                     );
 
@@ -2319,30 +2350,83 @@
 
                             <div class="rounded-b-[2.5rem] bg-gray-950 px-6 py-7 sm:px-8">
 
-                                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                                <div class="flex flex-col gap-4">
 
                                     <div>
 
                                         <p class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">
-                                            Total
+                                            Ringkasan Biaya
                                         </p>
 
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-gray-500">
-                                            Total dihitung berdasarkan harga per hari, jumlah hari rental, quantity, ukuran, dan harga masing-masing.
+                                            Total dihitung berdasarkan harga per hari, jumlah hari rental, quantity, ukuran, harga masing-masing, dan transport HT apabila berlaku.
                                         </p>
 
                                     </div>
 
 
-                                    <p
-                                        class="text-2xl font-black text-white sm:text-3xl"
-                                        id="cartTotalPrice"
-                                    >
+                                    <div class="space-y-2 rounded-2xl bg-white/5 p-4">
 
-                                        Rp
-                                        {{ number_format($totalPrice, 0, ',', '.') }}
+                                        <div class="flex items-center justify-between gap-4">
 
-                                    </p>
+                                            <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                                                Subtotal Barang
+                                            </span>
+
+                                            <span
+                                                id="cartItemSubtotal"
+                                                class="text-sm font-black text-gray-200"
+                                            >
+                                                Rp 0
+                                            </span>
+
+                                        </div>
+
+
+                                        @if($hasHandyTalkie)
+
+                                            <div
+                                                id="transportFeeRow"
+                                                class="flex items-center justify-between gap-4 border-t border-white/10 pt-2"
+                                            >
+
+                                                <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                                                    Transport HT
+                                                </span>
+
+                                                <span
+                                                    id="transportFeeDisplay"
+                                                    class="text-sm font-black text-amber-300"
+                                                >
+                                                    Rp 15.000
+                                                </span>
+
+                                            </div>
+
+                                        @endif
+
+                                    </div>
+
+
+                                    <div class="flex items-end justify-between gap-4 border-t border-white/10 pt-4">
+
+                                        <div>
+
+                                            <p class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">
+                                                Grand Total
+                                            </p>
+
+                                        </div>
+
+
+                                        <p
+                                            class="text-2xl font-black text-white sm:text-3xl"
+                                            id="cartTotalPrice"
+                                        >
+                                            Rp 0
+                                        </p>
+
+                                    </div>
 
                                 </div>
 
@@ -2448,7 +2532,7 @@
                                     <div>
 
                                         <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
-                                            Organisasi
+                                            Proker di bawah organisasi
                                         </label>
 
 
@@ -2678,6 +2762,14 @@
 
 
 
+                                <input
+                                    type="hidden"
+                                    name="transport_fee"
+                                    id="transportFeeInput"
+                                    value="0"
+                                >
+
+
                                 <!-- ================================================= -->
                                 <!-- STUDENT COUNCIL FREE NOTICE -->
                                 <!-- ================================================= -->
@@ -2700,11 +2792,11 @@
 
                                             <p class="mt-1 text-xs font-bold leading-relaxed text-emerald-800">
 
-                                                Pilih
-                                                <span class="font-black">
-                                                    Student Council
-                                                </span>
-                                                sebagai organisasi untuk mendapatkan fasilitas gratis pada:
+                                                Proker di bawah
+                                                 <span class="font-black">
+                                                     Student Council
+                                                 </span>
+                                                 akan mendapatkan fasilitas gratis pada:
 
                                             </p>
 
@@ -2871,7 +2963,7 @@
                                                     <span class="font-black">
                                                         gap tanggal pengambilan dan pengembalian
                                                     </span>,
-                                                    bukan jumlah tanggal yang dilewati secara inklusif.
+                                                    dengan minimum biaya rental 1 hari.
 
                                                 </p>
 
@@ -2961,6 +3053,30 @@
                 const totalElement =
                     document.getElementById(
                         'cartTotalPrice'
+                    );
+
+                const itemSubtotalElement =
+                    document.getElementById(
+                        'cartItemSubtotal'
+                    );
+
+                const transportFeeDisplay =
+                    document.getElementById(
+                        'transportFeeDisplay'
+                    );
+
+                const transportFeeInput =
+                    document.getElementById(
+                        'transportFeeInput'
+                    );
+
+                const hasHandyTalkie =
+                    Array.from(cartItems).some(
+                        function (cartItem) {
+                            return cartItem.dataset
+                                .itemTransactionType ===
+                                'Handy Talkie';
+                        }
                     );
 
 
@@ -3163,13 +3279,73 @@
                 }
 
 
+                function calculateTransportFee(
+                    organization
+                ) {
+
+                    if (!hasHandyTalkie) {
+                        return 0;
+                    }
+
+                    let paidHandyTalkieTotal =
+                        0;
+
+
+                    cartItems.forEach(
+                        function (cartItem) {
+
+                            const transactionType =
+                                cartItem.dataset
+                                    .itemTransactionType;
+
+                            const transactionDetail =
+                                cartItem.dataset
+                                    .itemTransactionDetail;
+
+                            if (
+                                transactionType !==
+                                'Handy Talkie'
+                            ) {
+                                return;
+                            }
+
+                            if (
+                                transactionDetail !==
+                                    'HT UV-82'
+                                &&
+                                transactionDetail !==
+                                    'HT 888s'
+                            ) {
+                                return;
+                            }
+
+                            paidHandyTalkieTotal +=
+                                calculateItemSubtotal(
+                                    cartItem,
+                                    organization
+                                );
+                        }
+                    );
+
+
+                    if (
+                        paidHandyTalkieTotal >=
+                        150000
+                    ) {
+                        return 0;
+                    }
+
+                    return 15000;
+                }
+
+
                 function updateCartPricing() {
 
                     const organization =
                         organizationSelect.value;
 
 
-                    let total =
+                    let itemTotal =
                         0;
 
 
@@ -3321,17 +3497,57 @@
                             }
 
 
-                            total +=
+                            itemTotal +=
                                 subtotal;
 
                         }
                     );
 
 
+                    const transportFee =
+                        calculateTransportFee(
+                            organization
+                        );
+
+                    const grandTotal =
+                        itemTotal +
+                        transportFee;
+
+
+                    if (itemSubtotalElement) {
+                        itemSubtotalElement.textContent =
+                            'Rp ' +
+                            formatRupiah(
+                                itemTotal
+                            );
+                    }
+
+
+                    if (transportFeeDisplay) {
+
+                        if (transportFee === 0) {
+                            transportFeeDisplay.textContent =
+                                'GRATIS';
+                        } else {
+                            transportFeeDisplay.textContent =
+                                'Rp ' +
+                                formatRupiah(
+                                    transportFee
+                                );
+                        }
+                    }
+
+
+                    if (transportFeeInput) {
+                        transportFeeInput.value =
+                            transportFee;
+                    }
+
+
                     totalElement.textContent =
                         'Rp ' +
                         formatRupiah(
-                            total
+                            grandTotal
                         );
                 }
 

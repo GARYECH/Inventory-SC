@@ -18,6 +18,7 @@ class Order extends Model
         'end_date' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
+         'transport_fee' => 'integer',
     ];
 
     /*
@@ -94,6 +95,14 @@ class Order extends Model
             ->sum(
                 'subtotal_price'
             );
+
+    $transportFee =
+        (int) (
+            $this->attributes['transport_fee']
+            ?? 0
+        );
+
+    return $itemTotal + $transportFee;
     }
 
     /*

@@ -392,25 +392,31 @@ class CartController extends Controller
                 );
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | RENTAL DAYS
-            |--------------------------------------------------------------------------
-            |
-            | Jumlah hari sewa dihitung berdasarkan
-            | gap antara tanggal pengambilan dan
-            | tanggal pengembalian.
-            |
-            | Contoh:
-            |
-            | Minggu → Senin  = 0 hari
-            | Minggu → Selasa = 1 hari
-            | Minggu → Rabu   = 2 hari
-            |
-            | Tanggal pengambilan dan pengembalian
-            | tidak dihitung sebagai hari sewa.
-            |
-            */
+           /*
+|--------------------------------------------------------------------------
+| RENTAL DAYS
+|--------------------------------------------------------------------------
+|
+| Jumlah hari sewa dihitung berdasarkan
+| gap antara tanggal pengambilan dan
+| tanggal pengembalian.
+|
+| Tanggal pengambilan dan pengembalian
+| tidak dihitung sebagai hari sewa.
+|
+| Namun, minimum biaya rental adalah
+| 1 (satu) hari.
+|
+| Contoh:
+|
+| Minggu → Minggu   = 1 hari
+| Minggu → Senin    = 1 hari
+| Minggu → Selasa   = 1 hari
+| Minggu → Rabu     = 2 hari
+| Senin → Rabu      = 1 hari
+| Senin → Kamis     = 2 hari
+|
+*/
 
             $rentalDays =
                 $this->getRentalDays(
@@ -2937,7 +2943,7 @@ class CartController extends Controller
             );
 
         return max(
-            0,
+            1,
             $difference - 1
         );
     }

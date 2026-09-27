@@ -288,6 +288,134 @@
 
 
             <!-- ===================================================== -->
+            <!-- STUDENT COUNCIL SPECIAL FACILITIES -->
+            <!-- ===================================================== -->
+
+            <div class="mb-7">
+
+                <div class="overflow-hidden rounded-[2rem] border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-indigo-50 shadow-sm">
+
+                    <div class="p-5 sm:p-6">
+
+                        <div class="flex items-start gap-4">
+
+                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-200">
+
+                                <svg
+                                    class="h-6 w-6"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="1.8"
+                                        d="M5 13l4 4L19 7"
+                                    />
+
+                                </svg>
+
+                            </div>
+
+
+                            <div class="min-w-0 flex-1">
+
+                                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+
+                                    <div>
+
+                                        <p class="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600">
+                                            Fasilitas Khusus Student Council
+                                        </p>
+
+                                        <h2 class="mt-1 text-lg font-black tracking-tight text-gray-950 sm:text-xl">
+                                            Proker di bawah Student Council mendapatkan fasilitas gratis
+                                        </h2>
+
+                                    </div>
+
+                                    <span class="inline-flex w-fit shrink-0 rounded-full bg-emerald-600 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-white shadow-sm">
+                                        Khusus Student Council
+                                    </span>
+
+                                </div>
+
+
+                                <p class="mt-3 text-xs font-bold leading-relaxed text-gray-700 sm:text-sm">
+                                    Proker di bawah Student Council akan mendapatkan fasilitas gratis pada:
+                                </p>
+
+
+                                <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+
+                                    <div class="rounded-xl border border-emerald-100 bg-white/80 px-3 py-2.5">
+                                        <p class="text-[8px] font-black uppercase tracking-widest text-emerald-600">
+                                            Gratis
+                                        </p>
+                                        <p class="mt-1 text-[10px] font-black text-gray-900">
+                                            Habis Pakai
+                                        </p>
+                                    </div>
+
+
+                                    <div class="rounded-xl border border-emerald-100 bg-white/80 px-3 py-2.5">
+                                        <p class="text-[8px] font-black uppercase tracking-widest text-emerald-600">
+                                            Gratis
+                                        </p>
+                                        <p class="mt-1 text-[10px] font-black text-gray-900">
+                                            Peralatan
+                                        </p>
+                                    </div>
+
+
+                                    <div class="rounded-xl border border-emerald-100 bg-white/80 px-3 py-2.5">
+                                        <p class="text-[8px] font-black uppercase tracking-widest text-emerald-600">
+                                            Gratis
+                                        </p>
+                                        <p class="mt-1 text-[10px] font-black text-gray-900">
+                                            HT UV-5R
+                                        </p>
+                                    </div>
+
+                                </div>
+
+
+                                <div class="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-3.5 py-3">
+
+                                    <p class="text-[9px] font-black uppercase tracking-widest text-amber-700">
+                                        Ketentuan HT Berbayar
+                                    </p>
+
+                                    <p class="mt-1 text-[10px] font-bold leading-relaxed text-amber-900">
+                                        HT UV-82 dan HT 888s tetap mengikuti harga rental normal.
+                                        Transport HT gratis apabila total harga rental HT UV-82 dan HT 888s mencapai
+                                        <span class="font-black">Rp 150.000</span>.
+                                        Jika belum mencapai Rp 150.000, biaya transport adalah
+                                        <span class="font-black">Rp 15.000</span>.
+                                    </p>
+
+                                </div>
+
+
+                                <p class="mt-3 text-[9px] font-semibold leading-relaxed text-gray-500">
+                                    Fasilitas gratis berlaku untuk proker yang berada di bawah Student Council.
+                                    Ketersediaan stok dan jadwal barang tetap mengikuti sistem peminjaman.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ===================================================== -->
             <!-- TRANSACTION TYPE FILTER -->
             <!-- ===================================================== -->
 

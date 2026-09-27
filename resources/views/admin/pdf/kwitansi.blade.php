@@ -152,10 +152,10 @@
             <!-- KIRI: BENDAHARA PROKER / MAHASISWA -->
             <td style="height: 120px; vertical-align: bottom;">
                 <br><br><br><br>
-                <span style="font-weight: bold; text-decoration: underline; color: #cc0000;">
+                <span style="font-weight: bold; text-decoration: underline; color: #000000;">
                     {{ $order->treasurer_name }}
                 </span><br>
-                <span style="color: #cc0000;">
+                <span style="color: #000000;">
                     Bendahara "{{ $order->proker_name }}"
                 </span>
             </td>
@@ -169,10 +169,10 @@
                         <br><br><br><br>
                     @endif
                 </div>
-                <span style="font-weight: bold; text-decoration: underline; color: #cc0000;">
+                <span style="font-weight: bold; text-decoration: underline; color: #000000;">
                     Gregory Edgard Christian
                 </span><br>
-                <span style="color: #cc0000;">
+                <span style="color: #000000;">
                     Bendahara Student Council
                 </span>
             </td>

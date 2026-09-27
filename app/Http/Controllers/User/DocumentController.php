@@ -637,7 +637,7 @@ class DocumentController extends Controller
 
         $pdf->setPaper(
             'a4',
-            'landscape'
+            'portrait'
         );
 
 

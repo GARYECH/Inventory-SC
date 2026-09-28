@@ -340,7 +340,7 @@
                                 </p>
 
                                 <p class="mt-0.5 text-sm font-black text-gray-900">
-                                    Sedikit info sebelum memilih barang
+                                    Info Sebelum Memilih Barang
                                 </p>
 
                             </div>
@@ -410,7 +410,7 @@
                                         <p class="mt-2 text-[8px] font-bold leading-relaxed text-gray-500">
 
                                             HT UV-82 dan HT 888s tetap mengikuti harga rental normal.
-                                            Transport HT gratis apabila total harga rental keduanya mencapai
+                                            Biaya Pengiriman HT gratis apabila total harga rental keduanya mencapai
                                             <span class="font-black text-gray-700">
                                                 Rp 150.000.
                                             </span>

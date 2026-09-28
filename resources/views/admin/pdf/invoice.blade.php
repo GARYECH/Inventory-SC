@@ -196,7 +196,7 @@
     */
 
     $rentalDays =
-        null;
+        1;
 
 
     if (
@@ -840,7 +840,7 @@
                                 Durasi:
                             </strong>
 
-                            {{ $rentalDays ?? 0 }}
+                           {{ max(1, (int) ($rentalDays ?? 1)) }}
                             {{ ($rentalDays ?? 0) === 1 ? 'hari' : 'hari' }}
 
                         </div>
@@ -897,7 +897,7 @@
                                 "
                             >
 
-                                {{ $rentalDays ?? 0 }}
+                                {{ max(1, (int) ($rentalDays ?? 1)) }}
                                 {{ ($rentalDays ?? 0) === 1 ? 'hari' : 'hari' }}
                                 rental
 
@@ -992,7 +992,7 @@
 
                             ×
 
-                            {{ $rentalDays ?? 0 }}
+                            {{ max(1, (int) ($rentalDays ?? 1)) }}
 
                             ×
 

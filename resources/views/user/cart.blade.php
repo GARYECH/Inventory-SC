@@ -1089,7 +1089,7 @@
                                             } else {
 
                                                 $rentalDays =
-                                                    0;
+                                                    1;
 
                                             }
 
@@ -1220,7 +1220,7 @@
                                         data-item-base-price="{{ $basePrice }}"
                                         data-item-size-extra="{{ $sizeExtra }}"
                                         data-item-quantity="{{ $quantity }}"
-                                        data-item-rental-days="{{ $rentalDays ?? 0 }}"
+                                        data-item-rental-days="{{ $rentalDays ?? 1 }}"
                                         data-item-is-rental="{{ $isRental ? '1' : '0' }}"
                                         data-item-is-equipment="{{ $isPeralatan ? '1' : '0' }}"
                                         data-item-is-consumable="{{ $isConsumable ? '1' : '0' }}"
@@ -3247,12 +3247,15 @@
                         );
 
                     const rentalDays =
-                        parseInt(
-                            cartItem.dataset
-                                .itemRentalDays
-                            || '0',
-                            10
-                        );
+                         Math.max(
+        1,
+        parseInt(
+            cartItem.dataset
+                .itemRentalDays
+            || '1',
+            10
+        )
+    );
 
                     const isRental =
                         cartItem.dataset
@@ -3550,12 +3553,15 @@
                                             );
 
                                         const rentalDays =
-                                            parseInt(
-                                                cartItem.dataset
-                                                    .itemRentalDays
-                                                || '0',
-                                                10
-                                            );
+                                            Math.max(
+        1,
+        parseInt(
+            cartItem.dataset
+                .itemRentalDays
+            || '1',
+            10
+        )
+    );
 
                                         rentalDetail.innerHTML = `
                                             <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">

@@ -2957,7 +2957,7 @@ class CartController extends Controller
             ||
             empty($endDate)
         ) {
-            return 0;
+            return 1;
         }
 
         $start =

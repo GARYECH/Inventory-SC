@@ -211,13 +211,9 @@ Route::middleware('auth')->group(function () {
     |
     */
 
-    Route::get(
+    Route::view(
         '/contact-information',
-        function () {
-            return view(
-                'contact-information'
-            );
-        }
+        'user.contact-information'
     )->name('contact.information');
 
 

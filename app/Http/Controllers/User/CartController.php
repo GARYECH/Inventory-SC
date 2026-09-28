@@ -2273,7 +2273,8 @@ class CartController extends Controller
         |--------------------------------------------------------------------------
         |
         | HT UV-82 dan HT 888s dikenakan HT Fee Rp20.000
-        | satu kali dalam satu transaksi.
+        | satu kali dalam satu transaksi untuk organisasi
+        | di luar Student Council.
         |
         | Transport HT:
         |
@@ -2289,7 +2290,8 @@ class CartController extends Controller
 
         $htFee =
             $this->calculateHtFee(
-                $cart
+                $cart,
+                $request->organization
             );
 
         $transportFee =
@@ -2646,7 +2648,8 @@ class CartController extends Controller
                     | - HT UV-5R
                     |
                     | HT UV-82 dan HT 888s tetap menggunakan harga item.
-                    | HT Fee Rp20.000 dicatat satu kali per transaksi.
+                    | HT Fee Rp20.000 dicatat satu kali per transaksi
+                    | untuk organisasi di luar Student Council.
                     |
                     */
 
@@ -3075,8 +3078,16 @@ class CartController extends Controller
     */
 
     private function calculateHtFee(
-        array $cart
+        array $cart,
+        ?string $organization
     ): int {
+
+        if (
+            $organization ===
+            'Student Council'
+        ) {
+            return 0;
+        }
 
         foreach (
             $cart as $cartItem

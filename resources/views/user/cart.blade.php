@@ -750,7 +750,7 @@
 
                                         <p class="mt-1 text-[10px] font-bold leading-relaxed text-amber-800">
                                             HT wajib dikembalikan. Harga rental dihitung berdasarkan jumlah hari sewa dan transaksi menggunakan MoU Handy Talkie.
-                                            HT UV-82 dan HT 888s dikenakan HT Fee Rp 20.000 satu kali per transaksi.
+                                            HT UV-82 dan HT 888s dikenakan HT Fee Rp 20.000 satu kali per transaksi untuk organisasi selain Student Council.
                                         </p>
 
 
@@ -2857,7 +2857,7 @@
 
                                             <p class="mt-3 text-[8px] font-bold leading-relaxed text-emerald-600">
 
-                                                HT UV-82 dan HT 888s dikenakan HT Fee Rp 20.000 satu kali per transaksi.
+                                                HT UV-82 dan HT 888s dikenakan HT Fee Rp 20.000 satu kali per transaksi untuk organisasi selain Student Council.
 
                                             </p>
 
@@ -3355,9 +3355,16 @@
                 }
 
 
-                function calculateHtFee() {
+                function calculateHtFee(
+                    organization
+                ) {
 
-                    if (!hasPaidHandyTalkie) {
+                    if (
+                        organization ===
+                        'Student Council'
+                        ||
+                        !hasPaidHandyTalkie
+                    ) {
                         return 0;
                     }
 
@@ -3594,7 +3601,9 @@
 
 
                     const htFee =
-                        calculateHtFee();
+                        calculateHtFee(
+                            organization
+                        );
 
                     const transportFee =
                         calculateTransportFee(

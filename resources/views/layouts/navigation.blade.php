@@ -17,21 +17,30 @@
             <div class="flex min-w-0 items-center">
 
                 <!-- LOGO -->
+
                 <div class="shrink-0">
+
                     <a
                         href="{{ route('dashboard') }}"
                         class="flex items-center"
                     >
+
                         <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-900 to-gray-700 shadow-lg shadow-gray-200 transition duration-300 hover:-rotate-3 hover:shadow-xl">
+
                             <x-application-logo
                                 class="block h-7 w-7 fill-current text-white"
                             />
+
                         </div>
+
                     </a>
+
                 </div>
 
 
+
                 <!-- DESKTOP NAVIGATION -->
+
                 <div class="hidden lg:ml-10 lg:flex lg:items-center lg:gap-1">
 
                     @if(Auth::user()->role === 'admin')
@@ -44,6 +53,7 @@
                             {{ __('Admin Dashboard') }}
                         </x-nav-link>
 
+
                         <x-nav-link
                             :href="route('admin.items.index')"
                             :active="request()->routeIs('admin.items.*')"
@@ -51,6 +61,7 @@
                         >
                             {{ __('Manage Inventory') }}
                         </x-nav-link>
+
 
                         <x-nav-link
                             :href="route('admin.categories.index')"
@@ -60,6 +71,7 @@
                             {{ __('Categories') }}
                         </x-nav-link>
 
+
                         <x-nav-link
                             :href="route('admin.orders')"
                             :active="request()->routeIs('admin.orders')"
@@ -68,6 +80,7 @@
                             {{ __('Confirm Returns') }}
                         </x-nav-link>
 
+
                         <x-nav-link
                             :href="route('guidebook')"
                             :active="request()->routeIs('guidebook')"
@@ -75,6 +88,18 @@
                         >
                             {{ __('Guidebook') }}
                         </x-nav-link>
+
+
+                        <!-- CONTACT INFORMATION -->
+
+                        <x-nav-link
+                            :href="route('contact.information')"
+                            :active="request()->routeIs('contact.information')"
+                            class="rounded-xl px-4 py-2.5 text-xs font-bold transition"
+                        >
+                            {{ __('Contact Information') }}
+                        </x-nav-link>
+
 
                         <x-nav-link
                             :href="route('admin.settings.index')"
@@ -94,6 +119,7 @@
                             {{ __('Rent Items') }}
                         </x-nav-link>
 
+
                         <x-nav-link
                             :href="route('student.loans')"
                             :active="request()->routeIs('student.loans')"
@@ -101,6 +127,7 @@
                         >
                             {{ __('My Active Loans') }}
                         </x-nav-link>
+
 
                         <x-nav-link
                             :href="route('guidebook')"
@@ -110,11 +137,23 @@
                             {{ __('Guidebook') }}
                         </x-nav-link>
 
+
+                        <!-- CONTACT INFORMATION -->
+
+                        <x-nav-link
+                            :href="route('contact.information')"
+                            :active="request()->routeIs('contact.information')"
+                            class="rounded-xl px-4 py-2.5 text-xs font-bold transition"
+                        >
+                            {{ __('Contact Information') }}
+                        </x-nav-link>
+
                     @endif
 
                 </div>
 
             </div>
+
 
 
             <!-- ===================================================== -->
@@ -124,6 +163,7 @@
             <div class="hidden items-center gap-3 sm:flex">
 
                 <!-- NOTIFICATION -->
+
                 <a
                     href="{{ route('notifications.index') }}"
                     class="group relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-gray-500 transition hover:border-indigo-100 hover:bg-indigo-50 hover:text-indigo-600"
@@ -136,12 +176,14 @@
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                     >
+
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                         />
+
                     </svg>
 
 
@@ -159,7 +201,9 @@
                 </a>
 
 
+
                 <!-- PROFILE DROPDOWN -->
+
                 <x-dropdown
                     align="right"
                     width="64"
@@ -173,17 +217,20 @@
                         >
 
                             <!-- AVATAR -->
+
                             <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-[11px] font-black text-white shadow-sm">
                                 {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                             </div>
 
 
                             <!-- USER INFO -->
+
                             <div class="hidden text-left xl:block">
 
                                 <p class="max-w-[150px] truncate text-xs font-black text-gray-900">
                                     {{ Auth::user()->name }}
                                 </p>
+
 
                                 <p class="mt-0.5 text-[8px] font-black uppercase tracking-widest text-gray-400">
                                     {{ ucfirst(Auth::user()->role) }}
@@ -193,18 +240,21 @@
 
 
                             <!-- CHEVRON -->
+
                             <svg
                                 class="h-4 w-4 text-gray-400 transition group-hover:text-gray-600"
                                 fill="none"
                                 viewBox="0 0 20 20"
                                 stroke="currentColor"
                             >
+
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="1.8"
                                     d="M6 8l4 4 4-4"
                                 />
+
                             </svg>
 
                         </button>
@@ -212,16 +262,21 @@
                     </x-slot>
 
 
+
                     <x-slot name="content">
 
                         <!-- PROFILE HEADER -->
+
                         <div class="border-b border-gray-100 px-4 py-4">
 
                             <div class="flex items-center gap-3">
 
                                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-xs font-black text-white">
+
                                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+
                                 </div>
+
 
                                 <div class="min-w-0">
 
@@ -240,7 +295,9 @@
                         </div>
 
 
+
                         <!-- PROFILE -->
+
                         <x-dropdown-link
                             :href="route('profile.edit')"
                             class="flex items-center gap-3 px-4 py-3 text-xs font-bold"
@@ -252,24 +309,30 @@
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
                             >
+
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="1.8"
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM4 21a8 8 0 0116 0"
                                 />
+
                             </svg>
+
 
                             {{ __('Profile') }}
 
                         </x-dropdown-link>
 
 
+
                         <!-- LOG OUT -->
+
                         <form
                             method="POST"
                             action="{{ route('logout') }}"
                         >
+
                             @csrf
 
                             <button
@@ -283,13 +346,16 @@
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
                                 >
+
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                         stroke-width="1.8"
                                         d="M15 12H3m12 0l-4-4m4 4l-4 4m7-9V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h6a2 2 0 002-2v-2"
                                     />
+
                                 </svg>
+
 
                                 {{ __('Log Out') }}
 
@@ -304,6 +370,7 @@
             </div>
 
 
+
             <!-- ===================================================== -->
             <!-- MOBILE RIGHT SIDE -->
             <!-- ===================================================== -->
@@ -311,6 +378,7 @@
             <div class="flex items-center gap-2 sm:hidden">
 
                 <!-- MOBILE NOTIFICATION -->
+
                 <a
                     href="{{ route('notifications.index') }}"
                     class="group relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-gray-500 transition hover:bg-indigo-50 hover:text-indigo-600"
@@ -323,12 +391,14 @@
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                     >
+
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                         />
+
                     </svg>
 
 
@@ -346,7 +416,9 @@
                 </a>
 
 
+
                 <!-- HAMBURGER -->
+
                 <button
                     type="button"
                     @click="open = ! open"
@@ -356,6 +428,7 @@
                 >
 
                     <!-- MENU ICON -->
+
                     <svg
                         x-show="!open"
                         x-cloak
@@ -364,16 +437,19 @@
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                     >
+
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16"
                         />
+
                     </svg>
 
 
                     <!-- CLOSE ICON -->
+
                     <svg
                         x-show="open"
                         x-cloak
@@ -382,12 +458,14 @@
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                     >
+
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M6 6l12 12M6 18L18 6"
                         />
+
                     </svg>
 
                 </button>
@@ -397,6 +475,7 @@
         </div>
 
     </div>
+
 
 
     <!-- ============================================================= -->
@@ -426,14 +505,18 @@
                 <div class="flex items-center gap-3">
 
                     <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-sm font-black text-white shadow-sm">
+
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+
                     </div>
+
 
                     <div class="min-w-0 flex-1">
 
                         <p class="truncate text-sm font-black text-gray-900">
                             {{ Auth::user()->name }}
                         </p>
+
 
                         <div class="mt-1 inline-flex rounded-full bg-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-gray-500 shadow-sm">
                             {{ ucfirst(Auth::user()->role) }}
@@ -444,6 +527,7 @@
                 </div>
 
             </div>
+
 
 
             <!-- ===================================================== -->
@@ -504,6 +588,18 @@
                     </x-responsive-nav-link>
 
 
+                    <!-- CONTACT INFORMATION -->
+
+                    <x-responsive-nav-link
+                        :href="route('contact.information')"
+                        :active="request()->routeIs('contact.information')"
+                        @click="open = false"
+                        class="rounded-xl px-4 py-3 text-sm font-bold"
+                    >
+                        {{ __('Contact Information') }}
+                    </x-responsive-nav-link>
+
+
                     <x-responsive-nav-link
                         :href="route('admin.settings.index')"
                         :active="request()->routeIs('admin.settings.index')"
@@ -544,9 +640,22 @@
                         {{ __('Guidebook') }}
                     </x-responsive-nav-link>
 
+
+                    <!-- CONTACT INFORMATION -->
+
+                    <x-responsive-nav-link
+                        :href="route('contact.information')"
+                        :active="request()->routeIs('contact.information')"
+                        @click="open = false"
+                        class="rounded-xl px-4 py-3 text-sm font-bold"
+                    >
+                        {{ __('Contact Information') }}
+                    </x-responsive-nav-link>
+
                 @endif
 
             </div>
+
 
 
             <!-- ===================================================== -->
@@ -555,15 +664,18 @@
 
             <div class="my-4 border-t border-gray-100"></div>
 
+
             <div class="space-y-1">
 
                 <!-- PROFILE -->
+
                 <x-responsive-nav-link
                     :href="route('profile.edit')"
                     :active="request()->routeIs('profile.edit')"
                     @click="open = false"
                     class="rounded-xl px-4 py-3 text-sm font-bold"
                 >
+
                     <span class="flex items-center gap-3">
 
                         <svg
@@ -572,25 +684,32 @@
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                         >
+
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="1.8"
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM4 21a8 8 0 0116 0"
                             />
+
                         </svg>
+
 
                         <span>{{ __('Profile') }}</span>
 
                     </span>
+
                 </x-responsive-nav-link>
 
 
+
                 <!-- LOG OUT -->
+
                 <form
                     method="POST"
                     action="{{ route('logout') }}"
                 >
+
                     @csrf
 
                     <button
@@ -605,13 +724,16 @@
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                         >
+
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="1.8"
-                                d="M15 12H3m12 0l-4-4m4 4l-4 4m7-9V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h6a2 2 0 002-2v-2"
+                                d="M15 12H3m12 0l-4-4m4 4l-4 4m7-9V5a2 2 0 00-2-2v14a2 2 0 002 2h6a2 2 0 002-2v-2"
                             />
+
                         </svg>
+
 
                         {{ __('Log Out') }}
 

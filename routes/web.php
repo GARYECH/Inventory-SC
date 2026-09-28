@@ -202,6 +202,27 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | CONTACT INFORMATION
+    |--------------------------------------------------------------------------
+    |
+    | Berisi informasi kontak pengelola Inventory Student Council.
+    | Dapat digunakan user untuk menanyakan transaksi,
+    | pembatalan order, atau kebutuhan bantuan lainnya.
+    |
+    */
+
+    Route::get(
+        '/contact-information',
+        function () {
+            return view(
+                'contact-information'
+            );
+        }
+    )->name('contact.information');
+
+
+    /*
+    |--------------------------------------------------------------------------
     | ADMIN
     |--------------------------------------------------------------------------
     */

@@ -50,12 +50,16 @@ class AdminItemTest extends TestCase
         $category = $this->createCategory();
 
         return Item::create([
-            'name' => 'Test Item',
-            'category_id' => $category->id,
-            'stock_quantity' => $stockQuantity,
-            'requires_return' => $requiresReturn,
-            'price' => 100000,
-            'is_active' => true,
+             'name' => 'Test Item',
+    'category_id' => $category->id,
+    'transaction_type' => $requiresReturn
+        ? 'Peralatan'
+        : 'Habis Pakai',
+    'description' => 'Test item description',
+    'item_photo' => 'test-item.jpg',
+    'stock_quantity' => $stockQuantity,
+    'price' => 100000,
+    'condition_status' => 'Good',
         ]);
     }
 
@@ -66,11 +70,31 @@ class AdminItemTest extends TestCase
         int $quantity = 1,
         array $extraOrderData = []
     ): Order {
+        $requiresReturn = $item->requires_return;
+
         $order = Order::create(array_merge([
+            'order_number' => 'TEST-' . Str::uuid(),
             'user_id' => $student->id,
-            'transaction_type' => $item->requires_return
-                ? 'Peralatan'
-                : 'Habis Pakai',
+            'full_name' => 'Test Student',
+            'organization' => 'Student Council',
+            'position' => 'Bendahara',
+            'phone_number' => '08123456789',
+            'proker_name' => 'Test Program',
+            'ketua_acara' => 'Test Ketua',
+            'department' => 'Student Council',
+            'treasurer_name' => 'Test Treasurer',
+            'address' => 'Test Address',
+            'notes' => null,
+            'order_type' => $item->transaction_type,
+            'funding_source' => 'program_treasurer',
+            'start_date' => $requiresReturn
+                ? now()->addDays(2)->toDateString()
+                : null,
+            'end_date' => $requiresReturn
+                ? now()->addDays(3)->toDateString()
+                : null,
+            'start_time' => $requiresReturn ? '17:00' : null,
+            'end_time' => $requiresReturn ? '18:00' : null,
             'status' => $status,
         ], $extraOrderData));
 
@@ -78,9 +102,7 @@ class AdminItemTest extends TestCase
             'order_id' => $order->id,
             'item_id' => $item->id,
             'quantity' => $quantity,
-            'unit_price' => $item->price,
             'subtotal_price' => $item->price * $quantity,
-            'requires_return' => $item->requires_return,
         ]);
 
         return $order->fresh([
@@ -403,7 +425,8 @@ class AdminItemTest extends TestCase
                 'status' => 'Approved',
             ]);
 
-        $response->assertSessionHasErrors();
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
 
         $this->assertDatabaseHas('orders', [
             'id' => $order->id,

@@ -83,6 +83,10 @@ class OrdersSummarySheet implements
 
     public function map($orderItem): array
     {
+        if (is_array($orderItem)) {
+            return $orderItem;
+        }
+
         return [
             $orderItem->item?->transaction_type ?? '-',
             0,

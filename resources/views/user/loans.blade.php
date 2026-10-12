@@ -530,7 +530,7 @@
 
                                             <p class="mt-1 text-2xl font-black text-gray-950">
                                                 Rp
-                                                {{ number_format($order->total_price ?? 0, 0, ',', '.') }}
+                                                {{ number_format($order->grand_total_price ?? 0, 0, ',', '.') }}
                                             </p>
 
                                         </div>
@@ -2345,7 +2345,7 @@
 
                                             <p class="mt-1 text-xl font-black text-gray-950">
                                                 Rp
-                                                {{ number_format($order->total_price ?? 0, 0, ',', '.') }}
+                                                {{ number_format($order->grand_total_price ?? 0, 0, ',', '.') }}
                                             </p>
 
                                         </div>

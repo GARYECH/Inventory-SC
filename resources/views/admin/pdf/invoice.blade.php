@@ -168,7 +168,7 @@
     | GRAND TOTAL
     |--------------------------------------------------------------------------
     |
-    | Menggunakan accessor total_price
+    | Menggunakan accessor grand_total_price
     | dari Order.
     |
     | item subtotal
@@ -178,7 +178,7 @@
     */
 
     $total =
-        (int) $order->total_price;
+        (int) $order->grand_total_price;
 
 
     /*
@@ -1163,6 +1163,7 @@
         <!-- ========================================================= -->
         <!-- TAX -->
         <!-- ========================================================= -->
+        @if($order->tax_amount > 0)
 
         <tr>
 
@@ -1171,18 +1172,27 @@
                 class="right"
             >
 
-                Tax
+                Tax (PPh 21 {{ (int) (100 * \App\Models\Order::TAX_RATE) }}% - Gross-up)
 
             </td>
 
 
             <td>
 
-                Rp 0,-
+                Rp
+                {{
+                    number_format(
+                        $order->tax_amount,
+                        0,
+                        ',',
+                        '.'
+                    )
+                }},-
 
             </td>
 
         </tr>
+        @endif
 
 
 

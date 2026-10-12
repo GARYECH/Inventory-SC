@@ -54,7 +54,7 @@
                 return $num;
             }
         }
-        $amountInWords = numberToWords($order->total_price) . ' Rupiah';
+        $amountInWords = numberToWords($order->grand_total_price) . ' Rupiah';
     @endphp
 
     <!-- KOP SURAT SC -->
@@ -100,7 +100,7 @@
         <tr>
             <td style="padding-left: 10px;">Total</td>
             <td style="text-align: center;">:</td>
-            <td>Rp {{ number_format($order->total_price, 0, ',', '.') }},-</td>
+            <td>Rp {{ number_format($order->grand_total_price, 0, ',', '.') }},-</td>
         </tr>
         <tr>
             <td style="padding-left: 10px;">Total Amount in Words</td>
@@ -117,22 +117,24 @@
     <!-- SUB INFORMASI (TOTAL, TAX, AMOUNT PAID) -->
     <table class="sub-table">
         <tr>
-            <td style="width: 40%; padding-left: 10px;">Total</td>
+            <td style="width: 40%; padding-left: 10px;">Subtotal</td>
             <td style="width: 5%; text-align: center;">:</td>
             <td style="width: 55%; font-weight: bold;">Rp {{ number_format($order->total_price, 0, ',', '.') }},-</td>
         </tr>
+        @if($order->tax_amount > 0)
         <tr>
             <td style="padding-left: 10px;">
                 Tax<br>
-                <span style="font-size: 11px;">PPh 21 (2%) - Gross/Net</span>
+                <span style="font-size: 11px;">PPh 21 ({{ (int) (100 * \App\Models\Order::TAX_RATE) }}%) - Gross-up</span>
             </td>
             <td style="text-align: center; vertical-align: middle;">:</td>
-            <td style="vertical-align: middle;">Rp 0,-</td>
+            <td style="vertical-align: middle;">Rp {{ number_format($order->tax_amount, 0, ',', '.') }},-</td>
         </tr>
+        @endif
         <tr>
             <td class="bg-red" style="padding-left: 10px;">Amount Paid</td>
             <td style="text-align: center; vertical-align: middle;">:</td>
-            <td style="font-weight: bold; vertical-align: middle;">Rp {{ number_format($order->total_price, 0, ',', '.') }},-</td>
+            <td style="font-weight: bold; vertical-align: middle;">Rp {{ number_format($order->grand_total_price, 0, ',', '.') }},-</td>
         </tr>
     </table>
     

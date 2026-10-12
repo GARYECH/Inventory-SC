@@ -744,6 +744,7 @@ it(
 
                         'notes' =>
                             'Testing duplicate size.',
+                        'funding_source' => 'program_treasurer',
 
                     ]
                 );

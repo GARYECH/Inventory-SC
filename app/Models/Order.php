@@ -120,6 +120,48 @@ class Order extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | TAX / GROSS-UP
+    |--------------------------------------------------------------------------
+    */
+
+    public const TAX_RATE = 0.02;
+
+    public function isTaxApplicable(): bool
+    {
+        return ($this->attributes['funding_source'] ?? null) === 'finance_uc'
+            && in_array(
+                $this->attributes['order_type'] ?? null,
+                [
+                    'Peralatan',
+                    'Handy Talkie',
+                    'Merchandise',
+                ],
+                true
+            );
+    }
+
+    public function getTaxAmountAttribute(): int
+    {
+        if (!$this->isTaxApplicable()) {
+            return 0;
+        }
+
+        // Gross-up PPh 2% so the base amount remains net of tax.
+        $taxRate = self::TAX_RATE;
+        $baseAmount = (int) $this->total_price;
+
+        return (int) round(
+            $baseAmount * $taxRate / (1 - $taxRate)
+        );
+    }
+
+    public function getGrandTotalPriceAttribute(): int
+    {
+        return (int) $this->total_price + (int) $this->tax_amount;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | MOU CHECK
     |--------------------------------------------------------------------------
     */

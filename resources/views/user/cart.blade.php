@@ -2455,6 +2455,11 @@
                                             Rp 0
                                         </p>
 
+                                        <p
+                                            id="cartTaxPreview"
+                                            class="mt-2 text-[10px] font-bold text-indigo-200"
+                                        >Pilih sumber pendanaan untuk menghitung pajak.</p>
+
                                     </div>
 
                                 </div>
@@ -2766,6 +2771,43 @@
                                         >
 
                                     </div>
+
+                                </div>
+
+
+
+                                <!-- FUNDING SOURCE -->
+
+                                <div>
+
+                                    <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
+                                        Sumber Pendanaan
+                                    </label>
+
+                                    <select
+                                        name="funding_source"
+                                        id="fundingSourceSelect"
+                                        required
+                                        class="w-full appearance-none rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                    >
+                                        <option value="" disabled {{ old('funding_source') ? '' : 'selected' }}>
+                                            Pilih sumber pendanaan...
+                                        </option>
+                                        <option value="finance_uc" {{ old('funding_source') === 'finance_uc' ? 'selected' : '' }}>
+                                            Pembelian Didanai Finance UC
+                                        </option>
+                                        <option value="program_treasurer" {{ old('funding_source') === 'program_treasurer' ? 'selected' : '' }}>
+                                            Pembelian Didanai Bendahara Program Kerja
+                                        </option>
+                                    </select>
+
+                                    @error('funding_source')
+                                        <p class="mt-2 ml-1 text-xs font-bold text-red-600">{{ $message }}</p>
+                                    @enderror
+
+                                    <p class="mt-2 ml-1 text-[10px] leading-relaxed text-gray-400">
+                                        Finance UC menggunakan gross-up pajak {{ (int) (100 * \App\Models\Order::TAX_RATE) }}% untuk Peralatan, Handy Talkie, dan Merchandise. Habis Pakai tidak dikenakan pajak. Pendanaan Bendahara Program Kerja tidak menampilkan pajak pada invoice maupun kuitansi.
+                                    </p>
 
                                 </div>
 
@@ -3091,6 +3133,16 @@
                     document.getElementById(
                         'cartTotalPrice'
                     );
+
+                const fundingSourceSelect =
+                    document.getElementById(
+                        'fundingSourceSelect'
+                    );
+
+                const taxRate = @json(\App\Models\Order::TAX_RATE);
+
+                const taxPreviewElement =
+                    document.getElementById('cartTaxPreview');
 
                 const itemSubtotalElement =
                     document.getElementById(
@@ -3667,10 +3719,48 @@
                     }
 
 
+                    const taxEligible =
+                        Array.from(cartItems).some(
+                            function (cartItem) {
+                                return [
+                                    'Peralatan',
+                                    'Handy Talkie',
+                                    'Merchandise',
+                                ].includes(
+                                    cartItem.dataset.itemTransactionType
+                                );
+                            }
+                        );
+
+                    const financeFundingSelected =
+                        fundingSourceSelect &&
+                        fundingSourceSelect.value === 'finance_uc';
+
+                    const taxAmount =
+                        financeFundingSelected && taxEligible
+                            ? Math.round(grandTotal * taxRate / (1 - taxRate))
+                            : 0;
+
+                    if (taxPreviewElement) {
+                        if (!fundingSourceSelect || !fundingSourceSelect.value) {
+                            taxPreviewElement.textContent =
+                                'Pilih sumber pendanaan untuk menghitung pajak.';
+                        } else if (taxAmount > 0) {
+                            taxPreviewElement.textContent =
+                                'Pajak gross-up ' + Math.round(taxRate * 100) + '%: Rp ' + formatRupiah(taxAmount);
+                        } else if (financeFundingSelected && !taxEligible) {
+                            taxPreviewElement.textContent =
+                                'Habis Pakai tidak dikenakan pajak.';
+                        } else {
+                            taxPreviewElement.textContent =
+                                'Tidak ada pajak untuk opsi pendanaan ini.';
+                        }
+                    }
+
                     totalElement.textContent =
                         'Rp ' +
                         formatRupiah(
-                            grandTotal
+                            grandTotal + taxAmount
                         );
                 }
 
@@ -3727,6 +3817,12 @@
                     'change',
                     updateCartPricing
                 );
+
+                if (fundingSourceSelect) {
+                    fundingSourceSelect.addEventListener(
+                        'change', updateCartPricing
+                    );
+                }
 
 
                 /*

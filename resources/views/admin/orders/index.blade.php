@@ -246,7 +246,7 @@
                                     </p>
 
                                     <p class="mt-1 text-2xl font-black text-gray-950">
-                                        Rp {{ number_format($order->total_price ?? 0, 0, ',', '.') }}
+                                        Rp {{ number_format($order->grand_total_price ?? 0, 0, ',', '.') }}
                                     </p>
 
                                 </div>
@@ -343,6 +343,25 @@
                                         <span class="mt-1 inline-flex rounded-lg bg-indigo-50 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-indigo-700">
                                             {{ $order->order_type }}
                                         </span>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                                            Funding Source
+                                        </p>
+
+                                        <p class="mt-1 text-sm font-bold text-gray-800">
+                                            @if($order->funding_source === 'finance_uc')
+                                                Pembelian Didanai Finance UC
+                                            @elseif($order->funding_source === 'program_treasurer')
+                                                Pembelian Didanai Bendahara Program Kerja
+                                            @else
+                                                Belum ditentukan (order lama)
+                                            @endif
+                                        </p>
 
                                     </div>
 

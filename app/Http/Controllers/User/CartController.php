@@ -2049,6 +2049,9 @@ class CartController extends Controller
 
             'notes' =>
                 'nullable|string',
+
+            'funding_source' =>
+                'required|in:finance_uc,program_treasurer',
         ]);
 
         $firstItem =
@@ -2530,6 +2533,9 @@ class CartController extends Controller
 
                     'order_type' =>
                         $orderType,
+
+                    'funding_source' =>
+                        $request->funding_source,
 
                     'start_date' =>
                         $firstItem[

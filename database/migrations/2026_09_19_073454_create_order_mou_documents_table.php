@@ -6,37 +6,35 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('order_mou_documents', function (Blueprint $table) {
-            $table->id();
+        // The earlier migration may already have created this table.
+        if (!Schema::hasTable('order_mou_documents')) {
+            Schema::create('order_mou_documents', function (Blueprint $table) {
+                $table->id();
 
-            $table->foreignId('order_id')
-                ->constrained('orders')
-                ->cascadeOnDelete();
+                $table->foreignId('order_id')
+                    ->constrained('orders')
+                    ->cascadeOnDelete();
 
-            $table->string('mou_type');
+                $table->string('mou_type');
 
-            $table->string('signed_file_path')
-                ->nullable();
+                $table->string('signed_file_path')
+                    ->nullable();
 
-            $table->timestamps();
+                $table->timestamps();
 
-            $table->unique([
-                'order_id',
-                'mou_type',
-            ]);
-        });
+                $table->unique([
+                    'order_id',
+                    'mou_type',
+                ]);
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('order_mou_documents');
+        // The earlier upgrade migration manages this table.
+        // Its down() method handles removing the table.
     }
 };

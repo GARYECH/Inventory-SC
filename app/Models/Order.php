@@ -18,6 +18,7 @@ class Order extends Model
         'end_date' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
+        'return_submitted_at' => 'datetime',
         'ht_fee' => 'integer',
         'transport_fee' => 'integer',
     ];

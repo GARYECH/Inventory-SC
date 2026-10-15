@@ -51,7 +51,7 @@
                     </div>
 
 
-                    <div class="flex w-full gap-3 md:w-auto">
+                    <div class="flex w-full flex-wrap gap-3 md:w-auto">
 
                         <form
                             action="{{ route('admin.orders') }}"
@@ -69,6 +69,13 @@
 
                         </form>
 
+
+                        <a
+                            href="{{ route('admin.returns.calendar') }}"
+                            class="inline-flex shrink-0 items-center justify-center rounded-2xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-[9px] font-black uppercase tracking-widest text-indigo-700 transition hover:bg-indigo-100"
+                        >
+                            Return Calendar
+                        </a>
 
                         <a
                             href="{{ route('admin.orders.export') }}"

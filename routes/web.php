@@ -319,6 +319,11 @@ Route::middleware('auth')->group(function () {
                 [AdminItemController::class, 'confirmReturn']
             )->name('orders.confirm-return');
 
+            Route::get(
+                '/returns/calendar',
+                [AdminItemController::class, 'returnsCalendar']
+            )->name('returns.calendar');
+
             Route::delete(
                 '/orders/{id}',
                 [AdminItemController::class, 'destroyOrder']

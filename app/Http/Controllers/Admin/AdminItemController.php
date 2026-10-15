@@ -936,6 +936,331 @@ class AdminItemController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | INVENTORY TRANSACTION CALENDAR
+    |--------------------------------------------------------------------------
+    |
+    | Shows current transaction statuses and their recorded dates:
+    | - request submitted (created_at)
+    | - planned usage / return dates (start_date / end_date)
+    | - return evidence submitted (return_submitted_at)
+    |
+    | The status shown is the current status. Historical status transitions
+    | are not available because this application does not store a status log.
+    |
+    */
+
+    public function returnsCalendar(Request $request)
+    {
+        $validated = $request->validate([
+            'month' => [
+                'nullable',
+                'date_format:Y-m',
+            ],
+            'date' => [
+                'nullable',
+                'date_format:Y-m-d',
+            ],
+            'status' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+        ]);
+
+        $statusOptions = self::ORDER_STATUSES;
+        $statusFilter = $validated['status'] ?? 'all';
+
+        if (
+            $statusFilter !== 'all'
+            && !in_array($statusFilter, $statusOptions, true)
+        ) {
+            $statusFilter = 'all';
+        }
+
+        $month = Carbon::createFromFormat(
+            '!Y-m',
+            $validated['month'] ?? Carbon::today()->format('Y-m')
+        );
+
+        $monthStart = $month->copy()->startOfMonth();
+        $monthEnd = $month->copy()->endOfMonth();
+        $calendarStart = $monthStart->copy()->subDays(
+            $monthStart->dayOfWeekIso - 1
+        );
+        $calendarEnd = $monthEnd->copy()->addDays(
+            7 - $monthEnd->dayOfWeekIso
+        );
+
+        $periodStart = $calendarStart->copy()->startOfDay();
+        $periodEnd = $calendarEnd->copy()->endOfDay();
+
+        $ordersQuery = Order::with([
+            'user',
+            'orderItems.item.category',
+        ])->where(function ($query) use (
+            $calendarStart,
+            $calendarEnd,
+            $periodStart,
+            $periodEnd
+        ) {
+            $query->where(function ($scheduleQuery) use (
+                $calendarStart,
+                $calendarEnd
+            ) {
+                $scheduleQuery
+                    ->whereNotNull('start_date')
+                    ->whereNotNull('end_date')
+                    ->whereDate('start_date', '<=', $calendarEnd->toDateString())
+                    ->whereDate('end_date', '>=', $calendarStart->toDateString());
+            })
+            ->orWhereBetween('created_at', [$periodStart, $periodEnd])
+            ->orWhereBetween('return_submitted_at', [$periodStart, $periodEnd]);
+        });
+
+        if ($statusFilter !== 'all') {
+            $ordersQuery->where('status', $statusFilter);
+        }
+
+        $calendarOrders = $ordersQuery
+            ->orderByDesc('created_at')
+            ->get();
+
+        $eventsByDate = collect();
+
+        $appendEvent = function (
+            $date,
+            Order $order,
+            string $label
+        ) use (
+            $eventsByDate,
+            $calendarStart,
+            $calendarEnd
+        ) {
+            if (!$date) {
+                return;
+            }
+
+            $eventDate = Carbon::parse($date)->startOfDay();
+
+            if (
+                $eventDate->lt($calendarStart)
+                || $eventDate->gt($calendarEnd)
+            ) {
+                return;
+            }
+
+            $dateKey = $eventDate->toDateString();
+
+            if (!$eventsByDate->has($dateKey)) {
+                $eventsByDate->put($dateKey, collect());
+            }
+
+            $eventsByDate->get($dateKey)->push([
+                'order' => $order,
+                'label' => $label,
+            ]);
+        };
+
+        foreach ($calendarOrders as $order) {
+            // Every transaction appears on its request submission date.
+            $appendEvent(
+                $order->created_at,
+                $order,
+                'Tanggal pengajuan'
+            );
+
+            // Scheduled transactions appear throughout their intended date range.
+            if ($order->start_date && $order->end_date) {
+                $originalStart = Carbon::parse($order->start_date)->startOfDay();
+                $originalEnd = Carbon::parse($order->end_date)->startOfDay();
+
+                if ($originalStart->lte($originalEnd)) {
+                    $displayStart = $originalStart->lt($calendarStart)
+                        ? $calendarStart->copy()
+                        : $originalStart->copy();
+
+                    $displayEnd = $originalEnd->gt($calendarEnd)
+                        ? $calendarEnd->copy()
+                        : $originalEnd->copy();
+
+                    for (
+                        $day = $displayStart->copy();
+                        $day->lte($displayEnd);
+                        $day->addDay()
+                    ) {
+                        if (
+                            $day->isSameDay($originalStart)
+                            && $day->isSameDay($originalEnd)
+                        ) {
+                            $label = 'Mulai & kembali';
+                        } elseif ($day->isSameDay($originalStart)) {
+                            $label = 'Mulai penggunaan';
+                        } elseif ($day->isSameDay($originalEnd)) {
+                            $label = 'Jadwal kembali';
+                        } else {
+                            $label = 'Dalam jadwal';
+                        }
+
+                        $appendEvent($day, $order, $label);
+                    }
+                }
+            }
+
+            // Keep the return-submission activity visible even when the loan dates are in the past.
+            if ($order->return_submitted_at) {
+                $appendEvent(
+                    $order->return_submitted_at,
+                    $order,
+                    'Bukti pengembalian dikirim'
+                );
+            } elseif ($order->status === 'Pending Return Review') {
+                // Existing records created before the timestamp migration use an explicitly approximate date.
+                $appendEvent(
+                    $order->updated_at ?? $order->created_at,
+                    $order,
+                    'Tanggal bukti (perkiraan)'
+                );
+            }
+        }
+
+        foreach ($eventsByDate as $dateKey => $events) {
+            $eventsByDate->put(
+                $dateKey,
+                $events->sortBy(function ($event) use ($statusOptions) {
+                    $statusPosition = array_search(
+                        $event['order']->status,
+                        $statusOptions,
+                        true
+                    );
+
+                    return ($statusPosition === false ? 999 : $statusPosition)
+                        . ' '
+                        . $event['order']->order_number;
+                })->values()
+            );
+        }
+
+        $monthEventOrderIds = $eventsByDate
+            ->filter(function ($events, $dateKey) use ($monthStart, $monthEnd) {
+                return $dateKey >= $monthStart->toDateString()
+                    && $dateKey <= $monthEnd->toDateString();
+            })
+            ->flatMap(function ($events) {
+                return $events->map(function ($event) {
+                    return $event['order']->id;
+                });
+            })
+            ->unique()
+            ->values();
+
+        $selectedDate = $validated['date'] ?? null;
+
+        if (
+            !$selectedDate
+            || Carbon::parse($selectedDate)->format('Y-m') !== $month->format('Y-m')
+        ) {
+            if ($month->isSameMonth(Carbon::today())) {
+                $selectedDate = Carbon::today()->toDateString();
+            } else {
+                $firstEventDate = $eventsByDate->keys()
+                    ->filter(function ($dateKey) use ($monthStart, $monthEnd) {
+                        return $dateKey >= $monthStart->toDateString()
+                            && $dateKey <= $monthEnd->toDateString();
+                    })
+                    ->sort()
+                    ->first();
+
+                $selectedDate = $firstEventDate ?? $monthStart->toDateString();
+            }
+        }
+
+        $selectedEvents = $eventsByDate->get($selectedDate, collect());
+        $selectedEntries = $selectedEvents
+            ->groupBy(function ($event) {
+                return $event['order']->id;
+            })
+            ->map(function ($events) {
+                return [
+                    'order' => $events->first()['order'],
+                    'types' => $events->pluck('label')->unique()->values(),
+                ];
+            })
+            ->sortBy(function ($entry) use ($statusOptions) {
+                $statusPosition = array_search(
+                    $entry['order']->status,
+                    $statusOptions,
+                    true
+                );
+
+                return ($statusPosition === false ? 999 : $statusPosition)
+                    . ' '
+                    . $entry['order']->order_number;
+            })
+            ->values();
+
+        $monthNames = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
+        ];
+
+        $monthLabel = $monthNames[(int) $month->format('n')]
+            . ' '
+            . $month->format('Y');
+
+        $pendingCount = Order::where('status', 'Pending')->count();
+        $pendingReturnReviewCount = Order::where(
+            'status',
+            'Pending Return Review'
+        )->count();
+        $overdueReturnCount = Order::where('status', 'Handed Over')
+            ->whereNotNull('end_date')
+            ->whereDate('end_date', '<', Carbon::today()->toDateString())
+            ->count();
+
+        $calendarWeeks = [];
+        $weekStart = $calendarStart->copy();
+
+        while ($weekStart->lte($calendarEnd)) {
+            $week = [];
+
+            for ($day = 0; $day < 7; $day++) {
+                $week[] = $weekStart->copy()->addDays($day);
+            }
+
+            $calendarWeeks[] = $week;
+            $weekStart->addWeek();
+        }
+
+        return view(
+            'admin.returns.calendar',
+            compact(
+                'month',
+                'monthLabel',
+                'calendarWeeks',
+                'eventsByDate',
+                'selectedDate',
+                'selectedEntries',
+                'statusOptions',
+                'statusFilter',
+                'monthEventOrderIds',
+                'pendingCount',
+                'pendingReturnReviewCount',
+                'overdueReturnCount'
+            )
+        );
+    }
+    /*
+    |--------------------------------------------------------------------------
     | CONFIRM RETURN
     |--------------------------------------------------------------------------
     */

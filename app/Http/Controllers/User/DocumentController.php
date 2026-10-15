@@ -1014,6 +1014,9 @@ class DocumentController extends Controller
             'return_drive_link' =>
                 $request->return_drive_link,
 
+            'return_submitted_at' =>
+                now(),
+
             'status' =>
                 'Pending Return Review',
         ]);

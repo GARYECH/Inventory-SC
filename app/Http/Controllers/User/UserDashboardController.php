@@ -8,6 +8,7 @@ use App\Models\Item;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Services\InventoryAvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -500,6 +501,7 @@ class UserDashboardController extends Controller
     */
 
     public function checkStock(
+        Request $request,
         $id
     ) {
         $item =
@@ -545,12 +547,24 @@ class UserDashboardController extends Controller
         |
         */
 
+        $validated = $request->validate([
+            'start_date' => 'nullable|date_format:Y-m-d',
+            'days' => 'nullable|integer|min:1|max:62',
+        ]);
+
+        $startDate = isset($validated['start_date'])
+            ? Carbon::parse($validated['start_date'])
+            : Carbon::today();
+
+        $days = (int) ($validated['days'] ?? 62);
+
         $availability =
             $this->availabilityService
                 ->getDailyAvailability(
                     $item->id,
                     (int) $item->stock_quantity,
-                    90
+                    $days,
+                    $startDate
                 );
 
         /*

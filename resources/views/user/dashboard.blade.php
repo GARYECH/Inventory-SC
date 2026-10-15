@@ -2915,6 +2915,51 @@
 
             let stockData = {};
 
+            let stockRequestId = 0;
+
+            function loadStockForMonth(year, month, instance) {
+
+                if (!isRental) {
+                    return;
+                }
+
+                const requestId = ++stockRequestId;
+
+                const startDate =
+                    String(year) + '-' +
+                    String(month + 1).padStart(2, '0') + '-01';
+
+                fetch(
+                    '/api/check-stock/' +
+                    itemId +
+                    '?start_date=' + startDate +
+                    '&days=62'
+                )
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error('Stock API failed.');
+                        }
+
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (requestId !== stockRequestId) {
+                            return;
+                        }
+
+                        stockData = Object.assign(
+                            {},
+                            stockData,
+                            data || {}
+                        );
+
+                        instance.redraw();
+                    })
+                    .catch(function (error) {
+                        console.error('Stock API Error:', error);
+                    });
+            }
+
 
 
             /* ========================================================
@@ -2943,6 +2988,21 @@
 
                         disableMobile:
                             true,
+
+
+                        onMonthChange:
+                            function (selectedDates, dateStr, instance) {
+                                loadStockForMonth(
+                                    instance.currentYear,
+                                    instance.currentMonth,
+                                    instance
+                                );
+                            },
+
+                        onYearChange:
+                            function (selectedDates, dateStr, instance) {
+                                loadStockForMonth(instance.currentYear, instance.currentMonth, instance);
+                            },
 
 
                         clickOpens:
@@ -3101,48 +3161,11 @@
              */
 
             if (isRental) {
-
-                fetch(
-                    '/api/check-stock/' +
-                    itemId
-                )
-                    .then(
-                        function (response) {
-
-                            if (!response.ok) {
-
-                                throw new Error(
-                                    'Stock API failed.'
-                                );
-
-                            }
-
-                            return response.json();
-
-                        }
-                    )
-                    .then(
-                        function (data) {
-
-                            stockData =
-                                data || {};
-
-
-                            picker.redraw();
-
-                        }
-                    )
-                    .catch(
-                        function (error) {
-
-                            console.error(
-                                'Stock API Error:',
-                                error
-                            );
-
-                        }
-                    );
-
+                loadStockForMonth(
+                    picker.currentYear,
+                    picker.currentMonth,
+                    picker
+                );
             }
 
 

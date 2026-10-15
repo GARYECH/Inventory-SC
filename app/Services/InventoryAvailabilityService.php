@@ -250,7 +250,8 @@ class InventoryAvailabilityService
     public function getDailyAvailability(
         int $itemId,
         int $totalStock,
-        int $days = 90
+        int $days = 90,
+        ?Carbon $startDate = null
     ): array {
         $bookings = $this->getActiveBookings(
             $itemId
@@ -258,7 +259,7 @@ class InventoryAvailabilityService
 
         $availability = [];
 
-        $startDate = Carbon::today();
+        $startDate = ($startDate ?? Carbon::today())->copy()->startOfDay();
 
         for ($i = 0; $i < $days; $i++) {
             $date = $startDate->copy()->addDays($i);

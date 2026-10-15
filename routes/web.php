@@ -314,6 +314,11 @@ Route::middleware('auth')->group(function () {
                 [AdminItemController::class, 'updateStatus']
             )->name('orders.update');
 
+            Route::patch(
+                '/orders/{order}/confirm-return',
+                [AdminItemController::class, 'confirmReturn']
+            )->name('orders.confirm-return');
+
             Route::delete(
                 '/orders/{id}',
                 [AdminItemController::class, 'destroyOrder']

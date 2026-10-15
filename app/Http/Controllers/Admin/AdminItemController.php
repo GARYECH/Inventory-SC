@@ -936,6 +936,64 @@ class AdminItemController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | CONFIRM RETURN
+    |--------------------------------------------------------------------------
+    */
+
+    public function confirmReturn(
+        Request $request,
+        Order $order
+    ) {
+        $request->validate([
+            'condition' => 'required|in:good,damaged',
+        ]);
+
+        if ($order->status !== 'Pending Return Review') {
+            return back()->with(
+                'error',
+                'Pengembalian hanya dapat dikonfirmasi saat status transaksi Pending Return Review.'
+            );
+        }
+
+        $newStatus = $request->condition === 'damaged'
+            ? 'Returned (Damaged)'
+            : 'Returned';
+
+        DB::beginTransaction();
+
+        try {
+            $order->update([
+                'status' => $newStatus,
+            ]);
+
+            $order->loadMissing('user');
+
+            if ($order->user) {
+                $order->user->notify(
+                    new OrderStatusUpdated($order)
+                );
+            }
+
+            DB::commit();
+
+            return back()->with(
+                'success',
+                $newStatus === 'Returned'
+                    ? 'Pengembalian berhasil dikonfirmasi.'
+                    : 'Pengembalian ditandai rusak. Silakan lanjutkan proses Berita Acara dan denda.'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return back()->with(
+                'error',
+                'Gagal mengonfirmasi pengembalian: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | UPDATE ORDER STATUS
     |--------------------------------------------------------------------------
     */
@@ -991,6 +1049,17 @@ class AdminItemController extends Controller
 
         $oldStatus =
             $order->status;
+
+        if (
+            $oldStatus === 'Pending Return Review'
+            &&
+            $newStatus !== 'Pending Return Review'
+        ) {
+            return back()->with(
+                'error',
+                'Gunakan tombol konfirmasi pengembalian untuk menyelesaikan pemeriksaan; status tidak dapat diubah langsung dari tahap ini.'
+            );
+        }
 
         /*
         |--------------------------------------------------------------------------

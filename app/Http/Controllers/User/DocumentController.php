@@ -1173,10 +1173,10 @@ class DocumentController extends Controller
     |
     | Start → End
     |
-    | Minggu → Senin  = 0
-    | Minggu → Selasa = 1
-    | Minggu → Rabu   = 2
-    | Senin  → Rabu   = 1
+    | Minggu → Senin  = 1 hari (minimum)
+    | Minggu → Selasa = 1 hari (minimum)
+    | Minggu → Rabu   = 2 hari
+    | Senin  → Rabu   = 1 hari (minimum)
     |
     */
 
@@ -1188,7 +1188,7 @@ class DocumentController extends Controller
             empty($startDate) ||
             empty($endDate)
         ) {
-            return 0;
+            return 1;
         }
 
 
@@ -1209,7 +1209,7 @@ class DocumentController extends Controller
                 $start
             )
         ) {
-            return 0;
+            return 1;
         }
 
 
@@ -1220,7 +1220,7 @@ class DocumentController extends Controller
 
 
         return max(
-            0,
+            1,
             $difference - 1
         );
     }

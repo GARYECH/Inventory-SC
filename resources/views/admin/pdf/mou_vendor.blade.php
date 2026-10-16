@@ -786,13 +786,13 @@
     |
     | Jumlah hari rental menggunakan GAP tanggal.
     |
-    | Minggu → Senin  = 0 hari
-    | Minggu → Selasa = 1 hari
+    | Minggu → Senin  = 1 hari (minimum)
+    | Minggu → Selasa = 1 hari (minimum)
     | Minggu → Rabu   = 2 hari
     |
     */
 
-    $rentalDays = null;
+    $rentalDays = 1;
 
 
     if (
@@ -817,7 +817,7 @@
 
         $rentalDays =
             max(
-                0,
+                1,
                 $dateDifference - 1
             );
 
@@ -1944,7 +1944,7 @@
                     ) }}"
                 >
 
-                    {{ $rentalDays ?? 0 }} hari
+                    {{ max(1, (int) ($rentalDays ?? 1)) }} hari
 
                 </span>
 
@@ -2186,7 +2186,7 @@
 
                             <strong>
 
-                                {{ $rentalDays ?? 0 }}
+                                {{ max(1, (int) ($rentalDays ?? 1)) }}
 
                             </strong>
 
@@ -2236,7 +2236,7 @@
 
                                     ×
 
-                                    {{ $rentalDays ?? 0 }}
+                                    {{ max(1, (int) ($rentalDays ?? 1)) }}
 
                                     ×
 

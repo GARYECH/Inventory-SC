@@ -691,7 +691,7 @@
     |
     */
 
-    $rentalDays = null;
+    $rentalDays = 1;
 
 
     if (
@@ -1627,7 +1627,7 @@
 
                 <span class="{{ $dynamicClass($rentalDays) }}">
 
-                    {{ $rentalDays ?? 0 }}
+                    {{ max(1, (int) ($rentalDays ?? 1)) }}
 
                     {{ ($rentalDays ?? 0) === 1 ? 'hari' : 'hari' }}
 
@@ -1871,7 +1871,7 @@
                         <td class="col-days">
 
                             <strong>
-                                {{ $rentalDays ?? 0 }}
+                                {{ max(1, (int) ($rentalDays ?? 1)) }}
                             </strong>
 
                             <br>
@@ -1910,7 +1910,7 @@
 
                                     ×
 
-                                    {{ $rentalDays ?? 0 }}
+                                    {{ max(1, (int) ($rentalDays ?? 1)) }}
 
                                     ×
 
@@ -2267,7 +2267,7 @@
                     <td class="col-days">
 
                         <strong>
-                            {{ $rentalDays ?? 0 }}
+                            {{ max(1, (int) ($rentalDays ?? 1)) }}
                         </strong>
 
                         <br>
@@ -2306,7 +2306,7 @@
 
                                 ×
 
-                                {{ $rentalDays ?? 0 }}
+                                {{ max(1, (int) ($rentalDays ?? 1)) }}
 
                                 ×
 

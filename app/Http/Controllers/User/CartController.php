@@ -403,12 +403,13 @@ class CartController extends Controller
             |
             | Contoh:
             |
-            | Minggu → Senin  = 0 hari
-            | Minggu → Selasa = 1 hari
+            | Minggu → Senin  = 1 hari (minimum)
+            | Minggu → Selasa = 1 hari (minimum)
             | Minggu → Rabu   = 2 hari
             |
             | Tanggal pengambilan dan pengembalian
             | tidak dihitung sebagai hari sewa.
+            | Minimum durasi rental tetap 1 (satu) hari.
             |
             */
 

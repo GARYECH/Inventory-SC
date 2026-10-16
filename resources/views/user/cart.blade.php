@@ -2542,7 +2542,7 @@
                                 <div>
 
                                     <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
-                                        Nama Lengkap PIC
+                                        Nama Lengkap PIC (Title Case)
                                     </label>
 
                                     <input
@@ -2566,7 +2566,7 @@
                                     <div>
 
                                         <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
-                                            Proker di bawah organisasi
+                                            Proker di bawah organisasi 
                                         </label>
 
 
@@ -2642,7 +2642,7 @@
                                     <div>
 
                                         <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
-                                            Jabatan
+                                            Jabatan dan Divisi (Title Case)
                                         </label>
 
 
@@ -2650,7 +2650,7 @@
                                             type="text"
                                             name="position"
                                             value="{{ old('position') }}"
-                                            placeholder="Contoh: Koordinator"
+                                            placeholder="Contoh: Koordinator Inventory"
                                             required
                                             class="w-full rounded-2xl border-none bg-gray-50 px-5 py-4 text-sm font-bold text-gray-800 shadow-inner outline-none placeholder:text-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                         >
@@ -2669,7 +2669,7 @@
                                     <div>
 
                                         <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
-                                            Nama Proker / Event
+                                            Nama Proker / Event (Title Case)
                                         </label>
 
 
@@ -2689,7 +2689,7 @@
                                     <div>
 
                                         <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
-                                            Nama Ketua Acara
+                                            Nama Ketua Acara (Title Case)
                                         </label>
 
 
@@ -2713,7 +2713,7 @@
                                 <div>
 
                                     <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
-                                        Alamat Lengkap
+                                        Alamat Lengkap (Title Case)
                                     </label>
 
 
@@ -2757,7 +2757,7 @@
                                     <div>
 
                                         <label class="mb-2 ml-1 block text-[9px] font-black uppercase tracking-[0.18em] text-gray-400">
-                                            Nama Bendahara
+                                            Nama Bendahara (Title Case)
                                         </label>
 
 

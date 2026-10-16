@@ -105,11 +105,19 @@ class Order extends Model
                 ?? 0
             );
 
-        $transportFee =
-            (int) (
-                $this->attributes['transport_fee']
-                ?? 0
-            );
+        // Ignore legacy transport charges when an order has no eligible HT.
+        // Only UV-82 and 888s qualify; UV-5R alone does not.
+        $hasTransportEligibleHtItems = $this->orderItems()
+            ->whereHas('item', function ($query) {
+                $query
+                    ->where('transaction_type', 'Handy Talkie')
+                    ->whereIn('transaction_detail', ['HT UV-82', 'HT 888s']);
+            })
+            ->exists();
+
+        $transportFee = $hasTransportEligibleHtItems
+            ? (int) ($this->attributes['transport_fee'] ?? 0)
+            : 0;
 
         return
             $itemTotal

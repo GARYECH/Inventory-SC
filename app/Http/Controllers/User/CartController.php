@@ -2946,13 +2946,12 @@ class CartController extends Controller
     |
     | Pengambilan → Pengembalian
     |
-    | Minggu → Senin  = 0 hari
+    | Durasi yang ditagihkan tidak boleh kurang dari 1 hari.
+    | Minggu → Senin  = 1 hari (minimum)
     | Minggu → Selasa = 1 hari
     | Minggu → Rabu   = 2 hari
     |
-    | Jadi:
-    |
-    | diff tanggal - 1
+    | Rumus: max(1, selisih tanggal - 1)
     |
     */
 
@@ -3154,7 +3153,7 @@ class CartController extends Controller
         ?int $rentalDays
     ): int {
 
-        $hasHandyTalkie =
+        $hasEligibleHandyTalkie =
             false;
 
         $paidHandyTalkieTotal =
@@ -3176,14 +3175,13 @@ class CartController extends Controller
                 continue;
             }
 
-            $hasHandyTalkie =
-                true;
-
             $transactionDetail =
                 $cartItem[
                     'transaction_detail'
                 ] ?? null;
 
+            // Transport HT only applies to UV-82 and 888s.
+            // UV-5R alone must never trigger transport fees.
             if (
                 !in_array(
                     $transactionDetail,
@@ -3196,6 +3194,9 @@ class CartController extends Controller
             ) {
                 continue;
             }
+
+            $hasEligibleHandyTalkie =
+                true;
 
             $unitPrice =
                 (int) (
@@ -3211,11 +3212,10 @@ class CartController extends Controller
                     ] ?? 0
                 );
 
-            $days =
-                (int) (
-                    $rentalDays
-                    ?? 0
-                );
+            $days = max(
+                1,
+                (int) ($rentalDays ?? 1)
+            );
 
             $paidHandyTalkieTotal +=
                 $unitPrice
@@ -3225,7 +3225,7 @@ class CartController extends Controller
                 $quantity;
         }
 
-        if (!$hasHandyTalkie) {
+        if (!$hasEligibleHandyTalkie) {
             return 0;
         }
 

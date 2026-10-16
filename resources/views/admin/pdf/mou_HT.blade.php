@@ -655,6 +655,16 @@
         })
         ->values();
 
+    // Only UV-82 and 888s qualify for the HT transport row/charge.
+    $hasTransportEligibleHtItems = $htItems->contains(function ($detail) {
+        return $detail->item
+            && in_array(
+                $detail->item->transaction_detail,
+                ['HT UV-82', 'HT 888s'],
+                true
+            );
+    });
+
 
     /*
     |--------------------------------------------------------------------------
@@ -753,11 +763,10 @@
     |--------------------------------------------------------------------------
     */
 
-    $transportFee =
-        (int) (
-            $order->transport_fee
-            ?? 0
-        );
+    // Ignore a legacy transport fee for an order containing only ineligible HTs.
+    $transportFee = $hasTransportEligibleHtItems
+        ? (int) ($order->transport_fee ?? 0)
+        : 0;
 
 
     /*
@@ -2442,65 +2451,69 @@
 
 
 
-            <!-- ========================================================= -->
-            <!-- TRANSPORT -->
-            <!-- ========================================================= -->
+            @if($hasTransportEligibleHtItems)
 
-            <tr>
+                <!-- ========================================================= -->
+                <!-- TRANSPORT -->
+                <!-- ========================================================= -->
 
-                <td
-                    colspan="6"
-                    class="right"
-                    style="
-                        padding-right:8mm;
-                    "
-                >
+                <tr>
 
-                    <strong>
-                        Transport HT
-                    </strong>
+                    <td
+                        colspan="6"
+                        class="right"
+                        style="
+                            padding-right:8mm;
+                        "
+                    >
 
-                </td>
+                        <strong>
+                            Transport HT
+                        </strong>
+
+                    </td>
 
 
-                <td class="col-subtotal">
+                    <td class="col-subtotal">
 
-                    @if($transportFee > 0)
+                        @if($transportFee > 0)
 
-                        <table class="money-table">
+                            <table class="money-table">
 
-                            <tr>
+                                <tr>
 
-                                <td class="money-prefix">
-                                    Rp
-                                </td>
+                                    <td class="money-prefix">
+                                        Rp
+                                    </td>
 
-                                <td class="money-value">
+                                    <td class="money-value">
 
-                                    {{ $money($transportFee) }}
+                                        {{ $money($transportFee) }}
 
-                                </td>
+                                    </td>
 
-                            </tr>
+                                </tr>
 
-                        </table>
+                            </table>
 
-                    @else
+                        @else
 
-                        <div
-                            style="
-                                text-align:right;
-                                font-weight:bold;
-                            "
-                        >
-                            GRATIS
-                        </div>
+                            <div
+                                style="
+                                    text-align:right;
+                                    font-weight:bold;
+                                "
+                            >
+                                GRATIS
+                            </div>
 
-                    @endif
+                        @endif
 
-                </td>
+                    </td>
 
-            </tr>
+                </tr>
+
+            @endif
 
 
 

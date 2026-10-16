@@ -3169,15 +3169,6 @@
                         'transportFeeInput'
                     );
 
-                const hasHandyTalkie =
-                    Array.from(cartItems).some(
-                        function (cartItem) {
-                            return cartItem.dataset
-                                .itemTransactionType ===
-                                'Handy Talkie';
-                        }
-                    );
-
                 const hasPaidHandyTalkie =
                     Array.from(cartItems).some(
                         function (cartItem) {
@@ -3428,7 +3419,8 @@
                     organization
                 ) {
 
-                    if (!hasHandyTalkie) {
+                    // Only UV-82 and 888s can incur HT transport fees.
+                    if (!hasPaidHandyTalkie) {
                         return 0;
                     }
 

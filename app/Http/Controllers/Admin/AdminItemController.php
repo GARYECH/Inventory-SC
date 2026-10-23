@@ -1337,6 +1337,9 @@ class AdminItemController extends Controller
             'invoice_number' =>
                 'nullable|string|max:255',
 
+            'invoice_due_date' =>
+                'nullable|date',
+
             'kwitansi_number' =>
                 'nullable|string|max:255',
 
@@ -1766,6 +1769,9 @@ class AdminItemController extends Controller
 
                 'invoice_number' =>
                     $request->invoice_number,
+
+                'invoice_due_date' =>
+                    $request->invoice_due_date,
 
                 'kwitansi_number' =>
                     $request->kwitansi_number,

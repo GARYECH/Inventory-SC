@@ -1047,7 +1047,34 @@
 
                                         </div>
 
-                                    </div>
+                                    
+                                            <!-- INVOICE DUE DATE -->
+                                            <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+
+                                                <label class="block text-[8px] font-black uppercase tracking-[0.16em] text-amber-700">
+                                                    Invoice Due Date (Optional)
+                                                </label>
+
+                                                <input
+                                                    type="date"
+                                                    name="invoice_due_date"
+                                                    value="{{ old('invoice_due_date', optional($order->invoice_due_date)->format('Y-m-d')) }}"
+                                                    class="mt-2 w-full rounded-lg border border-amber-200 bg-white px-3 py-2.5 text-[10px] font-black text-gray-800 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10"
+                                                >
+
+                                                <p class="mt-1 text-[8px] font-semibold text-amber-700">
+                                                    Kosongkan untuk menggunakan Due Date otomatis.
+                                                    @if($order->start_date)
+                                                        Otomatis:
+                                                        {{ \Carbon\Carbon::parse($order->start_date)->subDay()->format('d/m/Y') }}
+                                                    @else
+                                                        Tanggal mulai belum tersedia.
+                                                    @endif
+                                                </p>
+
+                                            </div>
+
+</div>
 
 
 

@@ -503,13 +503,17 @@
 
                     <td>
                         {{
-                            $order->start_date
+                            $order->invoice_due_date
                                 ? \Carbon\Carbon::parse(
+                                    $order->invoice_due_date
+                                )->format('d/m/Y')
+                                : (
                                     $order->start_date
+                                        ? \Carbon\Carbon::parse(
+                                            $order->start_date
+                                        )->subDay()->format('d/m/Y')
+                                        : '-'
                                 )
-                                ->subDay()
-                                ->format('d/m/Y')
-                                : '-'
                         }}
                     </td>
 

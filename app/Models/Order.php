@@ -16,6 +16,7 @@ class Order extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'invoice_due_date' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
         'return_submitted_at' => 'datetime',

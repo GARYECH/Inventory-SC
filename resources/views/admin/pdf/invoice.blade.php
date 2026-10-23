@@ -177,8 +177,24 @@
     |
     */
 
-    $total =
-        (int) $order->grand_total_price;
+    $grossTotal = (int) $order->grand_total_price;
+    $hasWithholdingTax = (int) $order->tax_amount > 0;
+
+    $total = $hasWithholdingTax
+        ? (int) $order->total_price
+        : $grossTotal;
+
+    $grossUpDisplay = function ($value) use ($hasWithholdingTax) {
+        $amount = (int) $value;
+
+        if (!$hasWithholdingTax || $amount <= 0) {
+            return $amount;
+        }
+
+        return (int) round(
+            $amount / (1 - \App\Models\Order::TAX_RATE)
+        );
+    };
 
 
     /*
@@ -924,7 +940,7 @@
 
                                     {{
                                         number_format(
-                                            $displayUnitPrice,
+                                            $grossUpDisplay($displayUnitPrice),
                                             0,
                                             ',',
                                             '.'
@@ -983,7 +999,7 @@
 
                             {{
                                 number_format(
-                                    $displayUnitPrice,
+                                    $grossUpDisplay($displayUnitPrice),
                                     0,
                                     ',',
                                     '.'
@@ -1018,7 +1034,7 @@
 
                                 {{
                                     number_format(
-                                        $subtotal,
+                                        $grossUpDisplay($subtotal),
                                         0,
                                         ',',
                                         '.'
@@ -1060,7 +1076,7 @@
                 Rp
                 {{
                     number_format(
-                        $itemSubtotal,
+                        $grossUpDisplay($itemSubtotal),
                         0,
                         ',',
                         '.'
@@ -1096,7 +1112,7 @@
                     Rp
                     {{
                         number_format(
-                            $htFee,
+                            $grossUpDisplay($htFee),
                             0,
                             ',',
                             '.'
@@ -1139,7 +1155,7 @@
                         Rp
                         {{
                             number_format(
-                                $transportFee,
+                                $grossUpDisplay($transportFee),
                                 0,
                                 ',',
                                 '.'
@@ -1172,7 +1188,7 @@
                 class="right"
             >
 
-                Tax (PPh 23 {{ (int) (100 * \App\Models\Order::TAX_RATE) }}% - Gross-up)
+                PPh 23 {{ (int) (100 * \App\Models\Order::TAX_RATE) }}% (Potongan)
 
             </td>
 
@@ -1211,7 +1227,7 @@
                 "
             >
 
-                Total
+                Total Netto
 
             </td>
 

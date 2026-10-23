@@ -832,7 +832,17 @@
 
 
     $mouTaxAmount = $order->getMouTaxAmount((int) $grandTotal);
-    $mouGrandTotal = (int) $grandTotal + $mouTaxAmount;
+
+    $mouGrossUp = function ($value) use ($mouTaxAmount) {
+        $amount = (int) $value;
+        if ($amount <= 0 || $mouTaxAmount <= 0) {
+            return $amount;
+        }
+        return (int) round(
+            $amount / (1 - \App\Models\Order::TAX_RATE)
+        );
+    };
+    $mouGrandTotal = (int) $grandTotal;
 
 
     /*
@@ -1951,7 +1961,7 @@
 
                                         {{
                                             $money(
-                                                $unitPrice
+                                                $mouGrossUp($unitPrice)
                                             )
                                         }}
 
@@ -1978,7 +1988,7 @@
 
                                         {{
                                             $money(
-                                                $subtotal
+                                                $mouGrossUp($subtotal)
                                             )
                                         }}
 
@@ -2023,7 +2033,7 @@
                     >
 
                         <strong>
-                            PPh 23 2% (Gross-up)
+                            PPh 23 2% (Potongan)
                         </strong>
 
                     </td>
@@ -2039,7 +2049,7 @@
                                 </td>
 
                                 <td class="money-value">
-                                    {{ $money($mouTaxAmount) }}
+                                    − {{ $money($mouTaxAmount) }}
                                 </td>
 
                             </tr>
@@ -2061,9 +2071,7 @@
                     style="height:12mm;"
                 >
 
-                    <strong>
-                        Total
-                    </strong>
+                    <strong>Total Netto</strong>
 
                 </td>
 

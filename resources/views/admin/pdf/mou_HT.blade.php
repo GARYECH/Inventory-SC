@@ -788,7 +788,17 @@
         $transportFee;
 
     $mouTaxAmount = $order->getMouTaxAmount((int) $htTotal);
-    $mouGrandTotal = (int) $htTotal + $mouTaxAmount;
+
+    $mouGrossUp = function ($value) use ($mouTaxAmount) {
+        $amount = (int) $value;
+        if ($amount <= 0 || $mouTaxAmount <= 0) {
+            return $amount;
+        }
+        return (int) round(
+            $amount / (1 - \App\Models\Order::TAX_RATE)
+        );
+    };
+    $mouGrandTotal = (int) $htTotal;
 
 
     /*
@@ -1850,7 +1860,7 @@
 
                                         <td class="money-value">
 
-                                            {{ $money($unitPrice) }}
+                                            {{ $money($mouGrossUp($unitPrice)) }}
 
                                         </td>
 
@@ -1904,7 +1914,7 @@
                                     Rp
                                     {{
                                         number_format(
-                                            $unitPrice,
+                                            $mouGrossUp($unitPrice),
                                             0,
                                             ',',
                                             '.'
@@ -1943,7 +1953,7 @@
 
                                     <td class="money-value">
 
-                                        {{ $money($subtotal) }}
+                                        {{ $money($mouGrossUp($subtotal)) }}
 
                                     </td>
 
@@ -2246,7 +2256,7 @@
 
                                     <td class="money-value">
 
-                                        {{ $money($unitPrice) }}
+                                        {{ $money($mouGrossUp($unitPrice)) }}
 
                                     </td>
 
@@ -2300,7 +2310,7 @@
                                 Rp
                                 {{
                                     number_format(
-                                        $unitPrice,
+                                        $mouGrossUp($unitPrice),
                                         0,
                                         ',',
                                         '.'
@@ -2339,7 +2349,7 @@
 
                                 <td class="money-value">
 
-                                    {{ $money($subtotal) }}
+                                    {{ $money($mouGrossUp($subtotal)) }}
 
                                 </td>
 
@@ -2389,7 +2399,7 @@
 
                             <td class="money-value">
 
-                                {{ $money($htSubtotal) }}
+                                {{ $money($mouGrossUp($htSubtotal)) }}
 
                             </td>
 
@@ -2438,7 +2448,7 @@
 
                                 <td class="money-value">
 
-                                    {{ $money($htFee) }}
+                                    {{ $money($mouGrossUp($htFee)) }}
 
                                 </td>
 
@@ -2491,7 +2501,7 @@
 
                                     <td class="money-value">
 
-                                        {{ $money($transportFee) }}
+                                        {{ $money($mouGrossUp($transportFee)) }}
 
                                     </td>
 
@@ -2532,7 +2542,7 @@
                     >
 
                         <strong>
-                            PPh 23 2% (Gross-up)
+                            PPh 23 2% (Potongan)
                         </strong>
 
                     </td>
@@ -2548,7 +2558,7 @@
                                 </td>
 
                                 <td class="money-value">
-                                    {{ $money($mouTaxAmount) }}
+                                    − {{ $money($mouTaxAmount) }}
                                 </td>
 
                             </tr>
@@ -2577,9 +2587,7 @@
                     "
                 >
 
-                    <strong>
-                        Total
-                    </strong>
+                    <strong>Total Netto</strong>
 
                 </td>
 

@@ -102,7 +102,7 @@
             <td>{{ $order->proker_name }}</td>
         </tr>
         <tr>
-            <td style="padding-left: 10px;">Total Netto</td>
+            <td style="padding-left: 10px;">Amount Received</td>
             <td style="text-align: center;">:</td>
             <td>Rp {{ number_format($netAmount, 0, ',', '.') }},-</td>
         </tr>
@@ -121,7 +121,7 @@
     <!-- SUB INFORMASI (TOTAL, TAX, AMOUNT PAID) -->
     <table class="sub-table">
         <tr>
-            <td style="width: 40%; padding-left: 10px;">Total Bruto</td>
+            <td style="width: 40%; padding-left: 10px;">Total </td>
             <td style="width: 5%; text-align: center;">:</td>
             <td style="width: 55%; font-weight: bold;">Rp {{ number_format($grossTotal, 0, ',', '.') }},-</td>
         </tr>

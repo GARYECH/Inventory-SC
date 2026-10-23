@@ -909,6 +909,10 @@
         );
 
 
+    $mouTaxAmount = $order->getMouTaxAmount((int) $grandTotal);
+    $mouGrandTotal = (int) $grandTotal + $mouTaxAmount;
+
+
     /*
     |--------------------------------------------------------------------------
     | DYNAMIC COLOR
@@ -2103,6 +2107,48 @@
             @endif
 
 
+
+            @if($mouTaxAmount > 0)
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        class="center"
+                        style="padding-right:0;"
+                    >
+
+                        <strong>
+                            PPh 23 2% (Gross-up)
+                        </strong>
+
+                    </td>
+
+                    <td class="col-subtotal">
+
+                        <table class="money-table">
+
+                            <tr>
+
+                                <td class="money-prefix">
+                                    Rp
+                                </td>
+
+                                <td class="money-value">
+                                    {{ $money($mouTaxAmount) }}
+                                </td>
+
+                            </tr>
+
+                        </table>
+
+                    </td>
+
+                </tr>
+
+            @endif
+
+
             <tr>
 
                 <td
@@ -2131,7 +2177,7 @@
                             <td class="money-value">
 
                                 <strong>
-                                    {{ $money($grandTotal) }}
+                                    {{ $money($mouGrandTotal) }}
                                 </strong>
 
                             </td>
@@ -3228,20 +3274,20 @@
             <strong>PIHAK PERTAMA</strong> sebesar
 
             <span
-                class="{{ $dynamicClass($grandTotal) }}"
+                class="{{ $dynamicClass($mouGrandTotal) }}"
             >
-                Rp {{ $money($grandTotal) }},-
+                Rp {{ $money($mouGrandTotal) }},-
             </span>
 
             (
 
             <span
-                class="{{ $dynamicClass($grandTotal) }}"
+                class="{{ $dynamicClass($mouGrandTotal) }}"
             >
                 {{
                     trim(
                         $terbilang(
-                            $grandTotal
+                            $mouGrandTotal
                         )
                     )
                 }}

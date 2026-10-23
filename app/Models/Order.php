@@ -169,6 +169,27 @@ class Order extends Model
         return (int) $this->total_price + (int) $this->tax_amount;
     }
 
+    /**
+     * Allocate the order's grossed-up tax proportionally to an individual MoU.
+     * This prevents the full order tax from being added again to every MoU.
+     */
+    public function getMouTaxAmount(int $mouBaseAmount): int
+    {
+        if (!$this->isTaxApplicable()) {
+            return 0;
+        }
+
+        $orderBaseAmount = (int) $this->total_price;
+
+        if ($orderBaseAmount <= 0 || $mouBaseAmount <= 0) {
+            return 0;
+        }
+
+        return (int) round(
+            (int) $this->tax_amount * $mouBaseAmount / $orderBaseAmount
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | MOU CHECK

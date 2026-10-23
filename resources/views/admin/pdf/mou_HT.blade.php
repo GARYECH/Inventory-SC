@@ -787,6 +787,9 @@
         +
         $transportFee;
 
+    $mouTaxAmount = $order->getMouTaxAmount((int) $htTotal);
+    $mouGrandTotal = (int) $htTotal + $mouTaxAmount;
+
 
     /*
     |--------------------------------------------------------------------------
@@ -2517,6 +2520,48 @@
 
 
 
+
+            @if($mouTaxAmount > 0)
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        class="right"
+                        style="padding-right:8mm;"
+                    >
+
+                        <strong>
+                            PPh 23 2% (Gross-up)
+                        </strong>
+
+                    </td>
+
+                    <td class="col-subtotal">
+
+                        <table class="money-table">
+
+                            <tr>
+
+                                <td class="money-prefix">
+                                    Rp
+                                </td>
+
+                                <td class="money-value">
+                                    {{ $money($mouTaxAmount) }}
+                                </td>
+
+                            </tr>
+
+                        </table>
+
+                    </td>
+
+                </tr>
+
+            @endif
+
+
             <!-- ========================================================= -->
             <!-- GRAND TOTAL -->
             <!-- ========================================================= -->
@@ -2557,7 +2602,7 @@
 
                             <td class="money-value">
 
-                                {{ $money($htTotal) }}
+                                {{ $money($mouGrandTotal) }}
 
                             </td>
 
@@ -3539,17 +3584,17 @@
             kepada <strong>PIHAK PERTAMA</strong>
             sebesar
 
-            <span class="{{ $dynamicClass($htTotal) }}">
+            <span class="{{ $dynamicClass($mouGrandTotal) }}">
 
-                Rp {{ $money($htTotal) }}-
+                Rp {{ $money($mouGrandTotal) }}-
 
             </span>
 
             (
 
-            <span class="{{ $dynamicClass($htTotal) }}">
+            <span class="{{ $dynamicClass($mouGrandTotal) }}">
 
-                {{ trim($terbilang($htTotal)) }} Rupiah
+                {{ trim($terbilang($mouGrandTotal)) }} Rupiah
 
             </span>
 

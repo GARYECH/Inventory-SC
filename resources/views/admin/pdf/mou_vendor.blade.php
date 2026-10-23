@@ -832,11 +832,11 @@
     | HANYA barang dengan:
     |
     | transaction_type   = Peralatan
-    | transaction_detail = Internal Rental
+    | transaction_detail = Vendor Rental
     |
     */
 
-    $internalItems =
+    $vendorItems =
         $order->orderItems
             ->filter(
                 function (
@@ -848,7 +848,7 @@
                         $detail->item->transaction_type ===
                             'Peralatan' &&
                         $detail->item->transaction_detail ===
-                            'Internal Rental';
+                            'Vendor Rental';
 
                 }
             )
@@ -862,7 +862,7 @@
     */
 
     $grandTotal =
-        (int) $internalItems->sum(
+        (int) $vendorItems->sum(
             function (
                 $detail
             ) {
@@ -875,6 +875,10 @@
 
             }
         );
+
+
+    $mouTaxAmount = $order->getMouTaxAmount((int) $grandTotal);
+    $mouGrandTotal = (int) $grandTotal + $mouTaxAmount;
 
 
     /*
@@ -2001,11 +2005,11 @@
         <tbody>
 
             @if(
-                $internalItems->count() > 0
+                $vendorItems->count() > 0
             )
 
                 @foreach(
-                    $internalItems
+                    $vendorItems
                     as $index =>
                     $detail
                 )
@@ -2047,7 +2051,7 @@
                         | STUDENT COUNCIL FREE
                         |--------------------------------------------------------------------------
                         |
-                        | Semua Internal Rental termasuk
+                        | Semua Vendor Rental termasuk
                         | kategori Peralatan.
                         |
                         */
@@ -2103,7 +2107,7 @@
                                 "
                             >
 
-                                Internal Rental
+                                Vendor Rental
 
                             </span>
 
@@ -2285,8 +2289,50 @@
                         style="height:18mm;"
                     >
 
-                        Tidak ada barang Internal Rental
+                        Tidak ada barang Vendor Rental
                         yang dipesan.
+
+                    </td>
+
+                </tr>
+
+            @endif
+
+
+
+            @if($mouTaxAmount > 0)
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        class="center"
+                        style="padding-right:0;"
+                    >
+
+                        <strong>
+                            PPh 23 2% (Gross-up)
+                        </strong>
+
+                    </td>
+
+                    <td class="col-subtotal">
+
+                        <table class="money-table">
+
+                            <tr>
+
+                                <td class="money-prefix">
+                                    Rp
+                                </td>
+
+                                <td class="money-value">
+                                    {{ $money($mouTaxAmount) }}
+                                </td>
+
+                            </tr>
+
+                        </table>
 
                     </td>
 
@@ -2327,7 +2373,7 @@
                                 <strong>
                                     {{
                                         $money(
-                                            $grandTotal
+                                            $mouGrandTotal
                                         )
                                     }}
                                 </strong>
@@ -3280,24 +3326,24 @@
 
             <span
                 class="{{ $dynamicClass(
-                    $grandTotal
+                    $mouGrandTotal
                 ) }}"
             >
-                Rp {{ $money($grandTotal) }}-
+                Rp {{ $money($mouGrandTotal) }}-
             </span>
 
             (
 
             <span
                 class="{{ $dynamicClass(
-                    $grandTotal
+                    $mouGrandTotal
                 ) }}"
             >
 
                 {{
                     trim(
                         $terbilang(
-                            $grandTotal
+                            $mouGrandTotal
                         )
                     )
                 }}

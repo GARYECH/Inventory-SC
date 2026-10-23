@@ -1172,7 +1172,7 @@
                 class="right"
             >
 
-                Tax (PPh 21 {{ (int) (100 * \App\Models\Order::TAX_RATE) }}% - Gross-up)
+                Tax (PPh 23 {{ (int) (100 * \App\Models\Order::TAX_RATE) }}% - Gross-up)
 
             </td>
 

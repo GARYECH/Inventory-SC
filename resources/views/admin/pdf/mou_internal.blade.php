@@ -877,6 +877,10 @@
         );
 
 
+    $mouTaxAmount = $order->getMouTaxAmount((int) $grandTotal);
+    $mouGrandTotal = (int) $grandTotal + $mouTaxAmount;
+
+
     /*
     |--------------------------------------------------------------------------
     | DYNAMIC CLASS
@@ -2295,6 +2299,48 @@
             @endif
 
 
+
+            @if($mouTaxAmount > 0)
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        class="center"
+                        style="padding-right:0;"
+                    >
+
+                        <strong>
+                            PPh 23 2% (Gross-up)
+                        </strong>
+
+                    </td>
+
+                    <td class="col-subtotal">
+
+                        <table class="money-table">
+
+                            <tr>
+
+                                <td class="money-prefix">
+                                    Rp
+                                </td>
+
+                                <td class="money-value">
+                                    {{ $money($mouTaxAmount) }}
+                                </td>
+
+                            </tr>
+
+                        </table>
+
+                    </td>
+
+                </tr>
+
+            @endif
+
+
             <!-- TOTAL -->
 
             <tr>
@@ -2327,7 +2373,7 @@
                                 <strong>
                                     {{
                                         $money(
-                                            $grandTotal
+                                            $mouGrandTotal
                                         )
                                     }}
                                 </strong>
@@ -3280,24 +3326,24 @@
 
             <span
                 class="{{ $dynamicClass(
-                    $grandTotal
+                    $mouGrandTotal
                 ) }}"
             >
-                Rp {{ $money($grandTotal) }}-
+                Rp {{ $money($mouGrandTotal) }}-
             </span>
 
             (
 
             <span
                 class="{{ $dynamicClass(
-                    $grandTotal
+                    $mouGrandTotal
                 ) }}"
             >
 
                 {{
                     trim(
                         $terbilang(
-                            $grandTotal
+                            $mouGrandTotal
                         )
                     )
                 }}

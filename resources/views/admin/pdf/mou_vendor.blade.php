@@ -2337,7 +2337,7 @@
                                 </td>
 
                                 <td class="money-value">
-                                    − {{ $money($mouTaxAmount) }}
+                                    {{ $money($mouTaxAmount) }}
                                 </td>
 
                             </tr>

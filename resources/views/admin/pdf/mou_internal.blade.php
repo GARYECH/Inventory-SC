@@ -25,7 +25,7 @@
 
         @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 48mm 16mm 12mm 16mm;
         }
 
 
@@ -86,9 +86,8 @@
 
         .page {
             margin: 0;
-            padding: 11mm 16mm 12mm 16mm;
-
-            page-break-after: always;
+            padding: 0;
+            page-break-after: auto;
         }
 
         .page:last-child {
@@ -103,10 +102,15 @@
         */
 
         .header {
-            margin: 0 0 5mm 0;
+            position: fixed;
+            top: -37mm;
+            left: 0;
+            right: 0;
+            margin: 0;
             padding: 0 0 4mm 0;
-
             border-bottom: 6px solid #000000;
+            background: #ffffff;
+            z-index: 1000;
         }
 
         .header-table {
@@ -662,6 +666,36 @@
             margin-top: 5mm;
         }
 
+    
+        /* Natural page flow: reduce blank space and avoid orphaned legal headings. */
+        .document-flow {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+
+        .article-title {
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+
+        .signature-date,
+        .signature-table,
+        .signature-table tr,
+        .signature-table td {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .items-table thead {
+            display: table-header-group;
+        }
+
+        .items-table tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
     </style>
 
 </head>
@@ -877,11 +911,22 @@
         );
 
 
-    $mouTaxAmount = $order->getMouTaxAmount((int) $grandTotal);
+    $mouTaxAmount = 0;
+    $orderBaseAmount = (int) $order->total_price;
+
+    if (
+        $order->isTaxApplicable()
+        && $orderBaseAmount > 0
+        && (int) $grandTotal > 0
+    ) {
+        $mouTaxAmount = (int) round(
+            (int) $order->tax_amount * (int) $grandTotal / $orderBaseAmount
+        );
+    }
+
     $mouGrandTotal = (int) $grandTotal + $mouTaxAmount;
 
-
-    /*
+/*
     |--------------------------------------------------------------------------
     | DYNAMIC CLASS
     |--------------------------------------------------------------------------
@@ -1217,14 +1262,7 @@
 
 @endphp
 
-
-<!-- ================================================================== -->
-<!-- PAGE 1 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
+<div class="header document-header">
 
         <table class="header-table">
 
@@ -1262,7 +1300,7 @@
                     </div>
 
                     <div class="header-sub">
-                        VENDOR SATU PINTU
+                        INTERNAL RENTAL SC
                     </div>
 
                     <div class="header-address">
@@ -1282,6 +1320,11 @@
         </table>
 
     </div>
+
+<div class="document-flow">
+
+
+    
 
 
     <div class="title">
@@ -1623,73 +1666,11 @@
 
     </p>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 2 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-
-                    @endif
-
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <div class="article-title">
@@ -1957,13 +1938,8 @@
         </tr>
 
     </table>
-
-
-    <!-- ============================================================= -->
-    <!-- ORDER ITEMS -->
-    <!-- ============================================================= -->
-
-    <table class="items-table">
+<!-- ORDER ITEMS -->
+<table class="items-table">
 
         <thead>
 
@@ -2311,7 +2287,7 @@
                     >
 
                         <strong>
-                            PPh 23 2% (Gross-up)
+                            PPh 23 {{ (int) (100 * \App\Models\Order::TAX_RATE) }}% (Gross-up)
                         </strong>
 
                     </td>
@@ -2392,141 +2368,11 @@
 
     </table>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 3 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-
-                    @endif
-
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
-
-</div>
-
-
-<!-- ================================================================== -->
-<!-- PAGE 4 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-
-                    @endif
-
-                </td>
-
-
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <div class="article-title">
@@ -2615,73 +2461,11 @@
 
     </ol>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 5 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-
-                    @endif
-
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <ol
@@ -2723,69 +2507,11 @@
 
     </ol>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 6 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-                    @endif
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <div class="sub-heading">
@@ -2855,71 +2581,11 @@
 
     </ol>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 7 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-                    @endif
-
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <div class="article-title">
@@ -2998,133 +2664,11 @@
 
     </ol>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 8 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-                    @endif
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
-
-</div>
-
-
-<!-- ================================================================== -->
-<!-- PAGE 9 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-                    @endif
-                </td>
-
-
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <div class="sub-heading">
@@ -3205,69 +2749,11 @@
 
     </ol>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 10 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-                    @endif
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <ol
@@ -3354,7 +2840,21 @@
 
             ).
 
-        </li>
+        
+
+            @if($mouTaxAmount > 0)
+                <p class="paragraph" style="margin-top:2mm;">
+                    Nilai bersih yang menjadi hak PIHAK PERTAMA adalah sebesar
+                    Rp {{ $money($grandTotal) }}. Nilai PPh Pasal 23 sebesar
+                    Rp {{ $money($mouTaxAmount) }} dihitung dengan metode gross-up menggunakan
+                    tarif {{ (int) (100 * \App\Models\Order::TAX_RATE) }}%, sehingga total bruto
+                    yang tercantum di atas menjadi Rp {{ $money($mouGrandTotal) }}.
+                    Pajak dipotong dan disetorkan oleh pihak yang wajib melakukan pemotongan
+                    sesuai ketentuan perpajakan yang berlaku, sehingga nilai bersih yang diterima
+                    PIHAK PERTAMA tetap sebesar Rp {{ $money($grandTotal) }}.
+                </p>
+            @endif
+</li>
 
 
         <li>
@@ -3438,73 +2938,11 @@
 
     </ol>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 11 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-
-                    @endif
-
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <div class="article-title">
@@ -3560,73 +2998,11 @@
 
     </ol>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 12 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-
-                    @endif
-
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <ol
@@ -3691,71 +3067,11 @@
 
     </ol>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 13 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-                    @endif
-
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <div class="article-title">
@@ -3864,71 +3180,11 @@
 
     </p>
 
-</div>
 
 
-<!-- ================================================================== -->
-<!-- PAGE 14 -->
-<!-- ================================================================== -->
-
-<div class="page">
-
-    <div class="header">
-
-        <table class="header-table">
-
-            <tr>
-
-                <td class="header-logo">
-
-                    @if(
-                        $logoPath &&
-                        file_exists($logoPath)
-                    )
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="Student Council"
-                        >
-                    @endif
-
-                </td>
 
 
-                <td class="header-text">
-
-                    <div class="header-main">
-                        UNIVERSITAS CIPUTRA SURABAYA
-                    </div>
-
-                    <div class="header-main">
-                        STUDENT COUNCIL
-                    </div>
-
-                    <div class="header-sub">
-                        SURAT PERJANJIAN KERJASAMA
-                    </div>
-
-                    <div class="header-sub">
-                        VENDOR SATU PINTU
-                    </div>
-
-                    <div class="header-address">
-                        Citraland CBD Boulevard, Surabaya, 60219
-                        <br>
-                        Jawa Timur – Indonesia
-                        <br>
-                        Telepon: (031)7451699; Fax: (031)7451698
-                        <br>
-                        Email: studentcouncil@ciputra.ac.id
-                    </div>
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+    
 
 
     <div class="signature-date">
@@ -3953,12 +3209,8 @@
     <table class="signature-table">
 
         <tr>
-
-            <!-- ===================================================== -->
-            <!-- PIHAK PERTAMA -->
-            <!-- ===================================================== -->
-
-            <td>
+<!-- PIHAK PERTAMA -->
+<td>
 
                 <div class="signature-title">
                     PIHAK PERTAMA
@@ -3994,13 +3246,8 @@
                 </div>
 
             </td>
-
-
-            <!-- ===================================================== -->
-            <!-- PIHAK KEDUA -->
-            <!-- ===================================================== -->
-
-            <td>
+<!-- PIHAK KEDUA -->
+<td>
 
                 <div class="signature-title">
                     PIHAK KEDUA
@@ -4034,7 +3281,9 @@
 
     </table>
 
+
 </div>
+
 
 
 </body>

@@ -212,9 +212,15 @@ class DocumentController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $pdf =
-            Pdf::loadView(
-                $view,
+        if (request()->boolean('mou_editor_source')) {
+            abort_unless(
+                auth()->check()
+                && auth()->user()->role === 'admin',
+                403
+            );
+
+            return response(
+                view($view,
                 [
                     'order' =>
                         $order,
@@ -224,8 +230,67 @@ class DocumentController extends Controller
 
                     'rentalDays' =>
                         $rentalDays,
+                ])->render(),
+                200,
+                [
+                    'Content-Type' => 'text/html; charset=UTF-8',
+                    'Cache-Control' => 'no-store, private',
                 ]
             );
+        }
+        /* INVENTORY_SC_MOU_EDITOR_GENERATED_PDF: use saved edited HTML when available. */
+        $mouEditorSavedHtml = null;
+        $mouEditorDocumentId = (isset($documentId) && $documentId !== null && (int) $documentId > 0) ? (int) $documentId : null;
+        if ($mouEditorDocumentId === null) {
+            // If this order has exactly one MoU record, it is safe to infer it. Do not guess when multiple MoUs exist.
+            $mouEditorDocumentCandidates = \Illuminate\Support\Facades\DB::table('order_mou_documents')
+                ->where('order_id', $order->id)
+                ->orderBy('id')
+                ->limit(2)
+                ->pluck('id');
+            if ($mouEditorDocumentCandidates->count() === 1) {
+                $mouEditorDocumentId = (int) $mouEditorDocumentCandidates->first();
+            }
+        }
+        if ($mouEditorDocumentId !== null) {
+            $mouEditorVersionRow = \Illuminate\Support\Facades\DB::table('order_mou_documents as mou_document')
+                ->join('order_mou_document_versions as mou_version', 'mou_version.order_mou_document_id', '=', 'mou_document.id')
+                ->where('mou_document.id', $mouEditorDocumentId)
+                ->where('mou_document.order_id', $order->id)
+                ->orderByDesc('mou_version.version_number')
+                ->select('mou_version.content')
+                ->first();
+
+            if ($mouEditorVersionRow) {
+                $mouEditorVersionContent = json_decode($mouEditorVersionRow->content, true);
+                if (
+                    is_array($mouEditorVersionContent)
+                    && ($mouEditorVersionContent['render_mode'] ?? null) === 'legacy-html'
+                    && !empty($mouEditorVersionContent['html'])
+                ) {
+                    $mouEditorSavedHtml = $mouEditorVersionContent['html'];
+                }
+            }
+        }
+
+        if (is_string($mouEditorSavedHtml) && $mouEditorSavedHtml !== '') {
+            $pdf = Pdf::loadHTML($mouEditorSavedHtml);
+        } else {
+            $pdf =
+                Pdf::loadView(
+                    $view,
+                    [
+                        'order' =>
+                            $order,
+    
+                        'mouDocument' =>
+                            $document,
+    
+                        'rentalDays' =>
+                            $rentalDays,
+                    ]
+                );
+        }
 
 
         $pdf->setPaper(

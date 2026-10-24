@@ -965,6 +965,10 @@
                                             Document Numbers
                                         </p>
 
+                                        <a href="{{ route('admin.mou-editor.index', ['order_id' => $order->id]) }}" class="mb-3 inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-indigo-700 transition hover:bg-indigo-100">
+                                            Open MoU Editor ↗
+                                        </a>
+
 
                                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 

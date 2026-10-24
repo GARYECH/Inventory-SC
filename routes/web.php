@@ -632,3 +632,6 @@ Route::middleware('auth')->group(function () {
 */
 
 require __DIR__ . '/auth.php';
+
+// Additive, versioned MoU Editor routes.
+require_once __DIR__ . '/mou_editor.php';

@@ -51,7 +51,8 @@ class MouEditorController extends Controller
             'order' => $order->id,
             'documentId' => $documentId,
         ]) . '?mou_editor_source=1';
-        $savedHtmlBase64 = base64_encode((string) ($content['html'] ?? ''));
+        $editorHtml = $this->inlineMouEditorStorageImages((string) ($content['html'] ?? ''));
+$savedHtmlBase64 = base64_encode($editorHtml);
 
         return view('admin.mou-editor.edit', compact(
             'order', 'document', 'content', 'versions', 'latestVersion', 'sourceUrl', 'savedHtmlBase64'
@@ -113,6 +114,7 @@ class MouEditorController extends Controller
             'rendered_html' => ['required', 'string', 'max:1500000'],
         ]);
         $html = $this->sanitizeRenderedHtml($validated['rendered_html']);
+        $html = $this->inlineMouEditorStorageImages($html);
 
         $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
         return $pdf->stream('MoU_Preview_' . $order->order_number . '_' . $document->mou_type . '.pdf');
@@ -129,7 +131,9 @@ class MouEditorController extends Controller
 
         $content = $this->decodeContent($version->content);
         abort_unless(!empty($content['html']), 422, 'Versi ini tidak berisi HTML MoU.');
-        $pdf = Pdf::loadHTML($this->sanitizeRenderedHtml($content['html']))->setPaper('a4', 'portrait');
+        $versionHtml = $this->sanitizeRenderedHtml($content['html']);
+$versionHtml = $this->inlineMouEditorStorageImages($versionHtml);
+$pdf = Pdf::loadHTML($versionHtml)->setPaper('a4', 'portrait');
         return $pdf->stream('MoU_' . $order->order_number . '_V' . $version->version_number . '.pdf');
     }
 
@@ -205,5 +209,75 @@ class MouEditorController extends Controller
         $html = preg_replace('/\s+on[a-z0-9_-]+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html) ?? $html;
         $html = preg_replace('/((?:href|src)\s*=\s*)(["\'])\s*javascript\s*:.*?\2/i', '$1"#"', $html) ?? $html;
         return $html;
+    }
+
+
+    /**
+     * Convert server-local image paths from the Settings-managed public disk into
+     * data URIs. Browser iframes cannot read server filesystem paths such as
+     * /.../storage/app/public/logo.png, but DomPDF's old Blade templates can.
+     * The source file itself is read only from storage/app/public.
+     */
+    private function inlineMouEditorStorageImages(string $html): string
+    {
+        $storageRoot = realpath(storage_path('app/public'));
+        if ($storageRoot === false) {
+            return $html;
+        }
+
+        $storageRootPrefix = rtrim($storageRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+
+        $updatedHtml = preg_replace_callback(
+            '~(?P<before><img\\b[^>]*?\\bsrc\\s*=\\s*)(?P<quote>["\'])(?P<src>.*?)\\k<quote>(?P<after>[^>]*>)~is',
+            function (array $matches) use ($storageRootPrefix): string {
+                $source = html_entity_decode(
+                    $matches['src'],
+                    ENT_QUOTES | ENT_HTML5,
+                    'UTF-8'
+                );
+
+                if (
+                    $source === ''
+                    || preg_match('~^(?:https?:|data:|//)~i', $source)
+                ) {
+                    return $matches[0];
+                }
+
+                $source = rawurldecode($source);
+                $realPath = realpath($source);
+
+                if (
+                    $realPath === false
+                    || !str_starts_with($realPath, $storageRootPrefix)
+                    || !is_file($realPath)
+                ) {
+                    return $matches[0];
+                }
+
+                $mimeType = function_exists('mime_content_type')
+                    ? mime_content_type($realPath)
+                    : false;
+
+                if (!is_string($mimeType) || !str_starts_with(strtolower($mimeType), 'image/')) {
+                    return $matches[0];
+                }
+
+                $imageBytes = @file_get_contents($realPath);
+                if ($imageBytes === false) {
+                    return $matches[0];
+                }
+
+                $dataUri = 'data:' . $mimeType . ';base64,' . base64_encode($imageBytes);
+
+                return $matches['before']
+                    . $matches['quote']
+                    . $dataUri
+                    . $matches['quote']
+                    . $matches['after'];
+            },
+            $html
+        );
+
+        return is_string($updatedHtml) ? $updatedHtml : $html;
     }
 }

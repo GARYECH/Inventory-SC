@@ -219,8 +219,7 @@ class DocumentController extends Controller
                 403
             );
 
-            return response(
-                view($view,
+            $mouEditorRenderedHtml = view($view,
                 [
                     'order' =>
                         $order,
@@ -230,7 +229,11 @@ class DocumentController extends Controller
 
                     'rentalDays' =>
                         $rentalDays,
-                ])->render(),
+                ])->render();
+$mouEditorRenderedHtml = $this->inlineMouEditorStorageImages($mouEditorRenderedHtml);
+
+return response(
+                $mouEditorRenderedHtml,
                 200,
                 [
                     'Content-Type' => 'text/html; charset=UTF-8',
@@ -274,7 +277,8 @@ class DocumentController extends Controller
         }
 
         if (is_string($mouEditorSavedHtml) && $mouEditorSavedHtml !== '') {
-            $pdf = Pdf::loadHTML($mouEditorSavedHtml);
+            $mouEditorSavedHtml = $this->inlineMouEditorStorageImages($mouEditorSavedHtml);
+        $pdf = Pdf::loadHTML($mouEditorSavedHtml);
         } else {
             $pdf =
                 Pdf::loadView(
@@ -1376,5 +1380,75 @@ class DocumentController extends Controller
             );
 
         }
+    }
+
+
+    /**
+     * Convert server-local image paths from the Settings-managed public disk into
+     * data URIs. Browser iframes cannot read server filesystem paths such as
+     * /.../storage/app/public/logo.png, but DomPDF's old Blade templates can.
+     * The source file itself is read only from storage/app/public.
+     */
+    private function inlineMouEditorStorageImages(string $html): string
+    {
+        $storageRoot = realpath(storage_path('app/public'));
+        if ($storageRoot === false) {
+            return $html;
+        }
+
+        $storageRootPrefix = rtrim($storageRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+
+        $updatedHtml = preg_replace_callback(
+            '~(?P<before><img\\b[^>]*?\\bsrc\\s*=\\s*)(?P<quote>["\'])(?P<src>.*?)\\k<quote>(?P<after>[^>]*>)~is',
+            function (array $matches) use ($storageRootPrefix): string {
+                $source = html_entity_decode(
+                    $matches['src'],
+                    ENT_QUOTES | ENT_HTML5,
+                    'UTF-8'
+                );
+
+                if (
+                    $source === ''
+                    || preg_match('~^(?:https?:|data:|//)~i', $source)
+                ) {
+                    return $matches[0];
+                }
+
+                $source = rawurldecode($source);
+                $realPath = realpath($source);
+
+                if (
+                    $realPath === false
+                    || !str_starts_with($realPath, $storageRootPrefix)
+                    || !is_file($realPath)
+                ) {
+                    return $matches[0];
+                }
+
+                $mimeType = function_exists('mime_content_type')
+                    ? mime_content_type($realPath)
+                    : false;
+
+                if (!is_string($mimeType) || !str_starts_with(strtolower($mimeType), 'image/')) {
+                    return $matches[0];
+                }
+
+                $imageBytes = @file_get_contents($realPath);
+                if ($imageBytes === false) {
+                    return $matches[0];
+                }
+
+                $dataUri = 'data:' . $mimeType . ';base64,' . base64_encode($imageBytes);
+
+                return $matches['before']
+                    . $matches['quote']
+                    . $dataUri
+                    . $matches['quote']
+                    . $matches['after'];
+            },
+            $html
+        );
+
+        return is_string($updatedHtml) ? $updatedHtml : $html;
     }
 }

@@ -576,6 +576,259 @@ return response(
 
     /*
     |--------------------------------------------------------------------------
+    | PIHAK KEDUA: PREVIEW / SIGN MOU WITH DRAWN OR UPLOADED SIGNATURE
+    |--------------------------------------------------------------------------
+    */
+
+    public function previewMouSignature(Request $request, Order $order, $documentId)
+    {
+        [$payload, $pdfBytes] = $this->makeSecondPartySignedMouPreview($request, $order, $documentId);
+        $request->session()->put($this->mouSignaturePreviewSessionKey($order, $payload['document']->id), [
+            'signature_sha256' => hash('sha256', $payload['signature_bytes']),
+            'source_html_sha256' => $payload['source_html_sha256'],
+            'method' => $payload['method'],
+            'created_at' => now()->timestamp,
+        ]);
+
+        $filename = 'MoU_Preview_TTD_' . $order->order_number . '.pdf';
+        return response($pdfBytes, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . preg_replace('/[^A-Za-z0-9._-]/', '_', $filename) . '"',
+            'Cache-Control' => 'no-store, private',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function signMouWithSignature(Request $request, Order $order, $documentId)
+    {
+        $request->validate([
+            'consent' => ['required', 'accepted'],
+            'preview_confirmed' => ['required', 'accepted'],
+        ]);
+
+        [$payload, $pdfBytes] = $this->makeSecondPartySignedMouPreview($request, $order, $documentId);
+        $document = $payload['document'];
+        $signatureBytes = $payload['signature_bytes'];
+        $method = $payload['method'];
+        $sourceVersion = $payload['source_version'];
+
+        $previewKey = $this->mouSignaturePreviewSessionKey($order, $document->id);
+        $previewRecord = $request->session()->get($previewKey);
+        $previewTimestamp = is_array($previewRecord) ? (int) ($previewRecord['created_at'] ?? 0) : 0;
+        $previewAge = now()->timestamp - $previewTimestamp;
+        $validPreview = is_array($previewRecord)
+            && $previewTimestamp > 0
+            && $previewAge >= 0
+            && $previewAge <= 1800
+            && ($previewRecord['method'] ?? null) === $method
+            && hash_equals((string) ($previewRecord['signature_sha256'] ?? ''), hash('sha256', $signatureBytes))
+            && hash_equals((string) ($previewRecord['source_html_sha256'] ?? ''), (string) $payload['source_html_sha256']);
+
+        if (!$validPreview) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'preview_confirmed' => 'Silakan buka ulang Preview PDF TTD untuk tanda tangan dan versi MoU terbaru sebelum mengirim.',
+            ]);
+        }
+
+        $safeOrderNumber = preg_replace('/[^A-Za-z0-9._-]/', '_', (string) $order->order_number) ?: (string) $order->id;
+        $filename = 'Signed_MoU_' . $safeOrderNumber . '_' . preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $document->mou_type)
+            . '_' . now()->format('Ymd_His') . '_' . \Illuminate\Support\Str::random(6) . '.pdf';
+        $path = 'signed_mous/' . $filename;
+
+        if (!Storage::disk('public')->put($path, $pdfBytes)) {
+            abort(500, 'PDF bertanda tangan gagal disimpan.');
+        }
+
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use (
+                $request, $order, $document, $path, $pdfBytes, $signatureBytes, $method, $sourceVersion
+            ) {
+                \Illuminate\Support\Facades\DB::table('order_mou_documents')
+                    ->where('id', $document->id)
+                    ->where('order_id', $order->id)
+                    ->update([
+                        'signed_file_path' => $path,
+                        'updated_at' => now(),
+                    ]);
+
+                \Illuminate\Support\Facades\DB::table('order_mou_signature_events')->insert([
+                    'order_id' => $order->id,
+                    'order_mou_document_id' => $document->id,
+                    'source_version_id' => $sourceVersion ? $sourceVersion->id : null,
+                    'source_version_number' => $sourceVersion ? (int) $sourceVersion->version_number : null,
+                    'signer_user_id' => auth()->id(),
+                    'signer_name' => auth()->user()->name ?? null,
+                    'signature_method' => $method,
+                    'signed_pdf_path' => $path,
+                    'signature_sha256' => hash('sha256', $signatureBytes),
+                    'signed_pdf_sha256' => hash('sha256', $pdfBytes),
+                    'ip_hash' => $request->ip() ? hash_hmac('sha256', (string) $request->ip(), (string) config('app.key')) : null,
+                    'signed_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $pendingMou = \Illuminate\Support\Facades\DB::table('order_mou_documents')
+                    ->where('order_id', $order->id)
+                    ->whereNull('signed_file_path')
+                    ->exists();
+
+                if (!$pendingMou) {
+                    $order->update(['status' => 'Pending Review MoU']);
+                }
+            });
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($path);
+            throw $exception;
+        }
+
+        $request->session()->forget($previewKey);
+
+        $pendingMou = $order->mouDocuments()
+            ->whereNull('signed_file_path')
+            ->exists();
+
+        $this->notifyAdmins(
+            'MoU ' . $this->formatMouName((string) $document->mou_type)
+            . ' untuk ' . $order->order_number . ' telah ditandatangani PIHAK KEDUA melalui website.'
+        );
+
+        return back()->with(
+            'success',
+            $pendingMou
+                ? 'Tanda tangan berhasil disimpan. Masih ada MoU lain yang perlu ditandatangani.'
+                : 'MoU bertanda tangan berhasil dikirim. Menunggu pemeriksaan admin sebelum melanjutkan ke pembayaran.'
+        );
+    }
+
+    /** Validate the input, render the exact latest saved MoU when available, then add the signature to PIHAK KEDUA. */
+    private function makeSecondPartySignedMouPreview(Request $request, Order $order, $documentId): array
+    {
+        $this->authorizeOrder($order);
+        abort_unless($order->status === 'Waiting for MoU', 422, 'MoU hanya dapat ditandatangani saat status Waiting for MoU.');
+
+        $validatedMethod = $request->validate([
+            'signature_method' => ['required', 'in:draw,upload'],
+        ]);
+        $method = $validatedMethod['signature_method'];
+
+        if ($method === 'draw') {
+            $validated = $request->validate([
+                'signature_data' => ['required', 'string', 'max:2500000'],
+            ]);
+            $data = (string) $validated['signature_data'];
+            if (!preg_match('/^data:image\/png;base64,([A-Za-z0-9+\/=\r\n]+)$/D', $data, $matches)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'signature_data' => 'Tanda tangan gambar tidak valid. Silakan gambar ulang.',
+                ]);
+            }
+            $signatureBytes = base64_decode($matches[1], true);
+            $drawInfo = is_string($signatureBytes) ? @getimagesizefromstring($signatureBytes) : false;
+            if (!is_string($signatureBytes)
+                || strlen($signatureBytes) > 1500000
+                || substr($signatureBytes, 0, 8) !== "\x89PNG\r\n\x1a\n"
+                || !is_array($drawInfo)
+                || ($drawInfo['mime'] ?? '') !== 'image/png'
+                || ($drawInfo[0] ?? 0) > 1200
+                || ($drawInfo[1] ?? 0) > 400) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'signature_data' => 'File tanda tangan PNG tidak valid atau terlalu besar.',
+                ]);
+            }
+            $mime = 'image/png';
+        } else {
+            $validated = $request->validate([
+                'signature_file' => ['required', 'file', 'mimes:png,jpg,jpeg', 'max:2048'],
+            ]);
+            $file = $request->file('signature_file');
+            $signatureBytes = file_get_contents($file->getRealPath());
+            if (!is_string($signatureBytes) || $signatureBytes === '') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'signature_file' => 'Gambar tanda tangan tidak dapat dibaca.',
+                ]);
+            }
+            $imageInfo = @getimagesizefromstring($signatureBytes);
+            $mime = is_array($imageInfo) ? ($imageInfo['mime'] ?? '') : '';
+            if (!in_array($mime, ['image/png', 'image/jpeg'], true)
+                || strlen($signatureBytes) > 2097152
+                || (is_array($imageInfo) && (($imageInfo[0] ?? 0) > 4000 || ($imageInfo[1] ?? 0) > 2000))) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'signature_file' => 'Gunakan gambar PNG/JPG yang valid, maksimal 2 MB dan dimensi 4000 × 2000 piksel.',
+                ]);
+            }
+        }
+
+        $document = \App\Models\OrderMouDocument::query()
+            ->where('id', (int) $documentId)
+            ->where('order_id', $order->id)
+            ->first();
+        abort_unless($document, 404, 'Dokumen MoU tidak ditemukan untuk pesanan ini.');
+
+        $order->loadMissing(['orderItems.item.category', 'orderItems.sizeBreakdowns', 'mouDocuments']);
+        $rentalDays = $this->getRentalDays($order->start_date, $order->end_date);
+        $view = match ((string) $document->mou_type) {
+            'ht' => 'admin.pdf.mou_HT',
+            'internal' => 'admin.pdf.mou_internal',
+            'vendor' => 'admin.pdf.mou_vendor',
+            'merch_baju' => 'admin.pdf.mou_merch_baju',
+            'merch_idcard' => 'admin.pdf.mou_merch_idcard',
+            default => abort(404, 'Template MoU tidak ditemukan.'),
+        };
+
+        $sourceVersion = \Illuminate\Support\Facades\DB::table('order_mou_document_versions as v')
+            ->join('order_mou_documents as d', 'd.id', '=', 'v.order_mou_document_id')
+            ->where('d.id', $document->id)
+            ->where('d.order_id', $order->id)
+            ->orderByDesc('v.version_number')
+            ->select('v.id', 'v.version_number', 'v.content')
+            ->first();
+
+        $html = null;
+        if ($sourceVersion) {
+            $content = json_decode((string) $sourceVersion->content, true);
+            if (is_array($content)
+                && ($content['render_mode'] ?? null) === 'legacy-html'
+                && !empty($content['html'])) {
+                $html = (string) $content['html'];
+            }
+        }
+
+        if (!is_string($html) || $html === '') {
+            $html = view($view, [
+                'order' => $order,
+                'mouDocument' => $document,
+                'rentalDays' => $rentalDays,
+            ])->render();
+            $sourceVersion = null;
+        }
+
+        $html = $this->inlineMouEditorStorageImages($html);
+        $sourceHtmlSha256 = hash('sha256', $html);
+        if (!\App\Support\MouSignatureHtml::canInsertSecondPartySignature($html)) {
+            abort(422, 'Area tanda tangan PIHAK KEDUA tidak ditemukan pada versi MoU ini. Periksa kembali template atau simpan ulang MoU dari template asli.');
+        }
+        $dataUri = 'data:' . $mime . ';base64,' . base64_encode($signatureBytes);
+        $signedHtml = \App\Support\MouSignatureHtml::insertSecondPartySignature($html, $dataUri);
+        $pdfBytes = Pdf::loadHTML($signedHtml)->setPaper('a4', 'portrait')->output();
+
+        return [[
+            'document' => $document,
+            'signature_bytes' => $signatureBytes,
+            'method' => $method,
+            'source_version' => $sourceVersion,
+            'source_html_sha256' => $sourceHtmlSha256,
+        ], $pdfBytes];
+    }
+
+
+    private function mouSignaturePreviewSessionKey(Order $order, $documentId): string
+    {
+        return 'mou_signature_preview.' . (int) $order->id . '.' . (int) $documentId;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | DOWNLOAD INVOICE
     |--------------------------------------------------------------------------
     */

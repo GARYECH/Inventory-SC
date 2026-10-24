@@ -460,6 +460,16 @@ Route::middleware('auth')->group(function () {
             */
 
             Route::post(
+                '/orders/{order}/preview-mou-signature/{documentId}',
+                [DocumentController::class, 'previewMouSignature']
+            )->name('orders.preview-mou-signature');
+
+            Route::post(
+                '/orders/{order}/sign-mou/{documentId}',
+                [DocumentController::class, 'signMouWithSignature']
+            )->name('orders.sign-mou');
+
+            Route::post(
                 '/orders/{order}/upload-mou/{documentId}',
                 [DocumentController::class, 'uploadSignedMou']
             )->name('orders.upload-mou');

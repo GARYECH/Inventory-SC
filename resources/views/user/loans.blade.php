@@ -1394,7 +1394,7 @@
                                                         </h4>
 
                                                         <p class="mt-1 text-[9px] font-bold leading-relaxed text-purple-700">
-                                                            Upload semua MoU yang diperlukan untuk transaksi ini.
+                                                            Tandatangani semua MoU yang diperlukan untuk transaksi ini.
                                                         </p>
 
                                                     </div>
@@ -1456,37 +1456,247 @@
                                                         </div>
 
 
-                                                        <form
-                                                            action="{{ route('student.orders.upload-mou', [$order->id, $document->id]) }}"
-                                                            method="POST"
-                                                            enctype="multipart/form-data"
-                                                            class="mt-3"
-                                                        >
+                                                        <div class="mt-3 rounded-xl border border-purple-200 bg-white p-4">
+                                                            <form
+                                                                id="mou-sign-form-{{ $document->id }}"
+                                                                action="{{ route('student.orders.sign-mou', [$order->id, $document->id]) }}"
+                                                                method="POST"
+                                                                enctype="multipart/form-data"
+                                                                class="space-y-3"
+                                                            >
+                                                                @csrf
+                                                                <input type="hidden" name="signature_method" value="draw" data-sign-method-input>
+                                                                <input type="hidden" name="signature_data" value="" data-signature-data>
 
-                                                            @csrf
+                                                                <div data-preview-warning class="rounded-xl border-2 border-red-400 bg-red-50 p-4 sm:p-5">
+                                                                    <p class="text-sm font-black uppercase tracking-wide text-red-800 sm:text-base">⚠️ PERINGATAN PENTING — WAJIB CEK PREVIEW SEBELUM MENGIRIM</p>
+                                                                    <p class="mt-2 text-xs font-semibold leading-relaxed text-red-900 sm:text-sm">Mohon letakkan tanda tangan di bagian tengah kotak agar terlihat jelas dan tidak terpotong. Setelah itu, klik <strong>Preview PDF TTD</strong> dan periksa seluruh halaman MoU, terutama isi perjanjian, nama, jabatan, tanggal, serta posisi tanda tangan PIHAK KEDUA. Jangan kirim sebelum preview diperiksa.</p>
+                                                                </div>
 
+                                                                <div>
+                                                                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-800">Tanda Tangan PIHAK KEDUA</p>
+                                                                    <p class="mt-1 text-[9px] leading-relaxed text-gray-500">Tanda tangan akan dimasukkan ke area PIHAK KEDUA pada MoU. Template asli tetap tidak berubah.</p>
+                                                                </div>
 
-                                                            <div class="flex flex-col gap-3 sm:flex-row">
+                                                                <div class="flex flex-wrap gap-2">
+                                                                    <button type="button" data-sign-mode="draw" class="rounded-lg border border-purple-300 bg-purple-100 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-purple-800">Draw Signature</button>
+                                                                    <button type="button" data-sign-mode="upload" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-wider text-gray-600">Upload Signature</button>
+                                                                </div>
 
-                                                                <input
-                                                                    type="file"
-                                                                    name="signed_mou"
-                                                                    accept=".pdf"
-                                                                    required
-                                                                    class="block w-full rounded-xl border border-purple-200 bg-white px-3 py-2.5 text-[9px] font-bold text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-100 file:px-3 file:py-2 file:text-[8px] file:font-black file:text-purple-700"
-                                                                />
+                                                                <div data-draw-panel>
+                                                                    <p class="mb-2 text-[9px] font-bold text-gray-500">Gambar tanda tangan di kotak berikut.</p>
+                                                                    <canvas data-signature-canvas width="900" height="220" aria-label="Area menggambar tanda tangan" class="block w-full rounded-lg border border-dashed border-gray-300 bg-white" style="height:125px;touch-action:none;cursor:crosshair"></canvas>
+                                                                    <button type="button" data-clear-signature class="mt-2 rounded-lg border border-gray-200 px-3 py-2 text-[9px] font-bold text-gray-600 hover:bg-gray-50">Hapus & Gambar Ulang</button>
+                                                                </div>
 
+                                                                <div data-upload-panel hidden>
+                                                                    <label class="mb-2 block text-[9px] font-bold text-gray-600" for="mou-signature-file-{{ $document->id }}">Unggah PNG atau JPG (maks. 2 MB)</label>
+                                                                    <input id="mou-signature-file-{{ $document->id }}" data-signature-file type="file" name="signature_file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" class="block w-full rounded-xl border border-purple-200 bg-white px-3 py-2.5 text-[9px] font-bold text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-100 file:px-3 file:py-2 file:text-[8px] file:font-black file:text-purple-700">
+                                                                </div>
 
-                                                                <button
-                                                                    type="submit"
-                                                                    class="inline-flex shrink-0 items-center justify-center rounded-xl bg-purple-600 px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-white transition hover:bg-purple-700"
-                                                                >
-                                                                    {{ $document->signed_file_path ? 'Ganti MoU' : 'Upload MoU' }}
-                                                                </button>
+                                                                <label class="flex items-start gap-2 rounded-lg bg-gray-50 p-3 text-[10px] leading-relaxed text-gray-700">
+                                                                    <input type="checkbox" name="consent" value="1" required class="mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                                                    <span>Saya menyatakan bahwa saya sebagai PIHAK KEDUA telah membaca dan menyetujui isi MoU ini, serta menyetujui penggunaan tanda tangan yang saya gambar atau unggah untuk dokumen ini.</span>
+                                                                </label>
 
-                                                            </div>
+                                                                <label data-preview-confirm-wrap class="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-[10px] font-semibold leading-relaxed text-amber-900">
+                                                                    <input type="checkbox" name="preview_confirmed" value="1" data-preview-confirm disabled required class="mt-0.5 rounded border-amber-400 text-purple-600 focus:ring-purple-500">
+                                                                    <span>Saya sudah membuka dan memeriksa Preview PDF TTD. Isi MoU, nama/jabatan, tanggal, dan posisi tanda tangan PIHAK KEDUA sudah benar.</span>
+                                                                </label>
+                                                                <p data-preview-status class="text-xs font-bold text-red-700">Preview belum diperiksa. Klik tombol Preview PDF TTD terlebih dahulu.</p>
 
-                                                        </form>
+                                                                <div class="grid grid-cols-1 gap-3">
+                                                                    <button type="submit" data-preview-button formaction="{{ route('student.orders.preview-mou-signature', [$order->id, $document->id]) }}" formtarget="_blank" formnovalidate class="inline-flex w-full items-center justify-center rounded-xl border-2 border-purple-300 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-widest text-purple-800 transition hover:bg-purple-50" style="display:flex!important;visibility:visible!important;opacity:1!important;width:100%;min-height:48px;align-items:center;justify-content:center;background:#ffffff;color:#5b21b6;border:2px solid #c4b5fd;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer">
+                                                                        1. Preview PDF TTD
+                                                                    </button>
+                                                                    <button type="submit" data-final-sign-button class="inline-flex w-full items-center justify-center rounded-xl bg-purple-700 px-4 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-sm transition hover:bg-purple-800" style="display:flex!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:10!important;width:100%;min-height:52px;align-items:center;justify-content:center;background:#6d28d9!important;color:#ffffff!important;border:2px solid #5b21b6;border-radius:12px;padding:14px 16px;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">
+                                                                        {{ $document->signed_file_path ? 'KONFIRMASI & KIRIM MoU BARU' : 'KONFIRMASI & KIRIM MoU' }}
+                                                                    </button>
+                                                                </div>
+                                                            </form>
+
+                                                            <script>
+                                                            (function () {
+                                                                const form = document.getElementById('mou-sign-form-{{ $document->id }}');
+                                                                if (!form || form.dataset.signatureReady === '1') return;
+                                                                form.dataset.signatureReady = '1';
+                                                                const canvas = form.querySelector('[data-signature-canvas]');
+                                                                const context = canvas.getContext('2d');
+                                                                const methodInput = form.querySelector('[data-sign-method-input]');
+                                                                const dataInput = form.querySelector('[data-signature-data]');
+                                                                const fileInput = form.querySelector('[data-signature-file]');
+                                                                const drawPanel = form.querySelector('[data-draw-panel]');
+                                                                const uploadPanel = form.querySelector('[data-upload-panel]');
+                                                                const modeButtons = form.querySelectorAll('[data-sign-mode]');
+                                                                const previewButton = form.querySelector('[data-preview-button]');
+                                                                const previewConfirm = form.querySelector('[data-preview-confirm]');
+                                                                const previewStatus = form.querySelector('[data-preview-status]');
+                                                                let drawing = false;
+                                                                let hasDrawn = false;
+
+                                                                context.lineWidth = 4.5;
+                                                                context.lineCap = 'round';
+                                                                context.lineJoin = 'round';
+                                                                context.strokeStyle = '#111827';
+
+                                                                function invalidatePreview() {
+                                                                    if (previewConfirm) {
+                                                                        previewConfirm.checked = false;
+                                                                        previewConfirm.disabled = true;
+                                                                    }
+                                                                    if (previewStatus) {
+                                                                        previewStatus.textContent = 'Tanda tangan berubah atau preview belum diperiksa. Klik Preview PDF TTD kembali sebelum mengirim.';
+                                                                        previewStatus.className = 'text-xs font-bold text-red-700';
+                                                                    }
+                                                                }
+
+                                                                function setMode(mode) {
+                                                                    if (methodInput.value !== mode) invalidatePreview();
+                                                                    methodInput.value = mode;
+                                                                    drawPanel.hidden = mode !== 'draw';
+                                                                    uploadPanel.hidden = mode !== 'upload';
+                                                                    modeButtons.forEach(function (button) {
+                                                                        const selected = button.dataset.signMode === mode;
+                                                                        button.classList.toggle('bg-purple-100', selected);
+                                                                        button.classList.toggle('border-purple-300', selected);
+                                                                        button.classList.toggle('text-purple-800', selected);
+                                                                        button.classList.toggle('bg-white', !selected);
+                                                                        button.classList.toggle('border-gray-200', !selected);
+                                                                        button.classList.toggle('text-gray-600', !selected);
+                                                                    });
+                                                                }
+
+                                                                function point(event) {
+                                                                    const rect = canvas.getBoundingClientRect();
+                                                                    return {
+                                                                        x: (event.clientX - rect.left) * (canvas.width / rect.width),
+                                                                        y: (event.clientY - rect.top) * (canvas.height / rect.height)
+                                                                    };
+                                                                }
+
+                                                                canvas.addEventListener('pointerdown', function (event) {
+                                                                    event.preventDefault();
+                                                                    invalidatePreview();
+                                                                    drawing = true;
+                                                                    hasDrawn = true;
+                                                                    if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
+                                                                    const p = point(event);
+                                                                    context.beginPath();
+                                                                    context.moveTo(p.x, p.y);
+                                                                    context.lineTo(p.x + 0.1, p.y + 0.1);
+                                                                    context.stroke();
+                                                                });
+                                                                canvas.addEventListener('pointermove', function (event) {
+                                                                    if (!drawing) return;
+                                                                    event.preventDefault();
+                                                                    const p = point(event);
+                                                                    context.lineTo(p.x, p.y);
+                                                                    context.stroke();
+                                                                });
+                                                                function stopDrawing() { drawing = false; }
+                                                                canvas.addEventListener('pointerup', stopDrawing);
+                                                                canvas.addEventListener('pointercancel', stopDrawing);
+                                                                canvas.addEventListener('lostpointercapture', stopDrawing);
+
+                                                                form.querySelector('[data-clear-signature]').addEventListener('click', function () {
+                                                                    context.clearRect(0, 0, canvas.width, canvas.height);
+                                                                    dataInput.value = '';
+                                                                    hasDrawn = false;
+                                                                    invalidatePreview();
+                                                                });
+                                                                modeButtons.forEach(function (button) {
+                                                                    button.addEventListener('click', function () { setMode(button.dataset.signMode); });
+                                                                });
+                                                                if (fileInput) {
+                                                                    fileInput.addEventListener('change', invalidatePreview);
+                                                                }
+                                                                if (previewConfirm) {
+                                                                    previewConfirm.addEventListener('change', function () {
+                                                                        if (previewConfirm.checked && previewStatus) {
+                                                                            previewStatus.textContent = 'Preview sudah dikonfirmasi. Kamu dapat mengirim MoU.';
+                                                                            previewStatus.className = 'text-xs font-bold text-emerald-700';
+                                                                        }
+                                                                    });
+                                                                }
+
+                                                                function exportTrimmedSignature() {
+                                                                    const image = context.getImageData(0, 0, canvas.width, canvas.height);
+                                                                    const pixels = image.data;
+                                                                    let minX = canvas.width;
+                                                                    let minY = canvas.height;
+                                                                    let maxX = -1;
+                                                                    let maxY = -1;
+                                                                    for (let y = 0; y < canvas.height; y++) {
+                                                                        for (let x = 0; x < canvas.width; x++) {
+                                                                            const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+                                                                            if (alpha > 8) {
+                                                                                if (x < minX) minX = x;
+                                                                                if (x > maxX) maxX = x;
+                                                                                if (y < minY) minY = y;
+                                                                                if (y > maxY) maxY = y;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    if (maxX < minX || maxY < minY) return '';
+                                                                    const padding = 14;
+                                                                    minX = Math.max(0, minX - padding);
+                                                                    minY = Math.max(0, minY - padding);
+                                                                    maxX = Math.min(canvas.width - 1, maxX + padding);
+                                                                    maxY = Math.min(canvas.height - 1, maxY + padding);
+                                                                    const cropWidth = maxX - minX + 1;
+                                                                    const cropHeight = maxY - minY + 1;
+                                                                    const croppedCanvas = document.createElement('canvas');
+                                                                    croppedCanvas.width = cropWidth;
+                                                                    croppedCanvas.height = cropHeight;
+                                                                    croppedCanvas.getContext('2d').putImageData(context.getImageData(minX, minY, cropWidth, cropHeight), 0, 0);
+                                                                    return croppedCanvas.toDataURL('image/png');
+                                                                }
+
+                                                                form.addEventListener('submit', function (event) {
+                                                                    const isPreviewRequest = event.submitter === previewButton;
+                                                                    if (methodInput.value === 'draw') {
+                                                                        if (!hasDrawn) {
+                                                                            event.preventDefault();
+                                                                            alert('Silakan gambar tanda tangan terlebih dahulu.');
+                                                                            return;
+                                                                        }
+                                                                        dataInput.value = exportTrimmedSignature();
+                                                                        if (!dataInput.value) {
+                                                                            event.preventDefault();
+                                                                            alert('Tanda tangan belum terbaca. Silakan gambar ulang dengan jelas di tengah kotak.');
+                                                                            return;
+                                                                        }
+                                                                    } else {
+                                                                        dataInput.value = '';
+                                                                        if (!fileInput.files || !fileInput.files.length) {
+                                                                            event.preventDefault();
+                                                                            alert('Silakan pilih file gambar tanda tangan terlebih dahulu.');
+                                                                            return;
+                                                                        }
+                                                                    }
+
+                                                                    if (isPreviewRequest) {
+                                                                        if (previewConfirm) {
+                                                                            previewConfirm.checked = false;
+                                                                            previewConfirm.disabled = false;
+                                                                        }
+                                                                        if (previewStatus) {
+                                                                            previewStatus.textContent = 'Preview PDF TTD sedang dibuka di tab baru. Periksa dokumen tersebut, lalu centang konfirmasi di atas sebelum mengirim.';
+                                                                            previewStatus.className = 'text-xs font-bold text-amber-800';
+                                                                        }
+                                                                        return;
+                                                                    }
+
+                                                                    if (!previewConfirm || previewConfirm.disabled || !previewConfirm.checked) {
+                                                                        event.preventDefault();
+                                                                        alert('Wajib membuka dan memeriksa Preview PDF TTD terlebih dahulu, lalu centang konfirmasi preview sebelum mengirim MoU.');
+                                                                        return;
+                                                                    }
+                                                                });
+                                                                setMode('draw');
+                                                            })();
+                                                            </script>
+                                                        </div>
 
                                                     </div>
 

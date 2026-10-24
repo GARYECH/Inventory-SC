@@ -600,7 +600,7 @@
 
             border-collapse: collapse;
 
-            margin-top: 6mm;
+            margin-top: 3mm;
         }
 
         .signature-table td {
@@ -616,11 +616,11 @@
         }
 
         .signature-title {
-            margin-bottom: 14mm;
+            margin-bottom: 5mm;
         }
 
         .signature-image {
-            height: 23mm;
+            height: 16mm;
 
             text-align: center;
         }
@@ -628,13 +628,13 @@
         .signature-image img {
             max-width: 43mm;
 
-            max-height: 19mm;
+            max-height: 14mm;
 
             margin: 0 auto;
         }
 
         .signature-space {
-            height: 23mm;
+            height: 16mm;
         }
 
         .signature-name {

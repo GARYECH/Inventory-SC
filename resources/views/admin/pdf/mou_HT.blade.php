@@ -572,7 +572,34 @@
             margin-top: 5mm;
         }
 
-    </style>
+
+        /* Inventory-SC neutral MoU cost summary */
+        .mou-summary-subtotal td,
+        .mou-summary-tax td,
+        .mou-summary-total td {
+            vertical-align: middle;
+            color: #222222 !important;
+        }
+        .mou-amount-in-words {
+            vertical-align: top !important;
+            text-align: left !important;
+            color: #222222 !important;
+            background-color: transparent !important;
+            font-weight: normal;
+            padding: 5px 6px !important;
+            line-height: 1.4;
+        }
+        .mou-amount-in-words strong { font-weight: bold; }
+        .mou-summary-label {
+            text-align: left !important;
+            color: #222222 !important;
+            background-color: transparent !important;
+            padding: 5px 6px !important;
+        }
+        .mou-summary-amount { color: #222222 !important; }
+        .mou-summary-tax .money-prefix,
+        .mou-summary-tax .money-value { color: #222222 !important; }
+</style>
 
 </head>
 
@@ -788,17 +815,7 @@
         $transportFee;
 
     $mouTaxAmount = $order->getMouTaxAmount((int) $htTotal);
-
-    $mouGrossUp = function ($value) use ($mouTaxAmount) {
-        $amount = (int) $value;
-        if ($amount <= 0 || $mouTaxAmount <= 0) {
-            return $amount;
-        }
-        return (int) round(
-            $amount / (1 - \App\Models\Order::TAX_RATE)
-        );
-    };
-    $mouGrandTotal = (int) $htTotal;
+$mouGrandTotal = max(0, (int) $htTotal - (int) $mouTaxAmount);
 
 
     /*
@@ -1860,7 +1877,7 @@
 
                                         <td class="money-value">
 
-                                            {{ $money($mouGrossUp($unitPrice)) }}
+                                            {{ $money($unitPrice) }}
 
                                         </td>
 
@@ -1914,7 +1931,7 @@
                                     Rp
                                     {{
                                         number_format(
-                                            $mouGrossUp($unitPrice),
+                                            $unitPrice,
                                             0,
                                             ',',
                                             '.'
@@ -1953,7 +1970,7 @@
 
                                     <td class="money-value">
 
-                                        {{ $money($mouGrossUp($subtotal)) }}
+                                        {{ $money($subtotal) }}
 
                                     </td>
 
@@ -2256,7 +2273,7 @@
 
                                     <td class="money-value">
 
-                                        {{ $money($mouGrossUp($unitPrice)) }}
+                                        {{ $money($unitPrice) }}
 
                                     </td>
 
@@ -2310,7 +2327,7 @@
                                 Rp
                                 {{
                                     number_format(
-                                        $mouGrossUp($unitPrice),
+                                        $unitPrice,
                                         0,
                                         ',',
                                         '.'
@@ -2349,7 +2366,7 @@
 
                                 <td class="money-value">
 
-                                    {{ $money($mouGrossUp($subtotal)) }}
+                                    {{ $money($subtotal) }}
 
                                 </td>
 
@@ -2399,7 +2416,7 @@
 
                             <td class="money-value">
 
-                                {{ $money($mouGrossUp($htSubtotal)) }}
+                                {{ $money($htSubtotal) }}
 
                             </td>
 
@@ -2448,7 +2465,7 @@
 
                                 <td class="money-value">
 
-                                    {{ $money($mouGrossUp($htFee)) }}
+                                    {{ $money($htFee) }}
 
                                 </td>
 
@@ -2501,7 +2518,7 @@
 
                                     <td class="money-value">
 
-                                        {{ $money($mouGrossUp($transportFee)) }}
+                                        {{ $money($transportFee) }}
 
                                     </td>
 
@@ -2531,34 +2548,54 @@
 
 
 
-            @if($mouTaxAmount > 0)
+            <tr class="mou-summary-subtotal">
 
-                <tr>
+    <td colspan="3" rowspan="{{ $mouTaxAmount > 0 ? 3 : 2 }}" class="mou-amount-in-words">
+        <strong>Jumlah Terbilang:</strong><br>
+        {{ trim($terbilang($mouGrandTotal)) }} Rupiah
+    </td>
+
+    <td colspan="2" class="right mou-summary-label"><strong>Subtotal</strong></td>
+
+    <td colspan="2" class="col-subtotal mou-summary-amount">
+        <table class="money-table">
+            <tr>
+                <td class="money-prefix">Rp</td>
+                <td class="money-value">{{ $money($htTotal) }}</td>
+            </tr>
+        </table>
+    </td>
+
+</tr>
+
+@if($mouTaxAmount > 0)
+
+<tr class="mou-summary-tax">
 
                     <td
-                        colspan="6"
-                        class="right"
+                        colspan="2"
+                        class="right mou-summary-label"
                         style="padding-right:8mm;"
                     >
 
                         <strong>
-                            PPh 23 2% (Potongan)
+                            PPh 23 (2%)
                         </strong>
 
                     </td>
 
-                    <td class="col-subtotal">
+                    <td class="col-subtotal mou-summary-amount" colspan="2">
 
                         <table class="money-table">
 
                             <tr>
 
                                 <td class="money-prefix">
-                                    Rp
+                                    (Rp
                                 </td>
 
                                 <td class="money-value">
-                                    {{ $money($mouTaxAmount) }}
+                                    {{ $money($mouTaxAmount) }})
                                 </td>
 
                             </tr>
@@ -2576,11 +2613,11 @@
             <!-- GRAND TOTAL -->
             <!-- ========================================================= -->
 
-            <tr>
+            <tr class="mou-summary-total">
 
                 <td
-                    colspan="6"
-                    class="right"
+                    colspan="2"
+                    class="right mou-summary-label"
                     style="
                         height:11mm;
                         padding-right:8mm;
@@ -2593,12 +2630,12 @@
 
 
                 <td
-                    class="col-subtotal"
+                    class="col-subtotal mou-summary-amount"
                     style="
                         background-color:#fff2cc;
                         font-weight:bold;
                     "
-                >
+                 colspan="2">
 
                     <table class="money-table">
 
@@ -2609,10 +2646,8 @@
                             </td>
 
                             <td class="money-value">
-
-                                {{ $money($mouGrandTotal) }}
-
-                            </td>
+                                    {{ $money($mouGrandTotal) }}
+                                </td>
 
                         </tr>
 

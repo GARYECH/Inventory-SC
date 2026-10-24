@@ -61,12 +61,71 @@
         try { return frame.contentDocument || frame.contentWindow.document; }
         catch (error) { return null; }
     }
+    function applyEditorA4Layout(doc){
+        if (!doc || !doc.head || !doc.body) return;
+        if (doc.getElementById('mou-editor-a4-preview-style')) return;
+        const style = doc.createElement('style');
+        style.id = 'mou-editor-a4-preview-style';
+        style.textContent = `
+            html {
+                background: #e2e8f0 !important;
+                min-width: 0 !important;
+            }
+            body {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 18px 0 28px !important;
+                gap: 16px !important;
+                background: #e2e8f0 !important;
+                overflow-x: hidden !important;
+            }
+            .page {
+                box-sizing: border-box !important;
+                width: 210mm !important;
+                max-width: calc(100vw - 36px) !important;
+                min-height: 297mm !important;
+                height: auto !important;
+                flex: 0 0 auto !important;
+                margin: 0 auto 16px !important;
+                background: #ffffff !important;
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: 0 3px 16px rgba(15, 23, 42, .18) !important;
+                overflow: visible !important;
+                page-break-after: auto !important;
+            }
+            .page:last-child {
+                margin-bottom: 0 !important;
+                page-break-after: auto !important;
+            }
+            @media print {
+                html, body { background: #ffffff !important; }
+                body { display: block !important; padding: 0 !important; gap: 0 !important; }
+                .page {
+                    width: auto !important;
+                    max-width: none !important;
+                    min-height: 0 !important;
+                    margin: 0 !important;
+                    border: 0 !important;
+                    box-shadow: none !important;
+                    page-break-after: always !important;
+                }
+            }
+        `;
+        doc.head.appendChild(style);
+    }
+
     function markReady(){
         const doc = frameDocument();
         if (!doc || !doc.body || !doc.documentElement) {
             status.textContent = 'Template gagal dimuat';
             return;
         }
+        applyEditorA4Layout(doc);
         doc.designMode = 'on';
         ready = true;
         status.textContent = 'Template siap diedit';
@@ -114,7 +173,10 @@
         const doc=currentDoc();if(!doc)return false;
         const previousMode=doc.designMode;
         doc.designMode='off';
-        let html='<!DOCTYPE html>\n'+doc.documentElement.outerHTML;
+        const savedDocument = doc.documentElement.cloneNode(true);
+        const editorOnlyStyle = savedDocument.querySelector('#mou-editor-a4-preview-style');
+        if (editorOnlyStyle) editorOnlyStyle.remove();
+        let html = '<!DOCTYPE html>\n' + savedDocument.outerHTML;
         const baseUrl = new URL('/', new URL(sourceUrl, window.location.href));
         const safeBase = htmlEscape(baseUrl.href);
         if (!/<base\b/i.test(html)) {

@@ -113,8 +113,7 @@ $savedHtmlBase64 = base64_encode($editorHtml);
         $validated = $request->validate([
             'rendered_html' => ['required', 'string', 'max:1500000'],
         ]);
-        $html = $this->sanitizeRenderedHtml($validated['rendered_html']);
-        $html = $this->inlineMouEditorStorageImages($html);
+        $html = $this->prepareHtmlForDomPdf($validated['rendered_html']);
 
         $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
         return $pdf->stream('MoU_Preview_' . $order->order_number . '_' . $document->mou_type . '.pdf');
@@ -131,9 +130,8 @@ $savedHtmlBase64 = base64_encode($editorHtml);
 
         $content = $this->decodeContent($version->content);
         abort_unless(!empty($content['html']), 422, 'Versi ini tidak berisi HTML MoU.');
-        $versionHtml = $this->sanitizeRenderedHtml($content['html']);
-$versionHtml = $this->inlineMouEditorStorageImages($versionHtml);
-$pdf = Pdf::loadHTML($versionHtml)->setPaper('a4', 'portrait');
+        $versionHtml = $this->prepareHtmlForDomPdf($content['html']);
+        $pdf = Pdf::loadHTML($versionHtml)->setPaper('a4', 'portrait');
         return $pdf->stream('MoU_' . $order->order_number . '_V' . $version->version_number . '.pdf');
     }
 
@@ -211,6 +209,50 @@ $pdf = Pdf::loadHTML($versionHtml)->setPaper('a4', 'portrait');
         return $html;
     }
 
+
+    /**
+     * Prepare saved/editor HTML for DomPDF without redesigning the document.
+     * Preserve the original template CSS and intentional page-break elements.
+     */
+    private function prepareHtmlForDomPdf(string $html): string
+    {
+        $html = $this->sanitizeRenderedHtml($html);
+
+        // Remove the A4 simulation and visual selection CSS used only by the editor.
+        $html = preg_replace(
+            '~<style\b(?=[^>]*\bid\s*=\s*(["\'])mou-editor-a4-preview-style\1)[^>]*>.*?</style\s*>~is',
+            '',
+            $html
+        ) ?? $html;
+
+        // Remove the active-page marker without changing other class names.
+        $html = preg_replace_callback(
+            '~\sclass\s*=\s*(["\'])(.*?)\1~is',
+            static function (array $matches): string {
+                $quote = $matches[1];
+                $classes = preg_split('/\s+/', trim($matches[2])) ?: [];
+                $classes = array_values(array_filter(
+                    $classes,
+                    static fn (string $class): bool =>
+                        $class !== '' && $class !== 'mou-editor-active-page'
+                ));
+
+                return $classes
+                    ? ' class=' . $quote . implode(' ', $classes) . $quote
+                    : '';
+            },
+            $html
+        ) ?? $html;
+
+        // Remove editor-only controls, but retain explicit page-break markers.
+        $html = preg_replace(
+            '~<([a-z][a-z0-9]*)\b(?=[^>]*\bdata-mou-editor-ui(?:\s|=|>))[^>]*>.*?</\1\s*>~is',
+            '',
+            $html
+        ) ?? $html;
+
+        return $this->inlineMouEditorStorageImages($html);
+    }
 
     /**
      * Convert server-local image paths from the Settings-managed public disk into

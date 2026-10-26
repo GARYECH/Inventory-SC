@@ -705,12 +705,10 @@
     <tbody>
 
 
-    @php($invoiceRowNumber = 1)
-
-        @foreach(
-            $order->orderItems
-            as $index => $detail
-        )
+    @php
+        $invoiceRowNumber = 1;
+        foreach ($order->orderItems as $index => $detail) {
+    @endphp
 
             @php
 
@@ -1322,7 +1320,9 @@
 
             @endif
 
-        @endforeach
+        @php
+        }
+        @endphp
 
 
 

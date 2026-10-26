@@ -597,7 +597,7 @@
 
                     <td
                         width="60%"
-                        style="color:#a00000;"
+                        style="color:#000000;"
                     >
                         {{
                             $order->invoice_number
@@ -871,98 +871,141 @@
                 && $detail->sizeBreakdowns->isNotEmpty()
             )
 
-                @foreach($detail->sizeBreakdowns as $sizeIndex => $sizeBreakdown)
+                @php
+                    $sizePriceGroups = $detail->sizeBreakdowns->groupBy(
+                        function ($breakdown) use ($baseUnitPrice) {
+                            $additionalPrice = (int) (
+                                $breakdown->size_additional_price ?? 0
+                            );
+
+                            return (int) (
+                                $breakdown->unit_price
+                                ?? ($baseUnitPrice + $additionalPrice)
+                            );
+                        }
+                    );
+                @endphp
+
+                @foreach($sizePriceGroups as $priceKey => $priceGroup)
 
                     @php
-                        $sizeQuantity = (int) ($sizeBreakdown->quantity ?? 0);
-                        $sizeAdditionalPriceForRow = (int) ($sizeBreakdown->size_additional_price ?? 0);
-                        $sizeUnitPrice = (int) (
-                            $sizeBreakdown->unit_price
-                            ?? ($baseUnitPrice + $sizeAdditionalPriceForRow)
+                        $sizeUnitPrice = (int) $priceKey;
+
+                        $sizeQuantity = (int) $priceGroup->sum(
+                            'quantity'
                         );
-                        $sizeSubtotal = (int) (
-                            $sizeBreakdown->subtotal_price
-                            ?? ($sizeQuantity * $sizeUnitPrice)
+
+                        $sizeSubtotal = (int) $priceGroup->sum(
+                            function ($breakdown) use ($sizeUnitPrice) {
+                                return (int) (
+                                    $breakdown->subtotal_price
+                                    ?? (
+                                        (int) ($breakdown->quantity ?? 0)
+                                        * $sizeUnitPrice
+                                    )
+                                );
+                            }
                         );
+
+                        $sizeLabels = $priceGroup
+                            ->groupBy(function ($breakdown) {
+                                return trim(
+                                    (string) ($breakdown->size ?? '')
+                                );
+                            })
+                            ->map(function ($rows, $size) {
+                                $count = (int) $rows->sum('quantity');
+
+                                return ($size !== '' ? $size : 'Ukuran -')
+                                    . ' (' . $count . ')';
+                            })
+                            ->implode(', ');
                     @endphp
 
                     <tr>
-                        <td class="center">{{ $invoiceRowNumber++ }}</td>
+                        <td class="center">
+                            {{ $invoiceRowNumber++ }}
+                        </td>
 
                         <td>
                             <strong>{{ $item->name ?? 'Baju' }}</strong>
+
                             <br>
+
                             <span style="font-size:10px;color:#555;">
-                                Ukuran: {{ $sizeBreakdown->size ?? '-' }}
-                            </span>
-                            <br>
-                            <span style="font-size:10px;color:#555;">
-                                Divisi: {{ $sizeBreakdown->division ?? '-' }}
+                                Ukuran: {{ $sizeLabels }}
                             </span>
 
-                            @if($sizeIndex === 0)
+                            @if($loop->first)
                                 <div class="small-muted">
-                                    Bahan: Cotton Combed 24s; Tipe sablon: DTF
+                                    Bahan: Cotton Combed 24s;
+                                    Tipe sablon: DTF
                                 </div>
 
-                                @if($transactionDetail)
-                                    <br>
-                                    <span style="font-size:10px;color:#555;">
-                                        {{ $transactionDetail }}
-                                    </span>
-                                @endif
-
                                 @if($detail->color_number)
-                                    <br>
-                                    <span style="font-size:10px;color:#555;">
-                                        Warna/No. Warna: {{ $detail->color_number }}
-                                    </span>
+                                    <div class="small-muted">
+                                        Warna/No. Warna:
+                                        {{ $detail->color_number }}
+                                    </div>
                                 @endif
 
                                 @if($detail->design_link)
-                                    <br>
-                                    <span style="font-size:9px;color:#555;">
+                                    <div class="small-muted">
                                         Referensi desain:
-                                        <a class="reference-link" href="{{ $detail->design_link }}">
-                                            {{ $detail->design_link }}
+                                        <a href="{{ $detail->design_link }}">
+                                            Buka tautan desain
                                         </a>
-                                    </span>
+                                    </div>
                                 @endif
-                            @endif
-
-                            @if($sizeAdditionalPriceForRow > 0)
-                                <div class="small-muted">
-                                    Tambahan ukuran (nilai dasar sebelum pajak):
-                                    Rp {{ number_format($sizeAdditionalPriceForRow, 0, ',', '.') }},- / pcs
-                                </div>
                             @endif
                         </td>
 
-                        <td class="center">{{ $sizeQuantity }}</td>
+                        <td class="center">
+                            {{ $sizeQuantity }}
+                        </td>
 
                         <td>
                             <table class="no-border-table">
                                 <tr>
                                     <td width="20%">Rp</td>
+
                                     <td width="80%" style="text-align:right;">
-                                        {{ number_format($grossUpDisplay($sizeUnitPrice), 0, ',', '.') }},-
+                                        {{ number_format(
+                                            $grossUpDisplay($sizeUnitPrice),
+                                            0,
+                                            ',',
+                                            '.'
+                                        ) }},-
                                     </td>
                                 </tr>
                             </table>
-                            <div class="small-muted" style="text-align:right;">/ pcs</div>
+
+                            <div class="small-muted" style="text-align:right;">
+                                / pcs
+                            </div>
                         </td>
 
                         <td>
                             <div class="small-muted" style="text-align:right;">
-                                {{ number_format($grossUpDisplay($sizeUnitPrice), 0, ',', '.') }}
-                                × {{ $sizeQuantity }}
+                                {{ number_format(
+                                    $grossUpDisplay($sizeUnitPrice),
+                                    0,
+                                    ',',
+                                    '.'
+                                ) }} × {{ $sizeQuantity }}
                             </div>
 
                             <table class="no-border-table">
                                 <tr>
                                     <td width="20%">Rp</td>
+
                                     <td width="80%" style="text-align:right;">
-                                        {{ number_format($grossUpDisplay($sizeSubtotal), 0, ',', '.') }},-
+                                        {{ number_format(
+                                            $grossUpDisplay($sizeSubtotal),
+                                            0,
+                                            ',',
+                                            '.'
+                                        ) }},-
                                     </td>
                                 </tr>
                             </table>

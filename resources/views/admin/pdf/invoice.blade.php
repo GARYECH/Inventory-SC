@@ -1380,7 +1380,7 @@
             <td colspan="3" rowspan="{{ $summaryRowCount }}" class="amount-words">
                 <strong>Jumlah Terbilang:</strong>
                 <br>
-                <span class="words-value">
+                <span class="words-value" style="color: #000000 !important;">
                     {{ trim($terbilang($total)) }} Rupiah
                 </span>
             </td>

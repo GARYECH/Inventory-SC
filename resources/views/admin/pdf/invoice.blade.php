@@ -38,6 +38,48 @@
         .items-table {
             margin-bottom: 20px;
             border: 1px solid #000;
+            page-break-inside: auto;
+        }
+
+        .items-table thead {
+            display: table-header-group;
+        }
+
+        .items-table tr {
+            page-break-inside: avoid;
+        }
+
+        .amount-words {
+            vertical-align: top;
+            line-height: 1.5;
+            padding: 8px !important;
+        }
+
+        .amount-words .words-value {
+            color: #a00000;
+        }
+
+        .small-muted {
+            margin-top: 3px;
+            color: #555;
+            font-size: 9px;
+            line-height: 1.3;
+        }
+
+        .reference-link {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .tax-note {
+            margin: 5px 0 0;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .payment-signature {
+            page-break-inside: avoid;
         }
 
         .items-table th {
@@ -199,6 +241,99 @@
 
     /*
     |--------------------------------------------------------------------------
+    | JUMLAH TERBILANG
+    |--------------------------------------------------------------------------
+    */
+    $terbilang = function ($number) use (&$terbilang) {
+        $number = (int) $number;
+
+        $words = [
+            '', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima',
+            'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas',
+        ];
+
+        if ($number === 0) {
+            return 'Nol';
+        }
+
+        if ($number < 0) {
+            return 'Minus ' . $terbilang(abs($number));
+        }
+
+        if ($number < 12) {
+            return $words[$number];
+        }
+
+        if ($number < 20) {
+            return $words[$number - 10] . ' Belas';
+        }
+
+        if ($number < 100) {
+            $result = $words[(int) floor($number / 10)] . ' Puluh';
+            $remainder = $number % 10;
+
+            return $remainder > 0
+                ? $result . ' ' . $terbilang($remainder)
+                : $result;
+        }
+
+        if ($number < 200) {
+            $remainder = $number - 100;
+
+            return 'Seratus' . (
+                $remainder > 0 ? ' ' . $terbilang($remainder) : ''
+            );
+        }
+
+        if ($number < 1000) {
+            $result = $terbilang((int) floor($number / 100)) . ' Ratus';
+            $remainder = $number % 100;
+
+            return $remainder > 0
+                ? $result . ' ' . $terbilang($remainder)
+                : $result;
+        }
+
+        if ($number < 2000) {
+            $remainder = $number - 1000;
+
+            return 'Seribu' . (
+                $remainder > 0 ? ' ' . $terbilang($remainder) : ''
+            );
+        }
+
+        if ($number < 1000000) {
+            $result = $terbilang((int) floor($number / 1000)) . ' Ribu';
+            $remainder = $number % 1000;
+
+            return $remainder > 0
+                ? $result . ' ' . $terbilang($remainder)
+                : $result;
+        }
+
+        if ($number < 1000000000) {
+            $result = $terbilang((int) floor($number / 1000000)) . ' Juta';
+            $remainder = $number % 1000000;
+
+            return $remainder > 0
+                ? $result . ' ' . $terbilang($remainder)
+                : $result;
+        }
+
+        if ($number < 1000000000000) {
+            $result = $terbilang((int) floor($number / 1000000000)) . ' Miliar';
+            $remainder = $number % 1000000000;
+
+            return $remainder > 0
+                ? $result . ' ' . $terbilang($remainder)
+                : $result;
+        }
+
+        return (string) $number;
+    };
+
+    /*
+    |--------------------------------------------------------------------------
     | RENTAL DAYS
     |--------------------------------------------------------------------------
     |
@@ -313,7 +448,7 @@
 
             <br>
 
-            Telepon: (031)7451699
+            Telepon: (031)7451699; Fax: (031)7451698
 
             <br>
 
@@ -419,7 +554,7 @@
                 <tr>
 
                     <td>
-                        Number
+                        Phone No.
                     </td>
 
                     <td>
@@ -453,14 +588,17 @@
                 <tr>
 
                     <td width="35%">
-                        Invoice Num.
+                        Invoice No.
                     </td>
 
                     <td width="5%">
                         :
                     </td>
 
-                    <td width="60%">
+                    <td
+                        width="60%"
+                        style="color:#a00000;"
+                    >
                         {{
                             $order->invoice_number
                             ??
@@ -474,7 +612,7 @@
                 <tr>
 
                     <td>
-                        Date
+                        Created
                     </td>
 
                     <td>
@@ -566,6 +704,8 @@
 
     <tbody>
 
+
+    @php($invoiceRowNumber = 1)
 
         @foreach(
             $order->orderItems
@@ -727,6 +867,114 @@
             @endphp
 
 
+            @if(
+                $subcategory === 'Baju'
+                && $detail->sizeBreakdowns
+                && $detail->sizeBreakdowns->isNotEmpty()
+            )
+
+                @foreach($detail->sizeBreakdowns as $sizeIndex => $sizeBreakdown)
+
+                    @php
+                        $sizeQuantity = (int) ($sizeBreakdown->quantity ?? 0);
+                        $sizeAdditionalPriceForRow = (int) ($sizeBreakdown->size_additional_price ?? 0);
+                        $sizeUnitPrice = (int) (
+                            $sizeBreakdown->unit_price
+                            ?? ($baseUnitPrice + $sizeAdditionalPriceForRow)
+                        );
+                        $sizeSubtotal = (int) (
+                            $sizeBreakdown->subtotal_price
+                            ?? ($sizeQuantity * $sizeUnitPrice)
+                        );
+                    @endphp
+
+                    <tr>
+                        <td class="center">{{ $invoiceRowNumber++ }}</td>
+
+                        <td>
+                            <strong>{{ $item->name ?? 'Baju' }}</strong>
+                            <br>
+                            <span style="font-size:10px;color:#555;">
+                                Ukuran: {{ $sizeBreakdown->size ?? '-' }}
+                            </span>
+                            <br>
+                            <span style="font-size:10px;color:#555;">
+                                Divisi: {{ $sizeBreakdown->division ?? '-' }}
+                            </span>
+
+                            @if($sizeIndex === 0)
+                                <div class="small-muted">
+                                    Bahan: Cotton Combed 24s; Tipe sablon: DTF
+                                </div>
+
+                                @if($transactionDetail)
+                                    <br>
+                                    <span style="font-size:10px;color:#555;">
+                                        {{ $transactionDetail }}
+                                    </span>
+                                @endif
+
+                                @if($detail->color_number)
+                                    <br>
+                                    <span style="font-size:10px;color:#555;">
+                                        Warna/No. Warna: {{ $detail->color_number }}
+                                    </span>
+                                @endif
+
+                                @if($detail->design_link)
+                                    <br>
+                                    <span style="font-size:9px;color:#555;">
+                                        Referensi desain:
+                                        <a class="reference-link" href="{{ $detail->design_link }}">
+                                            {{ $detail->design_link }}
+                                        </a>
+                                    </span>
+                                @endif
+                            @endif
+
+                            @if($sizeAdditionalPriceForRow > 0)
+                                <div class="small-muted">
+                                    Tambahan ukuran (nilai dasar sebelum pajak):
+                                    Rp {{ number_format($sizeAdditionalPriceForRow, 0, ',', '.') }},- / pcs
+                                </div>
+                            @endif
+                        </td>
+
+                        <td class="center">{{ $sizeQuantity }}</td>
+
+                        <td>
+                            <table class="no-border-table">
+                                <tr>
+                                    <td width="20%">Rp</td>
+                                    <td width="80%" style="text-align:right;">
+                                        {{ number_format($grossUpDisplay($sizeUnitPrice), 0, ',', '.') }},-
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="small-muted" style="text-align:right;">/ pcs</div>
+                        </td>
+
+                        <td>
+                            <div class="small-muted" style="text-align:right;">
+                                {{ number_format($grossUpDisplay($sizeUnitPrice), 0, ',', '.') }}
+                                × {{ $sizeQuantity }}
+                            </div>
+
+                            <table class="no-border-table">
+                                <tr>
+                                    <td width="20%">Rp</td>
+                                    <td width="80%" style="text-align:right;">
+                                        {{ number_format($grossUpDisplay($sizeSubtotal), 0, ',', '.') }},-
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                @endforeach
+
+            @else
+
             <!-- ===================================================== -->
             <!-- ITEM ROW -->
             <!-- ===================================================== -->
@@ -740,7 +988,7 @@
 
                 <td class="center">
 
-                    {{ $index + 1 }}
+                    {{ $invoiceRowNumber++ }}
 
                 </td>
 
@@ -813,6 +1061,23 @@
 
                         </span>
 
+                    @endif
+
+                    @if($subcategory === 'Baju' && $detail->color_number)
+                        <br>
+                        <span style="font-size:10px;color:#666;">
+                            Warna/No. Warna: {{ $detail->color_number }}
+                        </span>
+                    @endif
+
+                    @if($subcategory === 'Baju' && $detail->design_link)
+                        <br>
+                        <span style="font-size:9px;color:#666;">
+                            Referensi desain:
+                            <a class="reference-link" href="{{ $detail->design_link }}">
+                                {{ $detail->design_link }}
+                            </a>
+                        </span>
                     @endif
 
 
@@ -1055,209 +1320,101 @@
 
             </tr>
 
+            @endif
+
         @endforeach
 
 
 
-        <!-- ========================================================= -->
-        <!-- SUBTOTAL -->
-        <!-- ========================================================= -->
+        @php
+            $summaryRowCount = 2
+                + ($htFee > 0 ? 1 : 0)
+                + ($order->order_type === 'Handy Talkie' ? 1 : 0)
+                + ((int) $order->tax_amount > 0 ? 1 : 0);
+        @endphp
 
         <tr>
-
-            <td
-                colspan="4"
-                class="right"
-            >
-
-                Subtotal
-
+            <td colspan="3" rowspan="{{ $summaryRowCount }}" class="amount-words">
+                <strong>Jumlah Terbilang:</strong>
+                <br>
+                <span class="words-value">
+                    {{ trim($terbilang($total)) }} Rupiah
+                </span>
             </td>
 
+            <td class="right">Subtotal</td>
 
             <td>
-
                 Rp
-                {{
-                    number_format(
-                        $grossUpDisplay($itemSubtotal),
-                        0,
-                        ',',
-                        '.'
-                    )
-                }},-
-
+                {{ number_format($grossUpDisplay($itemSubtotal), 0, ',', '.') }},-
             </td>
-
         </tr>
-
-
-
-        <!-- ========================================================= -->
-        <!-- HT FEE -->
-        <!-- ========================================================= -->
 
         @if($htFee > 0)
-
             <tr>
-
-                <td
-                    colspan="4"
-                    class="right"
-                >
-
-                    HT Fee
-
-                </td>
-
-
+                <td class="right">HT Fee</td>
                 <td>
-
                     Rp
-                    {{
-                        number_format(
-                            $grossUpDisplay($htFee),
-                            0,
-                            ',',
-                            '.'
-                        )
-                    }},-
-
+                    {{ number_format($grossUpDisplay($htFee), 0, ',', '.') }},-
                 </td>
-
             </tr>
-
         @endif
 
-
-
-        <!-- ========================================================= -->
-        <!-- TRANSPORT -->
-        <!-- ========================================================= -->
-
-        @if(
-            $order->order_type ===
-            'Handy Talkie'
-        )
-
+        @if($order->order_type === 'Handy Talkie')
             <tr>
-
-                <td
-                    colspan="4"
-                    class="right"
-                >
-
-                    Transport HT
-
+                <td class="right">Transport HT</td>
+                <td>
+                    @if($transportFee > 0)
+                        Rp
+                        {{ number_format($grossUpDisplay($transportFee), 0, ',', '.') }},-
+                    @else
+                        GRATIS
+                    @endif
                 </td>
+            </tr>
+        @endif
 
+        @if((int) $order->tax_amount > 0)
+            <tr>
+                <td class="right">
+                    <strong>Tax</strong>
+                    <br>
+                    PPh 23 ({{ (int) (100 * \App\Models\Order::TAX_RATE) }}%) - Gross Up
+                </td>
 
                 <td>
-
-                    @if($transportFee > 0)
-
-                        Rp
-                        {{
-                            number_format(
-                                $grossUpDisplay($transportFee),
-                                0,
-                                ',',
-                                '.'
-                            )
-                        }},-
-
-                    @else
-
-                        GRATIS
-
-                    @endif
-
+                    <table class="no-border-table">
+                        <tr>
+                            <td width="20%">(Rp</td>
+                            <td width="80%" style="text-align:right;">
+                                {{ number_format($order->tax_amount, 0, ',', '.') }},-)
+                            </td>
+                        </tr>
+                    </table>
                 </td>
-
             </tr>
-
         @endif
 
-
-
-        <!-- ========================================================= -->
-        <!-- TAX -->
-        <!-- ========================================================= -->
-        @if($order->tax_amount > 0)
-
         <tr>
-
-            <td
-                colspan="4"
-                class="right"
-            >
-
-                PPh 23 {{ (int) (100 * \App\Models\Order::TAX_RATE) }}% (Potongan)
-
+            <td class="bg-red" style="font-weight:bold;text-align:right;">
+                Total
             </td>
 
-
-            <td>
-
+            <td class="bg-red" style="font-weight:bold;">
                 Rp
-                {{
-                    number_format(
-                        $order->tax_amount,
-                        0,
-                        ',',
-                        '.'
-                    )
-                }},-
-
+                {{ number_format($total, 0, ',', '.') }},-
             </td>
-
-        </tr>
-        @endif
-
-
-
-        <!-- ========================================================= -->
-        <!-- TOTAL -->
-        <!-- ========================================================= -->
-
-        <tr>
-
-            <td
-                colspan="4"
-                class="bg-red"
-                style="
-                    font-weight:bold;
-                    text-align:right;
-                "
-            >
-
-                Total Netto
-
-            </td>
-
-
-            <td
-                class="bg-red"
-                style="font-weight:bold;"
-            >
-
-                Rp
-                {{
-                    number_format(
-                        $total,
-                        0,
-                        ',',
-                        '.'
-                    )
-                }},-
-
-            </td>
-
         </tr>
 
     </tbody>
 
 </table>
+
+<p class="tax-note">
+    <strong>Catatan:</strong>
+    Pajak yang timbul atas transaksi ini menjadi tanggungan pihak
+    penyewa/pembeli sesuai kesepakatan para pihak.
+</p>
 
 
 
@@ -1265,7 +1422,7 @@
 <!-- PAYMENT + SIGNATURE -->
 <!-- =============================================================== -->
 
-<table style="margin-top:35px;">
+<table class="payment-signature" style="margin-top:35px;">
 
     <tr>
 

@@ -942,21 +942,9 @@
                                     Tipe sablon: DTF
                                 </div>
 
-                                @if($detail->color_number)
-                                    <div class="small-muted">
-                                        Warna/No. Warna:
-                                        {{ $detail->color_number }}
-                                    </div>
-                                @endif
 
-                                @if($detail->design_link)
-                                    <div class="small-muted">
-                                        Referensi desain:
-                                        <a href="{{ $detail->design_link }}">
-                                            Buka tautan desain
-                                        </a>
-                                    </div>
-                                @endif
+
+
                             @endif
                         </td>
 
@@ -1104,22 +1092,9 @@
 
                     @endif
 
-                    @if($subcategory === 'Baju' && $detail->color_number)
-                        <br>
-                        <span style="font-size:10px;color:#666;">
-                            Warna/No. Warna: {{ $detail->color_number }}
-                        </span>
-                    @endif
 
-                    @if($subcategory === 'Baju' && $detail->design_link)
-                        <br>
-                        <span style="font-size:9px;color:#666;">
-                            Referensi desain:
-                            <a class="reference-link" href="{{ $detail->design_link }}">
-                                {{ $detail->design_link }}
-                            </a>
-                        </span>
-                    @endif
+
+
 
 
                     <!-- ================================================= -->

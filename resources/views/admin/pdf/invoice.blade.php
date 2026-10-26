@@ -907,19 +907,48 @@
                             }
                         );
 
-                        $sizeLabels = $priceGroup
-                            ->groupBy(function ($breakdown) {
-                                return trim(
-                                    (string) ($breakdown->size ?? '')
-                                );
+                        $sizeNames = $priceGroup
+                            ->pluck('size')
+                            ->map(function ($size) {
+                                return strtoupper(trim((string) $size));
                             })
-                            ->map(function ($rows, $size) {
-                                $count = (int) $rows->sum('quantity');
+                            ->filter()
+                            ->unique()
+                            ->values()
+                            ->all();
 
-                                return ($size !== '' ? $size : 'Ukuran -')
-                                    . ' (' . $count . ')';
-                            })
-                            ->implode(', ');
+                        $sizeOrder = [
+                            'XS', 'S', 'M', 'L', 'XL',
+                            '2XL', '3XL', '4XL', '5XL'
+                        ];
+
+                        usort($sizeNames, function ($a, $b) use ($sizeOrder) {
+                            $aIndex = array_search($a, $sizeOrder, true);
+                            $bIndex = array_search($b, $sizeOrder, true);
+
+                            return ($aIndex === false ? 999 : $aIndex)
+                                <=> ($bIndex === false ? 999 : $bIndex);
+                        });
+
+                        $sizeLabels = implode(', ', $sizeNames);
+
+                        if (count($sizeNames) > 1) {
+                            $firstSize = array_search($sizeNames[0], $sizeOrder, true);
+                            $lastSize = array_search(
+                                $sizeNames[count($sizeNames) - 1],
+                                $sizeOrder,
+                                true
+                            );
+
+                            if (
+                                $firstSize !== false &&
+                                $lastSize !== false &&
+                                $lastSize - $firstSize + 1 === count($sizeNames)
+                            ) {
+                                $sizeLabels = $sizeNames[0] . '–'
+                                    . $sizeNames[count($sizeNames) - 1];
+                            }
+                        }
                     @endphp
 
                     <tr>
@@ -936,16 +965,7 @@
                                 Ukuran: {{ $sizeLabels }}
                             </span>
 
-                            @if($loop->first)
-                                <div class="small-muted">
-                                    Bahan: Cotton Combed 24s;
-                                    Tipe sablon: DTF
-                                </div>
 
-
-
-
-                            @endif
                         </td>
 
                         <td class="center">
@@ -968,21 +988,10 @@
                                 </tr>
                             </table>
 
-                            <div class="small-muted" style="text-align:right;">
-                                / pcs
-                            </div>
+
                         </td>
 
                         <td>
-                            <div class="small-muted" style="text-align:right;">
-                                {{ number_format(
-                                    $grossUpDisplay($sizeUnitPrice),
-                                    0,
-                                    ',',
-                                    '.'
-                                ) }} × {{ $sizeQuantity }}
-                            </div>
-
                             <table class="no-border-table">
                                 <tr>
                                     <td width="20%">Rp</td>

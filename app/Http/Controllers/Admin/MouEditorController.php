@@ -76,7 +76,7 @@ class MouEditorController extends Controller
         $submittedMouNumber = MouNumberSynchronizer::extractNumber($html);
         $numberChanged = $submittedMouNumber !== null
             && $submittedMouNumber !== MouNumberSynchronizer::displayNumber($order);
-        $numberChange = ['changed' => false, 'archived_signed_count' => 0];
+        $numberChange = ['changed' => false, 'archived_signed_count' => 0, 'updated_signed_count' => 0, 'requires_resign_count' => 0];
         $content = [
             'format_version' => 2,
             'render_mode' => 'legacy-html',
@@ -120,9 +120,13 @@ class MouEditorController extends Controller
         });
 
         $successMessage = "MoU berhasil disimpan sebagai versi {$versionNumber}. Nomor MoU disinkronkan ke data pesanan.";
-        if (($numberChange['archived_signed_count'] ?? 0) > 0) {
-            $successMessage .= ' ' . $numberChange['archived_signed_count']
-                . ' MoU yang sebelumnya bertanda tangan diarsipkan dan perlu ditandatangani ulang.';
+        if (($numberChange['updated_signed_count'] ?? 0) > 0) {
+            $successMessage .= ' ' . $numberChange['updated_signed_count']
+                . ' PDF MoU signed diperbarui dengan nomor terbaru; salinan lama tetap diarsipkan.';
+        }
+        if (($numberChange['requires_resign_count'] ?? 0) > 0) {
+            $successMessage .= ' ' . $numberChange['requires_resign_count']
+                . ' dokumen lama tidak memiliki sumber HTML/tanda tangan untuk dibuat ulang dan perlu ditandatangani ulang satu kali.';
         }
 
         return redirect()

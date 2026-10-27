@@ -604,6 +604,7 @@ return response(
         $signatureBytes = $payload['signature_bytes'];
         $method = $payload['method'];
         $sourceVersion = $payload['source_version'];
+        $signedHtml = (string) $payload['signed_html'];
 
         $previewKey = $this->mouSignaturePreviewSessionKey($order, $document->id);
         $previewRecord = $request->session()->get($previewKey);
@@ -628,13 +629,22 @@ return response(
             . '_' . now()->format('Ymd_His') . '_' . \Illuminate\Support\Str::random(6) . '.pdf';
         $path = 'signed_mous/' . $filename;
 
+        $signedHtmlPath = 'signed_mou_html/' . $safeOrderNumber . '_'
+            . preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $document->mou_type)
+            . '_' . now()->format('Ymd_His') . '_' . \Illuminate\Support\Str::random(6) . '.html';
+
+        if (!Storage::disk('local')->put($signedHtmlPath, $signedHtml)) {
+            abort(500, 'Snapshot isi MoU bertanda tangan gagal disimpan.');
+        }
+
         if (!Storage::disk('public')->put($path, $pdfBytes)) {
+            Storage::disk('local')->delete($signedHtmlPath);
             abort(500, 'PDF bertanda tangan gagal disimpan.');
         }
 
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use (
-                $request, $order, $document, $path, $pdfBytes, $signatureBytes, $method, $sourceVersion, $orderStatusBeforeSign
+                $request, $order, $document, $path, $pdfBytes, $signatureBytes, $method, $sourceVersion, $orderStatusBeforeSign, $signedHtmlPath
             ) {
                 if (!empty($document->signed_file_path)) {
                     MouNumberSynchronizer::archiveSignedPath(
@@ -663,6 +673,7 @@ return response(
                     'signer_name' => auth()->user()->name ?? null,
                     'signature_method' => $method,
                     'signed_pdf_path' => $path,
+                    'signed_html_path' => $signedHtmlPath,
                     'signature_sha256' => hash('sha256', $signatureBytes),
                     'signed_pdf_sha256' => hash('sha256', $pdfBytes),
                     'ip_hash' => $request->ip() ? hash_hmac('sha256', (string) $request->ip(), (string) config('app.key')) : null,
@@ -682,6 +693,7 @@ return response(
             });
         } catch (\Throwable $exception) {
             Storage::disk('public')->delete($path);
+            Storage::disk('local')->delete($signedHtmlPath);
             throw $exception;
         }
 
@@ -829,6 +841,7 @@ return response(
             'method' => $method,
             'source_version' => $sourceVersion,
             'source_html_sha256' => $sourceHtmlSha256,
+            'signed_html' => $signedHtml,
         ], $pdfBytes];
     }
 

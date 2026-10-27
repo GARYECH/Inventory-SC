@@ -1797,12 +1797,15 @@ class AdminItemController extends Controller
             |--------------------------------------------------------------------------
             */
 
+            $mouNumberChange = MouNumberSynchronizer::updateOrderNumber(
+                $order,
+                $request->mou_number,
+                'Nomor MoU diperbarui dari halaman Orders'
+            );
+
             $order->update([
                 'status' =>
                     $newStatus,
-
-                'mou_number' =>
-                    $request->mou_number,
 
                 'invoice_number' =>
                     $request->invoice_number,
@@ -1854,10 +1857,17 @@ class AdminItemController extends Controller
 
             DB::commit();
 
-            return back()->with(
-                'success',
-                'Status & dokumen berhasil diperbarui!'
-            );
+            $successMessage = 'Status & dokumen berhasil diperbarui!';
+            if (($mouNumberChange['updated_signed_count'] ?? 0) > 0) {
+                $successMessage .= ' ' . $mouNumberChange['updated_signed_count']
+                    . ' PDF MoU signed diperbarui dengan nomor terbaru; salinan sebelumnya diarsipkan.';
+            }
+            if (($mouNumberChange['requires_resign_count'] ?? 0) > 0) {
+                $successMessage .= ' ' . $mouNumberChange['requires_resign_count']
+                    . ' PDF lama tidak memiliki sumber tanda tangan yang dapat dibuat ulang, sehingga diarsipkan dan perlu ditandatangani ulang satu kali.';
+            }
+
+            return back()->with('success', $successMessage);
         } catch (
             \Throwable $e
         ) {

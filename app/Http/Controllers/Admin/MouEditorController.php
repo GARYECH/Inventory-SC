@@ -60,8 +60,14 @@ class MouEditorController extends Controller
             ->get();
         $isSignedEdit = $request->query('mode') === 'signed';
         $signedHtmlAvailable = false;
+        $signedPdfSourcePath = '';
+        $signedPdfSourceUrl = null;
         if ($isSignedEdit) {
             [$signedPdfSourcePath] = $this->signedPdfSource($document);
+            if ($signedPdfSourcePath !== '') {
+                $signedPdfSourceUrl = asset('storage/' . ltrim($signedPdfSourcePath, '/'));
+            }
+
             $signedHtmlPath = $this->latestSignedHtmlPath($documentId, $signedPdfSourcePath);
             if ($signedHtmlPath !== null) {
                 $signedHtml = Storage::disk('local')->get($signedHtmlPath);
@@ -71,6 +77,15 @@ class MouEditorController extends Controller
                 }
             }
         }
+
+        // Never present the ordinary MoU template as though it were a signed PDF.
+        // Documents without a signing-time HTML snapshot use a dedicated PDF viewer/upload page.
+        if ($isSignedEdit && !$signedHtmlAvailable) {
+            return view('admin.mou-editor.signed-upload', compact(
+                'order', 'document', 'signedHistory', 'signedPdfSourcePath', 'signedPdfSourceUrl'
+            ));
+        }
+
         $sourceUrl = route('admin.orders.document.mou', [
             'order' => $order->id,
             'documentId' => $documentId,

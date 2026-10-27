@@ -1093,7 +1093,7 @@
                                                 function ($document) {
 
                                                     return !empty(
-                                                        $document->signed_file_path
+                                                        $document->view_signed_file_path
                                                     );
 
                                                 }
@@ -1166,10 +1166,10 @@
 
                                                         @foreach($order->mouDocuments as $document)
 
-                                                            @if($document->signed_file_path)
+                                                            @if($document->view_signed_file_path)
 
                                                                 <a
-                                                                    href="{{ asset('storage/' . $document->signed_file_path) }}"
+                                                                    href="{{ asset('storage/' . $document->view_signed_file_path) }}"
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     class="flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-white px-4 py-3 transition hover:bg-emerald-100"
@@ -2726,7 +2726,7 @@
                                                 function ($document) {
 
                                                     return !empty(
-                                                        $document->signed_file_path
+                                                        $document->view_signed_file_path
                                                     );
 
                                                 }
@@ -2796,10 +2796,10 @@
 
                                                         @foreach($order->mouDocuments as $document)
 
-                                                            @if($document->signed_file_path)
+                                                            @if($document->view_signed_file_path)
 
                                                                 <a
-                                                                    href="{{ asset('storage/' . $document->signed_file_path) }}"
+                                                                    href="{{ asset('storage/' . $document->view_signed_file_path) }}"
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     class="flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-white px-4 py-3 transition hover:bg-emerald-100"

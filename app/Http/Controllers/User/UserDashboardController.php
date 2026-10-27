@@ -11,6 +11,8 @@ use App\Services\InventoryAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class UserDashboardController extends Controller
 {
@@ -423,6 +425,11 @@ class UserDashboardController extends Controller
             ->paginate(5)
             ->withQueryString();
 
+        // Keep View Signed available if an older PDF exists only in the archive.
+        $this->attachSignedMouViewPaths(
+            $activeLoans->concat($pastLoans->getCollection())
+        );
+
         return view(
             'user.loans',
             compact(
@@ -430,6 +437,53 @@ class UserDashboardController extends Controller
                 'pastLoans'
             )
         );
+    }
+
+    /**
+     * Select the active signed PDF when it exists; otherwise use the newest existing archived PDF.
+     * This is for display only and does not change the database's active signed_file_path.
+     */
+    private function attachSignedMouViewPaths($orders): void
+    {
+        $documents = collect($orders)->flatMap(
+            static fn ($order) => $order->mouDocuments
+        );
+
+        if ($documents->isEmpty()) {
+            return;
+        }
+
+        $documentIds = $documents->pluck('id')->unique()->values()->all();
+        $archivePaths = [];
+
+        $archivedVersions = DB::table('order_mou_document_signed_versions')
+            ->whereIn('order_mou_document_id', $documentIds)
+            ->orderByDesc('superseded_at')
+            ->orderByDesc('id')
+            ->get(['order_mou_document_id', 'signed_file_path']);
+
+        foreach ($archivedVersions as $version) {
+            $documentId = (int) $version->order_mou_document_id;
+            if (array_key_exists($documentId, $archivePaths)) {
+                continue;
+            }
+
+            $candidatePath = trim((string) ($version->signed_file_path ?? ''));
+            if ($candidatePath !== '' && Storage::disk('public')->exists($candidatePath)) {
+                $archivePaths[$documentId] = $candidatePath;
+            }
+        }
+
+        foreach ($documents as $document) {
+            $activePath = trim((string) ($document->signed_file_path ?? ''));
+            if ($activePath !== '' && Storage::disk('public')->exists($activePath)) {
+                $viewPath = $activePath;
+            } else {
+                $viewPath = $archivePaths[(int) $document->id] ?? null;
+            }
+
+            $document->setAttribute('view_signed_file_path', $viewPath);
+        }
     }
 
     /*

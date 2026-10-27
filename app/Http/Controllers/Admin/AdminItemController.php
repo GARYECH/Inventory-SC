@@ -1346,9 +1346,13 @@ class AdminItemController extends Controller
         });
 
         $message = 'Nomor dokumen berhasil disimpan.';
-        if (($result['archived_signed_count'] ?? 0) > 0) {
-            $message .= ' ' . $result['archived_signed_count']
-                . ' MoU yang sebelumnya bertanda tangan telah diarsipkan; pihak terkait perlu menandatangani ulang versi dengan nomor baru.';
+        if (($result['updated_signed_count'] ?? 0) > 0) {
+            $message .= ' ' . $result['updated_signed_count']
+                . ' PDF MoU signed otomatis diperbarui dengan nomor terbaru; salinan sebelumnya tetap diarsipkan.';
+        }
+        if (($result['requires_resign_count'] ?? 0) > 0) {
+            $message .= ' ' . $result['requires_resign_count']
+                . ' dokumen tidak dapat diperbarui otomatis karena file PDF arsip tidak ditemukan; dokumen tersebut perlu diperiksa secara manual.';
         }
 
         return back()->with('success', $message);

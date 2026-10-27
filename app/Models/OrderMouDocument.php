@@ -13,6 +13,10 @@ class OrderMouDocument extends Model
         'id',
     ];
 
+    protected $casts = [
+        'requires_resign' => 'boolean',
+    ];
+
     /*
     |--------------------------------------------------------------------------
     | ORDER

@@ -315,6 +315,11 @@ Route::middleware('auth')->group(function () {
             )->name('orders.update');
 
             Route::patch(
+                '/orders/{order}/document-numbers',
+                [AdminItemController::class, 'updateDocumentNumbers']
+            )->name('orders.document-numbers');
+
+            Route::patch(
                 '/orders/{order}/confirm-return',
                 [AdminItemController::class, 'confirmReturn']
             )->name('orders.confirm-return');

@@ -1217,7 +1217,15 @@
 
                                     <button
                                         type="submit"
-                                        class="mt-4 w-full rounded-xl bg-gray-950 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white transition hover:bg-indigo-600"
+                                        formaction="{{ route('admin.orders.document-numbers', $order->id) }}"
+                                        class="mt-4 w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-indigo-700 transition hover:bg-indigo-100"
+                                    >
+                                        Save Document Numbers
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        class="mt-2 w-full rounded-xl bg-gray-950 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white transition hover:bg-indigo-600"
                                     >
                                         Update Transaction
                                     </button>

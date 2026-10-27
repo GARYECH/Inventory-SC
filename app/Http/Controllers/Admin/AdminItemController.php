@@ -9,6 +9,7 @@ use App\Models\Item;
 use App\Models\Order;
 use App\Notifications\OrderStatusUpdated;
 use App\Services\InventoryAvailabilityService;
+use App\Support\MouNumberSynchronizer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -1315,6 +1316,42 @@ class AdminItemController extends Controller
                 'Gagal mengonfirmasi pengembalian: ' . $e->getMessage()
             );
         }
+    }
+
+    /** Save document numbers independently of order-status transition rules. */
+    public function updateDocumentNumbers(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'mou_number' => ['nullable', 'string', 'max:255'],
+            'invoice_number' => ['nullable', 'string', 'max:255'],
+            'invoice_due_date' => ['nullable', 'date'],
+            'kwitansi_number' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $requestedMouNumber = trim((string) ($validated['mou_number'] ?? ''));
+        $requestedMouNumber = $requestedMouNumber === '' ? null : $requestedMouNumber;
+
+        $result = DB::transaction(function () use ($order, $validated, $requestedMouNumber) {
+            $order->update([
+                'invoice_number' => $validated['invoice_number'] ?? null,
+                'invoice_due_date' => $validated['invoice_due_date'] ?? null,
+                'kwitansi_number' => $validated['kwitansi_number'] ?? null,
+            ]);
+
+            return MouNumberSynchronizer::updateOrderNumber(
+                $order,
+                $requestedMouNumber,
+                'Nomor MoU diubah; tanda tangan sebelumnya diarsipkan untuk revisi'
+            );
+        });
+
+        $message = 'Nomor dokumen berhasil disimpan.';
+        if (($result['archived_signed_count'] ?? 0) > 0) {
+            $message .= ' ' . $result['archived_signed_count']
+                . ' MoU yang sebelumnya bertanda tangan telah diarsipkan; pihak terkait perlu menandatangani ulang versi dengan nomor baru.';
+        }
+
+        return back()->with('success', $message);
     }
 
     /*

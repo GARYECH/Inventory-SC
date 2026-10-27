@@ -409,6 +409,10 @@
                                 $requiresMou =
                                     $order->mouDocuments->count() > 0;
 
+                                $requiresMouResign = $order->mouDocuments->contains(
+                                    fn ($document) => (bool) ($document->requires_resign ?? false)
+                                );
+
 
                                 /*
                                 |--------------------------------------------------------------------------
@@ -1356,7 +1360,7 @@
                                         <!-- WAITING FOR MOU -->
                                         <!-- ================================================= -->
 
-                                        @if($currentStep === 'mou')
+                                        @if($currentStep === 'mou' || $requiresMouResign)
 
                                             <div class="border-b border-purple-100 bg-purple-50 px-4 py-4">
 
@@ -1390,11 +1394,15 @@
                                                         </p>
 
                                                         <h4 class="mt-1 text-sm font-black text-gray-900">
-                                                            Signed MoU
+                                                            {{ $requiresMouResign ? 'MoU Perlu Ditandatangani Ulang' : 'Signed MoU' }}
                                                         </h4>
 
                                                         <p class="mt-1 text-[9px] font-bold leading-relaxed text-purple-700">
-                                                            Tandatangani semua MoU yang diperlukan untuk transaksi ini.
+                                                            @if($requiresMouResign)
+                                                                Nomor MoU telah berubah. Periksa nomor terbaru pada preview, lalu tandatangani ulang dokumen yang diminta.
+                                                            @else
+                                                                Tandatangani semua MoU yang diperlukan untuk transaksi ini.
+                                                            @endif
                                                         </p>
 
                                                     </div>
@@ -1427,7 +1435,13 @@
                                                                 </p>
 
 
-                                                                @if($document->signed_file_path)
+                                                                @if($document->requires_resign)
+
+                                                                    <p class="mt-1 text-[8px] font-black text-amber-700">
+                                                                        ⚠️ Nomor berubah — tanda tangan ulang diperlukan
+                                                                    </p>
+
+                                                                @elseif($document->signed_file_path)
 
                                                                     <p class="mt-1 text-[8px] font-black text-emerald-600">
                                                                         ✓ Sudah diupload

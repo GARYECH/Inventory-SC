@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Support\MouNumberSynchronizer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -52,7 +53,11 @@ class MouEditorController extends Controller
             'documentId' => $documentId,
         ]) . '?mou_editor_source=1';
         $editorHtml = $this->inlineMouEditorStorageImages((string) ($content['html'] ?? ''));
-$savedHtmlBase64 = base64_encode($editorHtml);
+        $editorHtml = MouNumberSynchronizer::replaceNumberInHtml(
+            $editorHtml,
+            MouNumberSynchronizer::displayNumber($order)
+        );
+        $savedHtmlBase64 = base64_encode($editorHtml);
 
         return view('admin.mou-editor.edit', compact(
             'order', 'document', 'content', 'versions', 'latestVersion', 'sourceUrl', 'savedHtmlBase64'
@@ -68,6 +73,10 @@ $savedHtmlBase64 = base64_encode($editorHtml);
         ]);
 
         $html = $this->sanitizeRenderedHtml($validated['rendered_html']);
+        $submittedMouNumber = MouNumberSynchronizer::extractNumber($html);
+        $numberChanged = $submittedMouNumber !== null
+            && $submittedMouNumber !== MouNumberSynchronizer::displayNumber($order);
+        $numberChange = ['changed' => false, 'archived_signed_count' => 0];
         $content = [
             'format_version' => 2,
             'render_mode' => 'legacy-html',
@@ -80,7 +89,15 @@ $savedHtmlBase64 = base64_encode($editorHtml);
         ];
         $changeNote = trim((string) ($validated['change_note'] ?? '')) ?: 'Edit isi MoU';
 
-        $versionNumber = DB::transaction(function () use ($documentId, $content, $changeNote) {
+        $versionNumber = DB::transaction(function () use ($documentId, $content, $changeNote, $order, $submittedMouNumber, $numberChanged, &$numberChange) {
+            if ($numberChanged) {
+                $numberChange = MouNumberSynchronizer::updateOrderNumber(
+                    $order,
+                    $submittedMouNumber,
+                    'Nomor MoU diperbarui melalui MoU Editor'
+                );
+            }
+
             $latest = DB::table('order_mou_document_versions')
                 ->where('order_mou_document_id', $documentId)
                 ->orderByDesc('version_number')
@@ -102,9 +119,15 @@ $savedHtmlBase64 = base64_encode($editorHtml);
             return $nextVersion;
         });
 
+        $successMessage = "MoU berhasil disimpan sebagai versi {$versionNumber}. Nomor MoU disinkronkan ke data pesanan.";
+        if (($numberChange['archived_signed_count'] ?? 0) > 0) {
+            $successMessage .= ' ' . $numberChange['archived_signed_count']
+                . ' MoU yang sebelumnya bertanda tangan diarsipkan dan perlu ditandatangani ulang.';
+        }
+
         return redirect()
             ->route('admin.mou-editor.edit', [$order->id, $document->id])
-            ->with('success', "MoU berhasil disimpan sebagai versi {$versionNumber}. Template legacy tidak ditimpa.");
+            ->with('success', $successMessage);
     }
 
     public function preview(Request $request, Order $order, int $documentId)

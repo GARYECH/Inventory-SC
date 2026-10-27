@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\MouNumberSynchronizer;
 use App\Notifications\AdminNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -277,6 +278,10 @@ return response(
         }
 
         if (is_string($mouEditorSavedHtml) && $mouEditorSavedHtml !== '') {
+            $mouEditorSavedHtml = MouNumberSynchronizer::replaceNumberInHtml(
+                $mouEditorSavedHtml,
+                MouNumberSynchronizer::displayNumber($order)
+            );
             $mouEditorSavedHtml = $this->inlineMouEditorStorageImages($mouEditorSavedHtml);
         $pdf = Pdf::loadHTML($mouEditorSavedHtml);
         } else {
@@ -342,15 +347,7 @@ return response(
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $order->status !==
-            'Waiting for MoU'
-        ) {
-            return back()->with(
-                'error',
-                'MoU belum dapat diunggah pada tahap ini.'
-            );
-        }
+        $isStandardMouUpload = $order->status === 'Waiting for MoU';
 
 
         /*
@@ -423,6 +420,13 @@ return response(
             );
         }
 
+        if (!$isStandardMouUpload && !(bool) ($document->requires_resign ?? false)) {
+            return back()->with(
+                'error',
+                'MoU hanya dapat diunggah pada tahap Waiting for MoU atau saat revisi nomor memerlukan tanda tangan ulang.'
+            );
+        }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -446,17 +450,13 @@ return response(
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $document->signed_file_path &&
-            Storage::disk('public')->exists(
-                $document->signed_file_path
-            )
-        ) {
-
-            Storage::disk('public')->delete(
-                $document->signed_file_path
+        if ($document->signed_file_path) {
+            MouNumberSynchronizer::archiveSignedPath(
+                (int) $document->id,
+                (string) $document->signed_file_path,
+                MouNumberSynchronizer::displayNumber($order),
+                'File MoU digantikan oleh unggahan bertanda tangan yang lebih baru'
             );
-
         }
 
 
@@ -483,6 +483,7 @@ return response(
             $order->order_number .
             '_' .
             $document->mou_type .
+            '_' . now()->format('Ymd_His') . '_' . \Illuminate\Support\Str::random(6) .
             '.' .
             $file->getClientOriginalExtension();
 
@@ -508,8 +509,8 @@ return response(
         */
 
         $document->update([
-            'signed_file_path' =>
-                $path,
+            'signed_file_path' => $path,
+            'requires_resign' => false,
         ]);
 
 
@@ -531,22 +532,13 @@ return response(
                 ->exists();
 
 
-        if (
-            $pendingMou
-        ) {
-
-            $successMessage =
-                'MoU berhasil diupload. Masih ada MoU lain yang perlu diunggah.';
-
+        if (!$isStandardMouUpload) {
+            $successMessage = 'MoU revisi berhasil diunggah. Status transaksi tetap ' . $order->status . '.';
+        } elseif ($pendingMou) {
+            $successMessage = 'MoU berhasil diupload. Masih ada MoU lain yang perlu diunggah.';
         } else {
-
-            $order->update([
-                'status' =>
-                    'Pending Review MoU',
-            ]);
-
-            $successMessage =
-                'Semua MoU sudah diupload. Menunggu pemeriksaan admin sebelum melanjutkan ke pembayaran.';
+            $order->update(['status' => 'Pending Review MoU']);
+            $successMessage = 'Semua MoU sudah diupload. Menunggu pemeriksaan admin sebelum melanjutkan ke pembayaran.';
         }
 
 
@@ -608,6 +600,7 @@ return response(
 
         [$payload, $pdfBytes] = $this->makeSecondPartySignedMouPreview($request, $order, $documentId);
         $document = $payload['document'];
+        $orderStatusBeforeSign = (string) $order->status;
         $signatureBytes = $payload['signature_bytes'];
         $method = $payload['method'];
         $sourceVersion = $payload['source_version'];
@@ -641,13 +634,23 @@ return response(
 
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use (
-                $request, $order, $document, $path, $pdfBytes, $signatureBytes, $method, $sourceVersion
+                $request, $order, $document, $path, $pdfBytes, $signatureBytes, $method, $sourceVersion, $orderStatusBeforeSign
             ) {
+                if (!empty($document->signed_file_path)) {
+                    MouNumberSynchronizer::archiveSignedPath(
+                        (int) $document->id,
+                        (string) $document->signed_file_path,
+                        MouNumberSynchronizer::displayNumber($order),
+                        'Digantikan oleh tanda tangan MoU yang lebih baru'
+                    );
+                }
+
                 \Illuminate\Support\Facades\DB::table('order_mou_documents')
                     ->where('id', $document->id)
                     ->where('order_id', $order->id)
                     ->update([
                         'signed_file_path' => $path,
+                        'requires_resign' => false,
                         'updated_at' => now(),
                     ]);
 
@@ -673,7 +676,7 @@ return response(
                     ->whereNull('signed_file_path')
                     ->exists();
 
-                if (!$pendingMou) {
+                if (!$pendingMou && $orderStatusBeforeSign === 'Waiting for MoU') {
                     $order->update(['status' => 'Pending Review MoU']);
                 }
             });
@@ -693,19 +696,19 @@ return response(
             . ' untuk ' . $order->order_number . ' telah ditandatangani PIHAK KEDUA melalui website.'
         );
 
-        return back()->with(
-            'success',
-            $pendingMou
+        $successMessage = $orderStatusBeforeSign !== 'Waiting for MoU'
+            ? 'Tanda tangan ulang MoU berhasil disimpan. Status transaksi tetap ' . $orderStatusBeforeSign . '.'
+            : ($pendingMou
                 ? 'Tanda tangan berhasil disimpan. Masih ada MoU lain yang perlu ditandatangani.'
-                : 'MoU bertanda tangan berhasil dikirim. Menunggu pemeriksaan admin sebelum melanjutkan ke pembayaran.'
-        );
+                : 'MoU bertanda tangan berhasil dikirim. Menunggu pemeriksaan admin sebelum melanjutkan ke pembayaran.');
+
+        return back()->with('success', $successMessage);
     }
 
     /** Validate the input, render the exact latest saved MoU when available, then add the signature to PIHAK KEDUA. */
     private function makeSecondPartySignedMouPreview(Request $request, Order $order, $documentId): array
     {
         $this->authorizeOrder($order);
-        abort_unless($order->status === 'Waiting for MoU', 422, 'MoU hanya dapat ditandatangani saat status Waiting for MoU.');
 
         $validatedMethod = $request->validate([
             'signature_method' => ['required', 'in:draw,upload'],
@@ -763,6 +766,11 @@ return response(
             ->where('order_id', $order->id)
             ->first();
         abort_unless($document, 404, 'Dokumen MoU tidak ditemukan untuk pesanan ini.');
+        abort_unless(
+            $order->status === 'Waiting for MoU' || (bool) ($document->requires_resign ?? false),
+            422,
+            'MoU hanya dapat ditandatangani saat Waiting for MoU atau ketika revisi nomor memerlukan tanda tangan ulang.'
+        );
 
         $order->loadMissing(['orderItems.item.category', 'orderItems.sizeBreakdowns', 'mouDocuments']);
         $rentalDays = $this->getRentalDays($order->start_date, $order->end_date);
@@ -802,6 +810,10 @@ return response(
             $sourceVersion = null;
         }
 
+        $html = MouNumberSynchronizer::replaceNumberInHtml(
+            $html,
+            MouNumberSynchronizer::displayNumber($order)
+        );
         $html = $this->inlineMouEditorStorageImages($html);
         $sourceHtmlSha256 = hash('sha256', $html);
         if (!\App\Support\MouSignatureHtml::canInsertSecondPartySignature($html)) {

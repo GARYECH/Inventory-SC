@@ -14,7 +14,7 @@
         <p class="break-words font-extrabold text-slate-900">{{ $document->order_number }} · {{ strtoupper(str_replace(['_', '-'], ' ', $document->mou_type)) }}</p>
         <p class="mt-1 text-sm text-slate-600">Proker: {{ $document->proker_name ?: '-' }} · Tipe transaksi: {{ $document->order_type ?: '-' }}</p>
         <p class="mt-1 text-xs text-slate-400">Order ID {{ $document->order_id }} · Dokumen ID {{ $document->document_id }}</p>
-    </div><a href="{{ route('admin.mou-editor.edit', [$document->order_id, $document->document_id]) }}" class="inline-flex shrink-0 items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-indigo-700">Buka & Edit MoU →</a></div>@endforeach</div><div class="border-t border-slate-100 px-5 py-4">{{ $documents->links() }}</div>@endif
+    </div><div class="flex flex-wrap gap-2"><a href="{{ route('admin.mou-editor.edit', [$document->order_id, $document->document_id]) }}" class="inline-flex shrink-0 items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-indigo-700">Buka & Edit MoU →</a>@if($document->signed_file_path || (int) $document->signed_archive_count > 0)<a href="{{ route('admin.mou-editor.edit', ['order' => $document->order_id, 'documentId' => $document->document_id, 'mode' => 'signed']) }}" class="inline-flex shrink-0 items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-extrabold text-emerald-800 hover:bg-emerald-100">Edit View Signed ↗</a>@endif</div></div>@endforeach</div><div class="border-t border-slate-100 px-5 py-4">{{ $documents->links() }}</div>@endif
     </div>
 </div></div>
 </x-app-layout>

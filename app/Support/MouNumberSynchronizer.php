@@ -92,6 +92,11 @@ class MouNumberSynchronizer
      * This is a visual reissue: it preserves the existing PDF pages/signature image
      * and overlays the number field; it does not preserve a cryptographic PDF signature.
      */
+    /**
+     * Update the official MoU number and create a corrected visual copy of each signed PDF.
+     * Original signed PDFs are kept in the archive; original signature events/hashes are never overwritten.
+     * The reissued PDF preserves the visible signature image and all pages, overlaying only the number line.
+     */
     public static function updateOrderNumber(Order $order, ?string $requestedNumber, string $reason): array
     {
         $newNumber = trim((string) ($requestedNumber ?? ''));
@@ -162,7 +167,6 @@ class MouNumberSynchronizer
                 if (!$numberChanged && !$needsReissue) {
                     continue;
                 }
-
                 if ($activePath === '' && !$needsReissue) {
                     continue;
                 }
@@ -170,54 +174,62 @@ class MouNumberSynchronizer
                 $sourcePath = $activePath;
                 $sourceWasArchived = false;
 
-                // Recover the older signed PDF if an earlier release already moved it to the archive.
+                // Earlier deployments may have archived a PDF and blanked signed_file_path.
                 if ($sourcePath === '') {
-                    $archivedVersion = DB::table('order_mou_document_signed_versions')
+                    $archivedVersions = DB::table('order_mou_document_signed_versions')
                         ->where('order_mou_document_id', $document->id)
                         ->orderByDesc('superseded_at')
                         ->orderByDesc('id')
-                        ->first();
-
-                    $archivePath = trim((string) ($archivedVersion->signed_file_path ?? ''));
+                        ->get();
+                    $archivePath = '';
+                    foreach ($archivedVersions as $archivedVersion) {
+                        $candidatePath = trim((string) ($archivedVersion->signed_file_path ?? ''));
+                        if ($candidatePath !== '' && Storage::disk('public')->exists($candidatePath)) {
+                            $archivePath = $candidatePath;
+                            break;
+                        }
+                    }
                     if ($archivePath === '') {
                         $requiresResignCount++;
                         continue;
                     }
-
                     $sourcePath = $archivePath;
                     $sourceWasArchived = true;
                 }
 
                 if (!Storage::disk('public')->exists($sourcePath)) {
-                    if (!$sourceWasArchived) {
-                        DB::table('order_mou_documents')
-                            ->where('id', $document->id)
-                            ->update([
-                                'signed_file_path' => null,
-                                'requires_resign' => true,
-                                'updated_at' => now(),
-                            ]);
-                    }
+                    // Keep a visible link to the original path even when reissue cannot proceed.
+                    DB::table('order_mou_documents')->where('id', $document->id)->update([
+                        'signed_file_path' => $sourcePath,
+                        'requires_resign' => true,
+                        'updated_at' => now(),
+                    ]);
                     $requiresResignCount++;
                     continue;
                 }
 
-                // Import the existing PDF pages and overlay only the number line on page one.
-                $pdfBytes = self::replaceNumberOnSignedPdf(
-                    $sourcePath,
-                    $newDisplayNumber,
-                    (int) $document->id
-                );
+                $sourceBytes = Storage::disk('public')->get($sourcePath);
+                $sourceHash = hash('sha256', $sourceBytes);
+                try {
+                    $pdfBytes = self::replaceNumberOnSignedPdf($sourcePath, $newDisplayNumber, (int) $document->id);
+                } catch (\Throwable $pdfException) {
+                    // Keep View Signed usable even if this PDF cannot be reissued automatically.
+                    DB::table('order_mou_documents')->where('id', $document->id)->update([
+                        'signed_file_path' => $sourcePath,
+                        'requires_resign' => true,
+                        'updated_at' => now(),
+                    ]);
+                    $requiresResignCount++;
+                    continue;
+                }
 
-                $safeOrder = preg_replace('/[^A-Za-z0-9._-]/', '_', (string) $order->order_number)
-                    ?: (string) $order->id;
-                $safeType = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $document->mou_type)
-                    ?: 'mou';
+                $safeOrder = preg_replace('/[^A-Za-z0-9._-]/', '_', (string) $order->order_number) ?: (string) $order->id;
+                $safeType = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $document->mou_type) ?: 'mou';
                 $newPath = 'signed_mous/Signed_MoU_' . $safeOrder . '_' . $safeType
                     . '_NOMOR_' . now()->format('Ymd_His') . '_' . Str::random(6) . '.pdf';
 
                 if (!Storage::disk('public')->put($newPath, $pdfBytes)) {
-                    throw new \RuntimeException('PDF MoU dengan nomor terbaru gagal disimpan. Perubahan dibatalkan.');
+                    throw new \RuntimeException('PDF MoU dengan nomor terbaru gagal disimpan. File lama tetap dipertahankan.');
                 }
                 $createdPaths[] = $newPath;
 
@@ -226,35 +238,31 @@ class MouNumberSynchronizer
                         (int) $document->id,
                         $sourcePath,
                         $oldDisplayNumber,
-                        $reason . ' — PDF lama diarsipkan; nomor pada salinan aktif diperbarui dengan overlay visual.'
+                        $reason . ' — PDF asli disimpan sebagai arsip; salinan aktif diperbarui secara visual.'
                     );
                     $archivedSignedCount++;
                 }
 
-                $event = DB::table('order_mou_signature_events')
-                    ->where('order_mou_document_id', $document->id)
-                    ->where('signed_pdf_path', $sourcePath)
-                    ->orderByDesc('signed_at')
-                    ->first();
+                // A separate audit row records the derivative without changing the original signing event.
+                DB::table('order_mou_document_signed_reissues')->insert([
+                    'order_mou_document_id' => (int) $document->id,
+                    'source_signed_file_path' => $sourcePath,
+                    'source_signed_pdf_sha256' => $sourceHash,
+                    'reissued_file_path' => $newPath,
+                    'reissued_pdf_sha256' => hash('sha256', $pdfBytes),
+                    'mou_number' => $newDisplayNumber,
+                    'reason' => $reason,
+                    'issued_by' => auth()->id(),
+                    'issued_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-                if ($event) {
-                    DB::table('order_mou_signature_events')
-                        ->where('id', $event->id)
-                        ->update([
-                            'signed_pdf_path' => $newPath,
-                            'signed_html_path' => null,
-                            'signed_pdf_sha256' => hash('sha256', $pdfBytes),
-                            'updated_at' => now(),
-                        ]);
-                }
-
-                DB::table('order_mou_documents')
-                    ->where('id', $document->id)
-                    ->update([
-                        'signed_file_path' => $newPath,
-                        'requires_resign' => false,
-                        'updated_at' => now(),
-                    ]);
+                DB::table('order_mou_documents')->where('id', $document->id)->update([
+                    'signed_file_path' => $newPath,
+                    'requires_resign' => false,
+                    'updated_at' => now(),
+                ]);
 
                 $updatedSignedCount++;
             }
@@ -273,53 +281,38 @@ class MouNumberSynchronizer
         ];
     }
 
-    /** Locate the number line from saved source HTML where possible. */
-    private static function numberLineTopOnA4(int $documentId, string $sourcePath): float
+    /** Determine the title-number line position from saved HTML or the known template type. */
+    private static function numberLineTopOnA4(int $documentId): float
     {
         $html = null;
-        $event = DB::table('order_mou_signature_events')
+        $version = DB::table('order_mou_document_versions')
             ->where('order_mou_document_id', $documentId)
-            ->where('signed_pdf_path', $sourcePath)
-            ->whereNotNull('signed_html_path')
-            ->orderByDesc('signed_at')
+            ->orderByDesc('version_number')
             ->first();
 
-        $signedHtmlPath = trim((string) ($event->signed_html_path ?? ''));
-        if ($signedHtmlPath !== '' && Storage::disk('local')->exists($signedHtmlPath)) {
-            $html = Storage::disk('local')->get($signedHtmlPath);
-        }
-
-        if (!is_string($html) || $html === '') {
-            $version = DB::table('order_mou_document_versions')
-                ->where('order_mou_document_id', $documentId)
-                ->orderByDesc('version_number')
-                ->first();
-            if ($version) {
-                $content = json_decode((string) $version->content, true);
-                if (is_array($content) && !empty($content['html'])) {
-                    $html = (string) $content['html'];
-                }
+        if ($version) {
+            $content = json_decode((string) $version->content, true);
+            if (is_array($content) && !empty($content['html'])) {
+                $html = (string) $content['html'];
             }
         }
 
-        if (is_string($html)
-            && preg_match('~<[^>]+\bclass\s*=\s*(?:"[^"]*\btitle-sub\b[^"]*"|\'[^\']*\btitle-sub\b[^\']*\')~i', $html) === 1) {
-            return 77.5;
+        $hasSubtitle = is_string($html)
+            && preg_match('~<[^>]+\bclass\s*=\s*(?:"[^"]*\btitle-sub\b[^"]*"|\'[^\']*\btitle-sub\b[^\']*\')~i', $html) === 1;
+
+        if ($hasSubtitle) {
+            return 68.5;
         }
 
-        return 71.5;
+        $document = DB::table('order_mou_documents')->where('id', $documentId)->first();
+        return ($document && (string) $document->mou_type === 'merch_idcard') ? 68.5 : 62.5;
     }
 
-    /**
-     * Preserve the whole existing signed PDF and visually replace its number line.
-     * The original PDF is archived first; the active copy keeps its existing signature image.
-     */
+    /** Import the existing PDF so all signature visuals/pages remain; replace the number line on page 1. */
     private static function replaceNumberOnSignedPdf(string $sourcePath, string $number, int $documentId): string
     {
         if (!class_exists(\setasign\Fpdi\Fpdi::class)) {
-            throw new \RuntimeException(
-                'Library FPDI belum tersedia. Jalankan composer install setelah dependensi setasign/fpdf dan setasign/fpdi ditambahkan.'
-            );
+            throw new \RuntimeException('Library FPDI belum tersedia. Jalankan composer install setelah dependensi dipasang.');
         }
 
         $absolutePath = Storage::disk('public')->path($sourcePath);
@@ -332,30 +325,25 @@ class MouNumberSynchronizer
             $pdf->SetAutoPageBreak(false);
             $pdf->SetMargins(0, 0, 0);
             $pageCount = $pdf->setSourceFile($absolutePath);
-
             if ($pageCount < 1) {
                 throw new \RuntimeException('PDF signed lama tidak memiliki halaman.');
             }
 
-            // Read the source HTML if available to account for template variants.
-            // Legacy PDFs without any source use the position verified from the existing signed ID Card PDF.
-            $numberTopOnA4 = self::numberLineTopOnA4($documentId, $sourcePath);
-
+            $numberTopOnA4 = self::numberLineTopOnA4($documentId);
             for ($pageNumber = 1; $pageNumber <= $pageCount; $pageNumber++) {
                 $templateId = $pdf->importPage($pageNumber);
                 $size = $pdf->getTemplateSize($templateId);
                 $orientation = $size['orientation']
                     ?? (((float) $size['width'] > (float) $size['height']) ? 'L' : 'P');
-
                 $pdf->AddPage($orientation, [$size['width'], $size['height']]);
-                $pdf->useTemplate($templateId, 0, 0, $size['width'], $size['height'], true);
+                $pdf->useTemplate($templateId, 0, 0, $size['width'], $size['height']);
 
                 if ($pageNumber === 1) {
                     $pageWidth = (float) $size['width'];
                     $pageHeight = (float) $size['height'];
                     $scale = $pageHeight / 297.0;
                     $barWidth = min(176.0, max(120.0, $pageWidth - 24.0));
-                    $barHeight = 8.5 * $scale;
+                    $barHeight = 8.0 * $scale;
                     $barX = ($pageWidth - $barWidth) / 2;
                     $barY = $numberTopOnA4 * $scale;
 
@@ -363,29 +351,19 @@ class MouNumberSynchronizer
                     $pdf->Rect($barX, $barY, $barWidth, $barHeight, 'F');
                     $pdf->SetTextColor(0, 0, 0);
                     $pdf->SetFont('Times', '', 11.5);
-                    $pdf->SetXY($barX, $barY + (0.6 * $scale));
-                    $pdf->Cell(
-                        $barWidth,
-                        $barHeight - (1.0 * $scale),
-                        'Nomor: ' . $number,
-                        0,
-                        0,
-                        'C',
-                        false
-                    );
+                    $pdf->SetXY($barX, $barY + (0.7 * $scale));
+                    $pdf->Cell($barWidth, $barHeight - (1.2 * $scale), 'Nomor: ' . $number, 0, 0, 'C', false);
                 }
             }
 
             $bytes = $pdf->Output('S');
             if (!is_string($bytes) || !str_starts_with($bytes, '%PDF-')) {
-                throw new \RuntimeException('Hasil pembaruan PDF tidak valid.');
+                throw new \RuntimeException('Hasil PDF pembaruan tidak valid.');
             }
-
             return $bytes;
         } catch (\Throwable $exception) {
             throw new \RuntimeException(
-                'Tidak dapat memperbarui nomor pada PDF signed. File lama tetap dipertahankan. Detail: '
-                    . $exception->getMessage(),
+                'Nomor pada PDF signed tidak dapat diperbarui. PDF lama tetap dipertahankan. Detail: ' . $exception->getMessage(),
                 0,
                 $exception
             );

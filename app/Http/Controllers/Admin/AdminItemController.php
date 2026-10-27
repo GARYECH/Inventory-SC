@@ -1348,11 +1348,11 @@ class AdminItemController extends Controller
         $message = 'Nomor dokumen berhasil disimpan.';
         if (($result['updated_signed_count'] ?? 0) > 0) {
             $message .= ' ' . $result['updated_signed_count']
-                . ' PDF MoU signed otomatis diperbarui dengan nomor terbaru; salinan sebelumnya tetap diarsipkan.';
+                . ' PDF signed diperbarui otomatis dengan nomor terbaru; PDF asli tetap tersedia di arsip.';
         }
         if (($result['requires_resign_count'] ?? 0) > 0) {
             $message .= ' ' . $result['requires_resign_count']
-                . ' dokumen tidak dapat diperbarui otomatis karena file PDF arsip tidak ditemukan; dokumen tersebut perlu diperiksa secara manual.';
+                . ' PDF belum berhasil dibuatkan salinan bernomor baru. File lama tetap tersedia; periksa log/error sebelum mencoba lagi.';
         }
 
         return back()->with('success', $message);

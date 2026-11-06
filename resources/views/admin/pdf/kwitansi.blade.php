@@ -59,17 +59,28 @@
             ? (int) $order->total_price
             : $grossTotal;
         $amountInWords = numberToWords($netAmount) . ' Rupiah';
+
+        $receiptItemNames = $order->orderItems
+            ->map(function ($orderItem) {
+                return $orderItem->item
+                    ? $orderItem->item->name
+                    : null;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->implode(', ');
     @endphp
 
     <!-- KOP SURAT SC -->
     <table style="margin-bottom: 15px;">
         <tr>
-            <td width="30%" style="vertical-align: middle;">
+            <td width="35%" style="vertical-align: middle;">
                 @if($logoPath && file_exists($logoPath))
-                    <img src="{{ $logoPath }}" alt="Logo SC" style="max-height: 70px;"> 
+                    <img src="{{ $logoPath }}" alt="Logo SC" style="width: 200px; max-width: 100%; max-height: 95px; height: auto;"> 
                 @endif
             </td>
-            <td width="70%" style="text-align: right; line-height: 1.2;">
+            <td width="65%" style="text-align: right; line-height: 1.2;">
                 <span style="font-weight: bold; font-size: 14px;">UNIVERSITAS CIPUTRA SURABAYA</span><br>
                 <span style="font-weight: bold; font-size: 14px;">STUDENT COUNCIL</span><br>
                 Citraland CBD Boulevard, Surabaya, 60219<br>
@@ -99,7 +110,7 @@
         <tr>
             <td style="padding-left: 10px;">Received from</td>
             <td style="text-align: center;">:</td>
-            <td>{{ $order->proker_name }}</td>
+            <td>{{ $order->full_name ?: '-' }}</td>
         </tr>
         <tr>
             <td style="padding-left: 10px;">Amount Received</td>
@@ -114,7 +125,7 @@
         <tr>
             <td style="padding-left: 10px;">Description</td>
             <td style="text-align: center;">:</td>
-            <td>Payment for Order {{ $order->order_number }}</td>
+            <td>{{ $receiptItemNames !== '' ? $receiptItemNames : '-' }}</td>
         </tr>
     </table>
 

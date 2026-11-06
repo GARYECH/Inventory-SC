@@ -42,6 +42,7 @@ class CartController extends Controller
         '3XL',
         '4XL',
         '5XL',
+        '10XL',
     ];
 
     private InventoryAvailabilityService $availabilityService;
@@ -1044,7 +1045,7 @@ class CartController extends Controller
             'sizes.*.size' => [
                 'required',
                 'string',
-                'in:S,M,L,XL,2XL,3XL,4XL,5XL',
+                'in:S,M,L,XL,2XL,3XL,4XL,5XL,10XL',
             ],
 
             'sizes.*.division' => [
@@ -3348,6 +3349,9 @@ class CartController extends Controller
 
             '5XL' =>
                 20000,
+
+            '10XL' =>
+                75000,
 
             default =>
                 0,

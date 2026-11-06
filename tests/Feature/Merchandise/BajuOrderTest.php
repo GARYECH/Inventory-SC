@@ -138,6 +138,10 @@ it(
             )
 
             ->assertSee(
+                '10XL'
+            )
+
+            ->assertSee(
                 'Baju Panitia'
             );
     }

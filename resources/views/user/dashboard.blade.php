@@ -1613,6 +1613,8 @@
                                             data-item-id="{{ $item->id }}"
                                             data-is-rental="{{ $isRental ? '1' : '0' }}"
                                             data-subcategory="{{ $item->subcategory ?? '' }}"
+                                            data-existing-start-date="{{ $cartSchedule['start_date'] ?? '' }}"
+                                            data-existing-start-time="{{ $cartSchedule['start_time'] ?? '' }}"
                                         >
 
                                             @csrf
@@ -2883,6 +2885,14 @@
                 );
 
 
+            const existingStartDate =
+                form.dataset.existingStartDate || '';
+
+
+            const existingStartTime =
+                form.dataset.existingStartTime || '';
+
+
             const endTime =
                 form.querySelector(
                     '.end-time'
@@ -3259,6 +3269,31 @@
 
             }
 
+
+
+            /*
+             * KEEP MERCHANDISE ITEMS ON THE SAME PICKUP SCHEDULE
+             */
+
+            if (
+                !isRental &&
+                ['ID Card', 'Lainnya'].includes(subcategory) &&
+                existingStartDate &&
+                existingStartTime
+            ) {
+                picker.setDate(
+                    existingStartDate,
+                    false
+                );
+
+                startDate.value =
+                    existingStartDate;
+
+                startTime.value =
+                    existingStartTime;
+
+                updateSummary();
+            }
 
 
             /* ========================================================

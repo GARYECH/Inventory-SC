@@ -67,6 +67,226 @@ function createBajuItem(): Item
 
 /*
 |--------------------------------------------------------------------------
+| Mixed Merchandise Cart
+|--------------------------------------------------------------------------
+*/
+
+it(
+    'keeps ID Card and Baju in one merchandise cart with the same pickup schedule',
+    function () {
+
+        $user =
+            User::factory()->create();
+
+
+        $bajuItem =
+            createBajuItem();
+
+
+        $idCardItem =
+            Item::create([
+                'name' =>
+                    'ID Card Panitia',
+
+                'category_id' =>
+                    $bajuItem->category_id,
+
+                'transaction_type' =>
+                    'Merchandise',
+
+                'transaction_detail' =>
+                    null,
+
+                'subcategory' =>
+                    'ID Card',
+
+                'requires_mou' =>
+                    true,
+
+                'description' =>
+                    'ID Card Panitia',
+
+                'item_photo' =>
+                    'test-id-card.jpg',
+
+                'stock_quantity' =>
+                    100,
+
+                'price' =>
+                    15000,
+
+                'condition_status' =>
+                    'Good',
+            ]);
+
+
+        $startDate =
+            now()
+                ->addDay()
+                ->format('Y-m-d');
+
+
+        $existingBajuCart = [
+            'existing-baju' => [
+                'id' =>
+                    $bajuItem->id,
+
+                'name' =>
+                    $bajuItem->name,
+
+                'price' =>
+                    100000,
+
+                'quantity' =>
+                    1,
+
+                'transaction_type' =>
+                    'Merchandise',
+
+                'transaction_detail' =>
+                    null,
+
+                'subcategory' =>
+                    'Baju',
+
+                'start_date' =>
+                    $startDate,
+
+                'start_time' =>
+                    '17:30',
+
+                'end_date' =>
+                    null,
+
+                'end_time' =>
+                    null,
+
+                'size_breakdowns' => [
+                    [
+                        'size' =>
+                            'L',
+
+                        'division' =>
+                            'Event',
+
+                        'quantity' =>
+                            1,
+
+                        'unit_price' =>
+                            100000,
+
+                        'size_additional_price' =>
+                            0,
+
+                        'subtotal_price' =>
+                            100000,
+                    ],
+                ],
+
+                'color_number' =>
+                    '01',
+
+                'design_link' =>
+                    'https://drive.google.com/baju',
+
+                'requires_mou' =>
+                    true,
+            ],
+        ];
+
+
+        /*
+        |----------------------------------------------------------------------
+        | DASHBOARD PREFILLS THE EXISTING SCHEDULE
+        |----------------------------------------------------------------------
+        */
+
+        $dashboardResponse =
+            $this
+                ->actingAs($user)
+                ->withSession([
+                    'cart' =>
+                        $existingBajuCart,
+                ])
+                ->get(
+                    route('student.dashboard')
+                );
+
+
+        $dashboardResponse
+            ->assertSuccessful()
+            ->assertSee(
+                'data-existing-start-date="' . $startDate . '"',
+                false
+            )
+            ->assertSee(
+                'data-existing-start-time="17:30"',
+                false
+            );
+
+
+        /*
+        |----------------------------------------------------------------------
+        | ADD ID CARD TO THE SAME MERCHANDISE CART
+        |----------------------------------------------------------------------
+        */
+
+        $addResponse =
+            $this->post(
+                route(
+                    'student.cart.add',
+                    $idCardItem->id
+                ),
+                [
+                    'quantity' =>
+                        2,
+
+                    'start_date' =>
+                        $startDate,
+
+                    'start_time' =>
+                        '17:30',
+
+                    'design_link' =>
+                        'https://drive.google.com/id-card',
+                ]
+            );
+
+
+        $addResponse
+            ->assertSessionHasNoErrors();
+
+
+        $updatedCart =
+            session('cart');
+
+
+        expect($updatedCart)
+            ->toBeArray()
+            ->toHaveCount(2);
+
+
+        expect(
+            collect($updatedCart)
+                ->pluck('subcategory')
+                ->contains('ID Card')
+        )->toBeTrue();
+
+
+        expect(
+            collect($updatedCart)
+                ->every(
+                    fn ($cartItem) =>
+                        ($cartItem['transaction_type'] ?? null) === 'Merchandise'
+                )
+        )->toBeTrue();
+
+    }
+);
+
+
+/*
+|--------------------------------------------------------------------------
 | Render Baju Order Form
 |--------------------------------------------------------------------------
 */

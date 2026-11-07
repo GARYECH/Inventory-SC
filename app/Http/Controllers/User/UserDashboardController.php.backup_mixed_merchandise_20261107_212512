@@ -1,0 +1,637 @@
+<?php
+
+namespace App\Http\Controllers\User;
+
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\Item;
+use App\Models\Order;
+use App\Models\Setting;
+use App\Services\InventoryAvailabilityService;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+
+class UserDashboardController extends Controller
+{
+    private const TRANSACTION_TYPES = [
+        'Peralatan',
+        'Handy Talkie',
+        'Habis Pakai',
+        'Merchandise',
+    ];
+
+    private const CLOSED_STATUSES = [
+        'Returned',
+        'Returned (Damaged)',
+        'Resolved (Fine Paid)',
+        'Cancelled',
+        'Rejected',
+    ];
+
+    private InventoryAvailabilityService $availabilityService;
+
+    public function __construct(
+        InventoryAvailabilityService $availabilityService
+    ) {
+        $this->availabilityService =
+            $availabilityService;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DASHBOARD
+    |--------------------------------------------------------------------------
+    */
+
+    public function index(
+        Request $request
+    ) {
+        $search = trim(
+            (string) $request->input(
+                'search',
+                ''
+            )
+        );
+
+        $type =
+            $request->input(
+                'type'
+            );
+
+        $category =
+            $request->input(
+                'category'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE TRANSACTION TYPE
+        |--------------------------------------------------------------------------
+        */
+
+        $type =
+            match ($type) {
+                'HT' =>
+                    'Handy Talkie',
+
+                'HabisPakai' =>
+                    'Habis Pakai',
+
+                default =>
+                    $type,
+            };
+
+        /*
+        |--------------------------------------------------------------------------
+        | ITEMS QUERY
+        |--------------------------------------------------------------------------
+        */
+
+        $query =
+            Item::query()
+                ->where(
+                    'condition_status',
+                    'Good'
+                )
+                ->with([
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CATEGORY
+                    |--------------------------------------------------------------------------
+                    |
+                    | Dashboard hanya membutuhkan nama category.
+                    |
+                    */
+
+                    'category:id,name',
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | ACTIVE RENTAL BOOKINGS
+                    |--------------------------------------------------------------------------
+                    |
+                    | Hanya ambil order item yang masih aktif.
+                    | Order yang sudah selesai tidak perlu ikut diambil.
+                    |
+                    */
+
+                    'orderItems' => function ($orderItemQuery) {
+
+                        $orderItemQuery
+                            ->select([
+                                'id',
+                                'item_id',
+                                'order_id',
+                                'quantity',
+                            ])
+                            ->whereHas(
+                                'order',
+                                function ($orderQuery) {
+
+                                    $orderQuery->whereNotIn(
+                                        'status',
+                                        self::CLOSED_STATUSES
+                                    );
+
+                                }
+                            )
+                            ->with([
+                                'order' => function ($orderQuery) {
+
+                                    $orderQuery->select([
+                                        'id',
+                                        'status',
+                                        'start_date',
+                                        'end_date',
+                                        'start_time',
+                                        'end_time',
+                                    ]);
+
+                                },
+                            ]);
+
+                    },
+                ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | TRANSACTION TYPE FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            in_array(
+                $type,
+                self::TRANSACTION_TYPES,
+                true
+            )
+        ) {
+            $query->where(
+                'transaction_type',
+                $type
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | CATEGORY FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($category)) {
+
+            $query->whereHas(
+                'category',
+                function ($categoryQuery) use ($category) {
+
+                    $categoryQuery->where(
+                        'slug',
+                        $category
+                    );
+
+                }
+            );
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEARCH
+        |--------------------------------------------------------------------------
+        */
+
+        if ($search !== '') {
+
+            $query->where(
+                function ($q) use ($search) {
+
+                    $q
+                        ->where(
+                            'name',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'description',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'transaction_type',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'transaction_detail',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'subcategory',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhereHas(
+                            'category',
+                            function ($categoryQuery) use ($search) {
+
+                                $categoryQuery->where(
+                                    'name',
+                                    'like',
+                                    "%{$search}%"
+                                );
+
+                            }
+                        );
+
+                }
+            );
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAGINATION
+        |--------------------------------------------------------------------------
+        */
+
+        $items =
+            $query
+                ->latest()
+                ->paginate(12)
+                ->withQueryString();
+
+        /*
+        |--------------------------------------------------------------------------
+        | CATEGORIES
+        |--------------------------------------------------------------------------
+        |
+        | Categories tidak sering berubah.
+        | Cache selama 10 menit agar tidak query terus.
+        |
+        */
+
+        $categories =
+    Category::withCount(
+        'items'
+    )
+    ->orderBy(
+        'name'
+    )
+    ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | CART COUNT
+        |--------------------------------------------------------------------------
+        */
+
+        $cart =
+            session()->get(
+                'cart',
+                []
+            );
+
+        $cartCount =
+            count(
+                $cart
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | BAJU COLOR CHART
+        |--------------------------------------------------------------------------
+        |
+        | Color chart hanya menjadi referensi.
+        | Pemilihan warna dilakukan di Cart.
+        |
+        | Cache 10 menit supaya tidak query Setting
+        | setiap kali user pindah filter.
+        |
+        */
+
+        $colorCharts =
+            Cache::remember(
+                'user_dashboard_color_charts',
+                now()->addMinutes(10),
+                function () {
+
+                    $colorChartSetting =
+                        Setting::where(
+                            'key',
+                            'baju_color_charts'
+                        )->value(
+                            'value'
+                        );
+
+                    if (!$colorChartSetting) {
+                        return [];
+                    }
+
+                    $decodedColorCharts =
+                        json_decode(
+                            $colorChartSetting,
+                            true
+                        );
+
+                    return is_array(
+                        $decodedColorCharts
+                    )
+                        ? $decodedColorCharts
+                        : [];
+
+                }
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | VIEW
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'user.dashboard',
+            compact(
+                'items',
+                'type',
+                'category',
+                'search',
+                'cartCount',
+                'categories',
+                'colorCharts'
+            )
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOANS
+    |--------------------------------------------------------------------------
+    */
+
+    public function loans()
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | ACTIVE LOANS
+        |--------------------------------------------------------------------------
+        |
+        | Pending tetap termasuk active karena belum selesai,
+        | termasuk transaksi Baju.
+        |
+        */
+
+        $activeLoans =
+            Order::where(
+                'user_id',
+                auth()->id()
+            )
+            ->whereNotIn(
+                'status',
+                self::CLOSED_STATUSES
+            )
+            ->with([
+                'orderItems.item.category',
+                'orderItems.sizeBreakdowns',
+                'mouDocuments',
+            ])
+            ->latest()
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAST LOANS
+        |--------------------------------------------------------------------------
+        */
+
+        $pastLoans =
+            Order::where(
+                'user_id',
+                auth()->id()
+            )
+            ->whereIn(
+                'status',
+                self::CLOSED_STATUSES
+            )
+            ->with([
+                'orderItems.item.category',
+                'orderItems.sizeBreakdowns',
+                'mouDocuments',
+            ])
+            ->latest()
+            ->paginate(5)
+            ->withQueryString();
+
+        // Keep View Signed available if an older PDF exists only in the archive.
+        $this->attachSignedMouViewPaths(
+            $activeLoans->concat($pastLoans->getCollection())
+        );
+
+        return view(
+            'user.loans',
+            compact(
+                'activeLoans',
+                'pastLoans'
+            )
+        );
+    }
+
+    /**
+     * Select the active signed PDF when it exists; otherwise use the newest existing archived PDF.
+     * This is for display only and does not change the database's active signed_file_path.
+     */
+    private function attachSignedMouViewPaths($orders): void
+    {
+        $documents = collect($orders)->flatMap(
+            static fn ($order) => $order->mouDocuments
+        );
+
+        if ($documents->isEmpty()) {
+            return;
+        }
+
+        $documentIds = $documents->pluck('id')->unique()->values()->all();
+        $archivePaths = [];
+
+        $archivedVersions = DB::table('order_mou_document_signed_versions')
+            ->whereIn('order_mou_document_id', $documentIds)
+            ->orderByDesc('superseded_at')
+            ->orderByDesc('id')
+            ->get(['order_mou_document_id', 'signed_file_path']);
+
+        foreach ($archivedVersions as $version) {
+            $documentId = (int) $version->order_mou_document_id;
+            if (array_key_exists($documentId, $archivePaths)) {
+                continue;
+            }
+
+            $candidatePath = trim((string) ($version->signed_file_path ?? ''));
+            if ($candidatePath !== '' && Storage::disk('public')->exists($candidatePath)) {
+                $archivePaths[$documentId] = $candidatePath;
+            }
+        }
+
+        foreach ($documents as $document) {
+            $activePath = trim((string) ($document->signed_file_path ?? ''));
+            if ($activePath !== '' && Storage::disk('public')->exists($activePath)) {
+                $viewPath = $activePath;
+            } else {
+                $viewPath = $archivePaths[(int) $document->id] ?? null;
+            }
+
+            $document->setAttribute('view_signed_file_path', $viewPath);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ITEM SCHEDULE
+    |--------------------------------------------------------------------------
+    */
+
+    public function itemSchedule(
+        $id
+    ) {
+        $item =
+            Item::with(
+                'category'
+            )->findOrFail(
+                $id
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | NON-RETURNABLE
+        |--------------------------------------------------------------------------
+        |
+        | Habis Pakai / Merchandise tidak mempunyai
+        | jadwal rental.
+        |
+        */
+
+        if (
+            !$item->requires_return
+        ) {
+            $activeBookings =
+                collect();
+
+            return view(
+                'user.item_schedule',
+                compact(
+                    'item',
+                    'activeBookings'
+                )
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURNABLE
+        |--------------------------------------------------------------------------
+        */
+
+        $activeBookings =
+            $this->availabilityService
+                ->getSchedule(
+                    $item->id
+                );
+
+        return view(
+            'user.item_schedule',
+            compact(
+                'item',
+                'activeBookings'
+            )
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK STOCK
+    |--------------------------------------------------------------------------
+    */
+
+    public function checkStock(
+        Request $request,
+        $id
+    ) {
+        $item =
+            Item::findOrFail(
+                $id
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | NON-RETURNABLE
+        |--------------------------------------------------------------------------
+        |
+        | Physical stock adalah stock yang tersedia.
+        | Stock baru berkurang ketika admin approve.
+        |
+        */
+
+        if (
+            !$item->requires_return
+        ) {
+            return response()->json([
+                'stock' =>
+                    (int) $item->stock_quantity,
+
+                'availability' =>
+                    [],
+
+                'bookings' =>
+                    [],
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURNABLE
+        |--------------------------------------------------------------------------
+        |
+        | Availability dihitung dari:
+        |
+        | physical stock
+        | -
+        | booking yang waktunya overlap
+        |
+        */
+
+        $validated = $request->validate([
+            'start_date' => 'nullable|date_format:Y-m-d',
+            'days' => 'nullable|integer|min:1|max:62',
+        ]);
+
+        $startDate = isset($validated['start_date'])
+            ? Carbon::parse($validated['start_date'])
+            : Carbon::today();
+
+        $days = (int) ($validated['days'] ?? 62);
+
+        $availability =
+            $this->availabilityService
+                ->getDailyAvailability(
+                    $item->id,
+                    (int) $item->stock_quantity,
+                    $days,
+                    $startDate
+                );
+
+        /*
+        |--------------------------------------------------------------------------
+        | FRONTEND RESPONSE
+        |--------------------------------------------------------------------------
+        |
+        | Frontend lama membutuhkan availability map.
+        |
+        */
+
+        return response()->json(
+            $availability
+        );
+    }
+}

@@ -301,6 +301,37 @@ class UserDashboardController extends Controller
             );
 
         /*
+        |----------------------------------------------------------------------
+        | EXISTING MERCHANDISE CART SCHEDULE
+        |----------------------------------------------------------------------
+        |
+        | Merchandise items in one order share the same pickup schedule.
+        | Reuse the first cart item's schedule for the next item form.
+        |
+        */
+
+        $firstCartItem =
+            !empty($cart)
+                ? reset($cart)
+                : null;
+
+        $cartSchedule = null;
+
+        if (
+            is_array($firstCartItem)
+            &&
+            ($firstCartItem['transaction_type'] ?? null) === 'Merchandise'
+        ) {
+            $cartSchedule = [
+                'start_date' =>
+                    $firstCartItem['start_date'] ?? null,
+
+                'start_time' =>
+                    $firstCartItem['start_time'] ?? null,
+            ];
+        }
+
+        /*
         |--------------------------------------------------------------------------
         | BAJU COLOR CHART
         |--------------------------------------------------------------------------
@@ -360,6 +391,7 @@ class UserDashboardController extends Controller
                 'category',
                 'search',
                 'cartCount',
+                'cartSchedule',
                 'categories',
                 'colorCharts'
             )

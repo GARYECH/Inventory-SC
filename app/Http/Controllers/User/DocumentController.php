@@ -1005,65 +1005,28 @@ return response(
     public function downloadBeritaAcara(
         Order $order
     ) {
-        $this->authorizeOrder(
-            $order
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOAD ORDER DATA
-        |--------------------------------------------------------------------------
-        */
+        $this->authorizeOrder($order);
 
         $order->load([
             'orderItems.item.category',
             'orderItems.sizeBreakdowns',
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | RENTAL DAYS
-        |--------------------------------------------------------------------------
-        */
-
-        $rentalDays =
-            $this->getRentalDays(
-                $order->start_date,
-                $order->end_date
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GENERATE PDF
-        |--------------------------------------------------------------------------
-        */
-
-        $pdf =
-            Pdf::loadView(
-                'admin.pdf.berita_acara',
-                [
-                    'order' =>
-                        $order,
-
-                    'rentalDays' =>
-                        $rentalDays,
-                ]
-            );
-
-
-        $pdf->setPaper(
-            'a4',
-            'portrait'
+        $rentalDays = $this->getRentalDays(
+            $order->start_date,
+            $order->end_date
         );
 
+        $html = \App\Support\BaDocumentHtml::forOrder(
+            $order,
+            $rentalDays
+        );
+
+        $pdf = Pdf::loadHTML($html);
+        $pdf->setPaper('a4', 'portrait');
 
         return $pdf->stream(
-            'Berita_Acara_' .
-            $order->order_number .
-            '.pdf'
+            'Berita_Acara_' . $order->order_number . '.pdf'
         );
     }
 

@@ -725,6 +725,13 @@
                                         </a>
 
 
+                                        <a
+                                            href="{{ route('admin.ba-editor.edit', $order->id) }}"
+                                            class="mb-2 flex w-full items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-indigo-700 transition hover:bg-indigo-100"
+                                        >
+                                            Edit Berita Acara
+                                        </a>
+
                                         <!-- BERITA ACARA -->
 
                                         <a

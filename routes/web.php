@@ -650,3 +650,4 @@ require __DIR__ . '/auth.php';
 
 // Additive, versioned MoU Editor routes.
 require_once __DIR__ . '/mou_editor.php';
+require_once __DIR__ . '/ba_editor.php';
